@@ -25,4 +25,14 @@ describe('ModalService', () => {
     open();
     expect(panel().style.getPropertyValue('--modal-max-height')).toBe('');
   });
+
+  it('reports whether a modal is open', () => {
+    const modals = TestBed.inject(ModalService);
+    expect(modals.hasOpen()).toBe(false);
+    const ref = modals.open(Content, { animation: 'none' });
+    TestBed.inject(ApplicationRef).tick();
+    expect(modals.hasOpen()).toBe(true);
+    ref.close();
+    expect(modals.hasOpen()).toBe(false);
+  });
 });

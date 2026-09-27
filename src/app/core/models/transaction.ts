@@ -1,6 +1,9 @@
 import { TimestampLike } from './timestamp';
 
-export type TxType = 'income' | 'expense' | 'transfer';
+/** `transactions.type` values (§8). Lowercase strings shared with Android. */
+export const TX_TYPES = ['expense', 'income', 'transfer'] as const;
+
+export type TxType = (typeof TX_TYPES)[number];
 export type TxSource = 'web' | 'android' | 'recurring' | 'import';
 
 /** `users/{uid}/transactions/{transactionId}` (§8). `attachments` arrives in v1.1. */

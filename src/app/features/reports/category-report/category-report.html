@@ -1,0 +1,52 @@
+@if (!rows().length) {
+  <l-card>
+    <app-empty-state
+      icon="pie_chart"
+      [title]="
+        store.type() === 'income' ? 'No income in this period' : 'No expenses in this period'
+      "
+      message="Pick another period, or add an entry to see where the money goes."
+    >
+      <l-button size="lg" (click)="add()">
+        {{ store.type() === 'income' ? 'Add income' : 'Add expense' }}
+      </l-button>
+    </app-empty-state>
+  </l-card>
+} @else {
+  <l-card [title]="typeLabel() + ' by category'">
+    <div class="category-report">
+      <l-donut-chart
+        class="category-report__donut"
+        [label]="typeLabel() + ' by category, ' + store.periodLabel()"
+        [segments]="segments()"
+        [format]="store.money"
+        [clickable]="true"
+        [legend]="false"
+        [tableToggle]="false"
+        [size]="220"
+        (segmentClick)="openSegment($event)"
+      >
+        <span class="category-report__total">{{ store.money(total()) }}</span>
+        <span class="category-report__caption">{{ entries(count()) }}</span>
+      </l-donut-chart>
+
+      <ul class="category-report__list" [attr.aria-label]="typeLabel() + ' by category'">
+        @for (row of rows(); track row.categoryId) {
+          <li>
+            <app-report-row
+              [icon]="row.icon"
+              [color]="row.color"
+              [name]="row.name"
+              [caption]="entries(row.count)"
+              [value]="store.money(row.amount)"
+              [detail]="percent(row.share)"
+              [bars]="row.bars"
+              [clickable]="!!row.categoryId"
+              (open)="openCategory(row.categoryId)"
+            />
+          </li>
+        }
+      </ul>
+    </div>
+  </l-card>
+}

@@ -1,6 +1,7 @@
 import {
   MAX_AMOUNT,
   currencySymbol,
+  formatCompactMoney,
   formatMoney,
   fractionDigits,
   toMajorUnits,
@@ -77,6 +78,16 @@ describe('money', () => {
       expect(formatMoney(1250, 'USD', 'en-US', 'exceptZero')).toBe('+$12.50');
       expect(formatMoney(-1250, 'USD', 'en-US', 'exceptZero')).toBe('-$12.50');
       expect(formatMoney(0, 'USD', 'en-US', 'exceptZero')).toBe('$0.00');
+    });
+  });
+
+  describe('formatCompactMoney', () => {
+    it('shortens large amounts for chart axes, from minor units', () => {
+      expect(formatCompactMoney(1_250_000, 'USD', 'en-US')).toBe('$12.5K');
+      expect(formatCompactMoney(250_000_000, 'JPY', 'en-US')).toBe('¥250M');
+      expect(formatCompactMoney(0, 'USD', 'en-US')).toBe('$0');
+      expect(formatCompactMoney(-50_000, 'USD', 'en-US', 'exceptZero')).toBe('-$500');
+      expect(formatCompactMoney(50_000, 'USD', 'en-US', 'exceptZero')).toBe('+$500');
     });
   });
 });

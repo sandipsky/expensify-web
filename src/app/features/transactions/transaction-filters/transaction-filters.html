@@ -1,0 +1,74 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">Filters</h2>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    <l-segmented-control
+      formControlName="type"
+      aria-label="Type"
+      size="lg"
+      [options]="typeOptions"
+      [fullWidth]="true"
+    />
+
+    <l-select
+      label="Accounts"
+      formControlName="accountIds"
+      placeholder="Any account"
+      bindValue="value"
+      bindLabel="label"
+      [items]="accountItems"
+      [multiple]="true"
+      [searchable]="accountItems.length > 8"
+    />
+
+    @if (categoryItems().length) {
+      <div class="sheet-form__field">
+        <l-select
+          label="Categories"
+          formControlName="categoryIds"
+          placeholder="Any category"
+          bindValue="value"
+          bindLabel="label"
+          groupBy="group"
+          [items]="categoryItems()"
+          [multiple]="true"
+          [searchable]="true"
+        />
+        <p class="sheet-form__hint">A category brings its subcategories.</p>
+      </div>
+    }
+
+    @if (tags.length) {
+      <l-select
+        label="Tags"
+        formControlName="tags"
+        placeholder="Any tag"
+        [items]="tags"
+        [multiple]="true"
+        [searchable]="tags.length > 8"
+      />
+    }
+
+    <fieldset class="filter-amounts">
+      <legend>Amount</legend>
+      <l-number-input
+        formControlName="min"
+        label="From"
+        [prefix]="symbol"
+        [decimalPlaces]="decimalPlaces"
+      />
+      <l-number-input
+        formControlName="max"
+        label="To"
+        [prefix]="symbol"
+        [decimalPlaces]="decimalPlaces"
+      />
+    </fieldset>
+  </div>
+
+  <div class="sheet-form__actions filter-actions">
+    <l-button variant="ghost" size="lg" (click)="reset()">Clear all</l-button>
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" (click)="apply()">Apply</l-button>
+  </div>
+</div>

@@ -1,0 +1,79 @@
+@if (!rows().length) {
+  <l-card>
+    <app-empty-state
+      icon="compare_arrows"
+      [title]="'No ' + typeLabel().toLowerCase() + ' in either period'"
+      message="Pick other periods to compare, or add an entry."
+    >
+      <l-button size="lg" (click)="add()">Add {{ typeLabel().toLowerCase() }}</l-button>
+    </app-empty-state>
+  </l-card>
+} @else {
+  <l-card [title]="typeLabel() + ' by category'" [flush]="true">
+    <table class="compare">
+      <caption class="visually-hidden">
+        {{
+          caption()
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Category</th>
+          <th scope="col" class="compare__period">
+            <span class="compare__key compare__key--a" aria-hidden="true"></span>{{ labelA() }}
+          </th>
+          <th scope="col" class="compare__period">
+            <span class="compare__key compare__key--b" aria-hidden="true"></span>{{ labelB() }}
+          </th>
+          <th scope="col">Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.categoryId) {
+          <tr>
+            <th scope="row">
+              <button type="button" [disabled]="!row.categoryId" (click)="open(row)">
+                <span class="compare__name text-ellipsis">{{ row.name }}</span>
+                <span class="compare__narrow">
+                  {{ store.money(row.previous) }} → {{ store.money(row.current) }}
+                </span>
+                <span class="compare__bars" aria-hidden="true">
+                  <span
+                    class="compare__bar compare__bar--a"
+                    [style.width.%]="row.previousPct"
+                  ></span>
+                  <span
+                    class="compare__bar compare__bar--b"
+                    [style.width.%]="row.currentPct"
+                  ></span>
+                </span>
+              </button>
+            </th>
+            <td class="compare__period">{{ store.money(row.previous) }}</td>
+            <td class="compare__period">{{ store.money(row.current) }}</td>
+            <td>
+              <span class="compare__change">
+                @if (row.change) {
+                  <l-icon [name]="icon(row.change)" [size]="14" color="inherit" />
+                }
+                {{ store.signedMoney(row.change) }}
+              </span>
+              <span class="compare__percent">{{ change(row.percent) }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <th scope="row">Total</th>
+          <td class="compare__period">{{ store.money(total().previous) }}</td>
+          <td class="compare__period">{{ store.money(total().current) }}</td>
+          <td>
+            <span class="compare__change">{{ store.signedMoney(total().change) }}</span>
+            <span class="compare__percent">{{ change(total().percent) }}</span>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </l-card>
+}

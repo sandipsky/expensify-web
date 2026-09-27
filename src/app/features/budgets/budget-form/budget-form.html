@@ -1,0 +1,58 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">{{ budget ? 'Edit budget' : 'Add budget' }}</h2>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    <div class="sheet-form__field">
+      <l-segmented-control
+        formControlName="period"
+        aria-label="Period"
+        size="lg"
+        [options]="periodOptions"
+        [fullWidth]="true"
+      />
+      <p class="sheet-form__hint">{{ periodHint() }}</p>
+    </div>
+
+    <l-number-input
+      formControlName="amount"
+      [label]="amountLabel()"
+      [prefix]="symbol"
+      [decimalPlaces]="decimalPlaces"
+      (enter)="save()"
+    />
+
+    <div class="sheet-form__field">
+      <l-select
+        label="Categories"
+        formControlName="categoryIds"
+        placeholder="All expenses"
+        bindValue="value"
+        bindLabel="label"
+        [items]="categoryItems"
+        [multiple]="true"
+        [searchable]="true"
+        [useValidation]="false"
+      />
+      <p class="sheet-form__hint">
+        Leave empty to count every expense. A category brings its subcategories.
+      </p>
+    </div>
+
+    <l-text-input label="Name" formControlName="name" (enter)="save()" />
+
+    <div class="sheet-form__field">
+      <l-toggle label="Roll over what's left" formControlName="rollover" />
+      <p class="sheet-form__hint">{{ rolloverHint() }}</p>
+    </div>
+
+    <div class="sheet-form__field">
+      <l-toggle label="Alert me at 80% and 100%" formControlName="alerts" />
+      <p class="sheet-form__hint">Once each, every period.</p>
+    </div>
+  </div>
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" (click)="save()">{{ budget ? 'Save' : 'Add budget' }}</l-button>
+  </div>
+</div>

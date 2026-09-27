@@ -3,7 +3,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { Category, CategoryType } from '../../core/models/category';
 import { NotificationService } from '../../shared/components/ui/notification';
 import { SheetService } from '../../shared/services/sheet.service';
-import { CategoriesStore } from './categories.store';
+import { CategoriesStore, isUsed } from './categories.store';
 import { CategoryDelete, CategoryDeleteData } from './category-delete/category-delete';
 import { CategoryForm, CategoryFormData } from './category-form/category-form';
 import { countOf, usageSummary } from './category-labels';
@@ -72,7 +72,7 @@ export class CategoryActions {
     if (category.isSystem) return false;
     const usage = await this.store.usage(category);
 
-    if (!usage.transactions.length && !usage.budgets.length) {
+    if (!isUsed(usage)) {
       const deleted = await this.store.delete(category, null);
       const subs = deleted.categories.length - 1;
       this.notify.info(

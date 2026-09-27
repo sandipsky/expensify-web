@@ -18,6 +18,7 @@
         [id]="id()"
         [checked]="_checked()"
         [disabled]="_isDisabled()"
+        [attr.aria-label]="ariaLabel() || null"
         (change)="_handleChange($event)"
         (blur)="_handleBlur()"
       />

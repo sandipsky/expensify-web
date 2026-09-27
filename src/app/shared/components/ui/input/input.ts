@@ -42,6 +42,8 @@ export abstract class BaseInput implements ControlValueAccessor {
   readonly placeholder = input<string>('');
   readonly disabled = input<boolean>(false);
   readonly id = input<string>(`l-input-${_uid++}`);
+  /** Accessible name when there is no visible `label`, e.g. for a search box. */
+  readonly ariaLabel = input<string>();
 
   /** Render the value as plain text instead of the input. */
   readonly viewMode = input(false);

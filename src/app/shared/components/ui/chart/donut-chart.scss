@@ -1,0 +1,105 @@
+@use 'chart-base';
+
+// Container queries give the host no width of its own, so in a shrink-to-fit slot (a flex
+// item sized by its content) it would collapse; keep at least the ring's width.
+:host {
+  min-width: min(100%, var(--l-donut-size));
+}
+
+// Ring above the legend on narrow containers, beside it from 480px.
+.l-donut-chart__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+@container (min-width: 480px) {
+  .l-donut-chart__body {
+    flex-direction: row;
+  }
+}
+
+.l-donut-chart__ring {
+  position: relative;
+  flex-shrink: 0;
+  max-width: 100%;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+}
+
+.l-donut-chart__arc {
+  outline: none;
+  transition: opacity 150ms ease-out;
+
+  &.is-dim {
+    opacity: 0.35;
+  }
+
+  &[role='button'] {
+    cursor: pointer;
+  }
+
+  &:focus-visible {
+    stroke: var(--text-primary);
+    stroke-width: 2px;
+  }
+}
+
+.l-donut-chart__track {
+  fill: none;
+  stroke: var(--separator-light);
+}
+
+.l-donut-chart__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  text-align: center;
+}
+
+.l-donut-chart__legend {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 16px;
+
+  li {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto 40px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+
+    &.is-on {
+      background: var(--bg-light);
+    }
+  }
+}
+
+.l-donut-chart__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.l-donut-chart__num {
+  color: var(--text-secondary);
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-donut-chart__arc {
+    transition: none;
+  }
+}

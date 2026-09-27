@@ -95,6 +95,8 @@ export class SegmentedControl implements ControlValueAccessor {
       this._positionThumb();
       requestAnimationFrame(() => this._ready.set(true));
 
+      // Missing in jsdom and very old browsers; the thumb then moves on selection only.
+      if (typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(() => this._positionThumb());
       observer.observe(this._host.nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());

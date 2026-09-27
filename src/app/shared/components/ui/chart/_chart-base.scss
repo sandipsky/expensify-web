@@ -1,0 +1,27 @@
+// Shared by l-bar-chart and l-donut-chart. The tooltip and table view style themselves
+// (chart-tip.ts, chart-table.ts), which keeps each chart's stylesheet small.
+:host {
+  display: block;
+  position: relative;
+  container-type: inline-size;
+  color: var(--text-primary);
+}
+
+.l-chart__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin-bottom: 8px;
+}
+
+.l-chart__toggle {
+  margin-left: auto;
+}
+
+.l-chart__swatch {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}

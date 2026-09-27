@@ -1,9 +1,11 @@
 import {
   ApplicationRef,
+  computed,
   createComponent,
   EnvironmentInjector,
   inject,
   Injectable,
+  signal,
   Injector,
   TemplateRef,
   Type,
@@ -24,6 +26,10 @@ export class DrawerService {
   private readonly appRef = inject(ApplicationRef);
   private readonly injector = inject(Injector);
   private readonly envInjector = inject(EnvironmentInjector);
+
+  private readonly _openCount = signal(0);
+  /** Whether any drawer is open, e.g. to hold off page-level keyboard shortcuts. */
+  readonly hasOpen = computed(() => this._openCount() > 0);
 
   private readonly openDrawers: DrawerRef[] = [];
 
@@ -49,6 +55,7 @@ export class DrawerService {
     document.body.appendChild(containerRef.location.nativeElement);
 
     this.openDrawers.push(drawerRef);
+    this._openCount.set(this.openDrawers.length);
     this.lockBodyScroll();
 
     drawerRef.afterClosed().subscribe(() => this.dispose(drawerRef));
@@ -67,6 +74,7 @@ export class DrawerService {
       return;
     }
     this.openDrawers.splice(index, 1);
+    this._openCount.set(this.openDrawers.length);
 
     const containerRef = drawerRef._containerRef;
     if (containerRef) {

@@ -1,0 +1,136 @@
+<div class="recurring-page">
+  <div class="recurring-page__header">
+    <l-breadcrumb title="Recurring" />
+    @if (store.views().length) {
+      <l-button size="lg" (click)="add()">
+        <l-icon name="add" color="inherit" />
+        Add rule
+      </l-button>
+    }
+  </div>
+
+  @if (store.loading()) {
+    <l-skeleton height="200px" />
+  } @else if (!store.views().length) {
+    <l-card>
+      <app-empty-state
+        icon="event_repeat"
+        title="No recurring entries yet"
+        message="Add your salary, rent or subscriptions once, and they're logged on schedule. You can also open any transaction and choose Make recurring."
+      >
+        <l-button size="lg" (click)="add()">Add rule</l-button>
+      </app-empty-state>
+    </l-card>
+  } @else {
+    @if (store.waiting().length) {
+      <l-card title="Waiting for you" [flush]="true">
+        <ul class="rule-list" aria-label="Entries waiting for you">
+          @for (view of store.waiting(); track view.id) {
+            <li class="due-item">
+              <div class="due-item__head">
+                <app-symbol-icon
+                  [icon]="view.icon"
+                  [color]="view.color ?? 'var(--text-tertiary)'"
+                  [size]="40"
+                />
+                <div class="due-item__text">
+                  <span class="due-item__name text-ellipsis">{{ view.name }}</span>
+                  <span class="due-item__caption">{{ dueCaption(view) }}</span>
+                </div>
+                <app-tx-amount
+                  [kind]="view.kind"
+                  [amount]="view.amount"
+                  [currency]="store.currency()"
+                />
+              </div>
+              <div class="due-item__actions">
+                <l-button size="lg" (click)="actions.confirm(view, view.due[0])">
+                  <l-icon name="check" color="inherit" />
+                  Confirm
+                </l-button>
+                <l-button variant="outlined" size="lg" (click)="actions.skip(view, view.due[0])">
+                  <l-icon name="skip_next" color="inherit" />
+                  Skip
+                </l-button>
+                <l-button
+                  variant="ghost"
+                  size="lg"
+                  (click)="actions.editAndConfirm(view, view.due[0])"
+                >
+                  <l-icon name="edit" color="inherit" />
+                  Edit
+                </l-button>
+              </div>
+            </li>
+          }
+        </ul>
+      </l-card>
+    }
+
+    @if (store.active().length) {
+      <l-card title="Active" [flush]="true">
+        <ul class="rule-list" aria-label="Active rules">
+          @for (view of store.active(); track view.id) {
+            <li>
+              <app-rule-row
+                [view]="view"
+                [currency]="store.currency()"
+                (edit)="actions.edit(view.rule)"
+                (pause)="actions.pause(view)"
+                (delete)="actions.delete(view)"
+              />
+            </li>
+          }
+        </ul>
+      </l-card>
+    } @else {
+      <l-card>
+        <app-empty-state
+          icon="pause"
+          title="No active rules"
+          message="Resume a paused rule, or add a new one."
+        >
+          <l-button size="lg" (click)="add()">Add rule</l-button>
+        </app-empty-state>
+      </l-card>
+    }
+
+    @if (store.paused().length || store.ended().length) {
+      <l-accordion>
+        @if (store.paused().length) {
+          <l-accordion-item [title]="'Paused (' + store.paused().length + ')'">
+            <ul class="rule-list">
+              @for (view of store.paused(); track view.id) {
+                <li>
+                  <app-rule-row
+                    [view]="view"
+                    [currency]="store.currency()"
+                    (edit)="actions.edit(view.rule)"
+                    (resume)="actions.resume(view)"
+                    (delete)="actions.delete(view)"
+                  />
+                </li>
+              }
+            </ul>
+          </l-accordion-item>
+        }
+        @if (store.ended().length) {
+          <l-accordion-item [title]="'Ended (' + store.ended().length + ')'">
+            <ul class="rule-list">
+              @for (view of store.ended(); track view.id) {
+                <li>
+                  <app-rule-row
+                    [view]="view"
+                    [currency]="store.currency()"
+                    (edit)="actions.edit(view.rule)"
+                    (delete)="actions.delete(view)"
+                  />
+                </li>
+              }
+            </ul>
+          </l-accordion-item>
+        }
+      </l-accordion>
+    }
+  }
+</div>

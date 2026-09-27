@@ -25,6 +25,7 @@
         [placeholder]="placeholder()"
         [disabled]="_isDisabled()"
         (keydown)="_handleKeydown($event)"
+        (keydown.enter)="_handleEnter($event)"
         (input)="_handleInput($event)"
         (focus)="_handleFocus()"
         (blur)="_handleBlur()"
@@ -34,5 +35,13 @@
         <span class="affix suffix">{{ suffix() }}</span>
       }
     </div>
+
+    @if (allowExpressions()) {
+      <div class="l-number-input__result" aria-live="polite">
+        @if (_result()) {
+          = {{ _result() }}
+        }
+      </div>
+    }
   </div>
 }

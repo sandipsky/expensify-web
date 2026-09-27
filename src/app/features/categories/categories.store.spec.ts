@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { CategoriesRepo } from '../../core/data/categories.repo';
 import { LocalDb } from '../../core/data/local-db';
+import { RecurringRepo } from '../../core/data/recurring.repo';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import { CategoryInput } from '../../core/models/category';
 import { CategoriesStore } from './categories.store';
@@ -167,6 +168,48 @@ describe('CategoriesStore', () => {
     expect(store.byId(food)).toBeUndefined();
     const [onRent] = await TestBed.inject(TransactionsRepo).listByCategory(rent);
     expect(onRent.id).toBe(tx);
+  });
+
+  it('moves recurring rules off a deleted category too, keeping the rest of their template (CAT-06)', async () => {
+    const food = store.create('expense', input({ name: 'Food' }));
+    const coffee = store.create('expense', input({ name: 'Coffee', parentId: food }));
+    const rent = store.create('expense', input({ name: 'Rent' }));
+    const rules = TestBed.inject(RecurringRepo);
+    const rule = rules.create({
+      template: {
+        type: 'expense',
+        amount: 450,
+        accountId: 'cash',
+        toAccountId: null,
+        categoryId: coffee,
+        payee: 'Cafe',
+        note: null,
+        tags: ['daily'],
+      },
+      frequency: 'daily',
+      interval: 1,
+      weekdays: [],
+      dayOfMonth: null,
+      startDate: '2026-10-01',
+      endType: 'never',
+      endDate: null,
+      maxCount: null,
+      occurrences: 0,
+      nextDueDate: '2026-10-01',
+      mode: 'auto',
+      active: true,
+    });
+
+    const usage = await store.usage(store.byId(food)!);
+    expect(usage.rules.map((r) => r.id)).toEqual([rule]);
+    await expect(store.delete(store.byId(food)!, null)).rejects.toThrow(/replacement/);
+
+    await store.delete(store.byId(food)!, rent);
+    const [moved] = await rules.listByCategory(rent);
+    expect(moved).toMatchObject({
+      id: rule,
+      template: { categoryId: rent, payee: 'Cafe', tags: ['daily'] },
+    });
   });
 
   it('refuses to delete a system category (CAT-05)', async () => {

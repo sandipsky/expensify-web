@@ -1,0 +1,52 @@
+<l-card [hoverable]="true" padding="lg">
+  <div class="budget-card">
+    <div class="budget-card__head">
+      <app-symbol-icon [icon]="icon().icon" [color]="icon().color" />
+
+      <div class="budget-card__title">
+        <a class="budget-card__link text-ellipsis" [routerLink]="['/budgets', budget().id]">
+          {{ budget().name }}
+        </a>
+        <span class="budget-card__caption text-ellipsis">{{ caption() }}</span>
+      </div>
+
+      <l-menu class="budget-card__menu" mode="right">
+        <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+          <l-icon name="more_vert" color="inherit" />
+          <span class="visually-hidden">Actions for {{ budget().name }}</span>
+        </l-button>
+        <button type="button" dropdown-item (click)="edit.emit()">
+          <l-icon name="edit" [size]="18" />Edit
+        </button>
+        @if (budget().active) {
+          <button type="button" dropdown-item (click)="pause.emit()">
+            <l-icon name="pause" [size]="18" />Pause
+          </button>
+        } @else {
+          <button type="button" dropdown-item (click)="resume.emit()">
+            <l-icon name="play_arrow" [size]="18" />Resume
+          </button>
+        }
+        <button type="button" dropdown-item class="danger" (click)="delete.emit()">
+          <l-icon name="delete" [size]="18" color="inherit" />Delete
+        </button>
+      </l-menu>
+    </div>
+
+    @if (!budget().active) {
+      <div class="budget-card__paused">
+        <span>{{ budget().amount | money: store.currency() }} {{ perPeriod() }}</span>
+        <l-chip size="sm">Paused</l-chip>
+      </div>
+    } @else if (progress(); as progress) {
+      <app-budget-meter
+        [progress]="progress"
+        [currency]="store.currency()"
+        [period]="budget().period"
+        [name]="budget().name"
+      />
+    } @else {
+      <l-skeleton height="92px" />
+    }
+  </div>
+</l-card>

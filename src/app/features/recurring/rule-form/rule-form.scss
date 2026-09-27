@@ -1,0 +1,48 @@
+@use '../../../shared/styles/sheet-form';
+
+.rule-form__section {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+// Matches the labels of the inputs around it; the control keeps its own aria-label.
+.rule-form__label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+// "Every N weeks" beside the weekdays or the day of the month; stacked when narrow.
+.rule-form__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.rule-form__interval {
+  flex: 0 1 160px;
+  min-width: 120px;
+}
+
+.rule-form__grow {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+// Sits under the row it explains, closer than the usual field gap.
+.rule-form__tight {
+  margin-top: -10px;
+}
+
+.rule-form__preview {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+}

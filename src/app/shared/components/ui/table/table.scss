@@ -256,3 +256,26 @@
     animation-duration: 1600ms;
   }
 }
+
+// Group header rows (`groupBy`): a quiet band across every column.
+.table .l-table__group th {
+  border-top: 0;
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  padding: 8px;
+  position: static;
+}
+
+// Space for the rows `virtualScroll` doesn't render.
+.table .l-table__spacer td {
+  padding: 0;
+  border: 0;
+}
+
+// Rows `rowSelected` picks out.
+.table tr.is-selected td {
+  background: var(--accent-bg);
+}

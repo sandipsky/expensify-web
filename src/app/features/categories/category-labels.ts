@@ -56,15 +56,17 @@ export function countOf(count: number, one: string, many = `${one}s`): string {
   return `${count} ${count === 1 ? one : many}`;
 }
 
-/** What uses a category, as "12 transactions and 1 budget". */
+/** What uses a category, as "12 transactions and 1 budget", or "…, 1 budget and 1 recurring rule". */
 export function usageSummary(usage: {
   transactions: readonly unknown[];
   budgets: readonly unknown[];
+  rules?: readonly unknown[];
 }): string {
-  return [
+  const parts = [
     usage.transactions.length ? countOf(usage.transactions.length, 'transaction') : '',
     usage.budgets.length ? countOf(usage.budgets.length, 'budget') : '',
-  ]
-    .filter(Boolean)
-    .join(' and ');
+    usage.rules?.length ? countOf(usage.rules.length, 'recurring rule') : '',
+  ].filter(Boolean);
+  const last = parts.pop();
+  return parts.length ? `${parts.join(', ')} and ${last}` : (last ?? '');
 }

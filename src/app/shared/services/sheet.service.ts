@@ -22,16 +22,22 @@ export class SheetService {
   /**
    * Emits the result passed to `close()` (or `undefined` when dismissed) once, after
    * closing. Dialogs are 480px wide and at most 640px tall unless `options` says
-   * otherwise; a longer form scrolls inside (see `_sheet-form.scss`).
+   * otherwise; a longer form scrolls inside (see `_sheet-form.scss`). Bottom sheets
+   * fit their content unless `phoneHeight` fixes it, as a form that grows while in
+   * use wants so the sheet doesn't jump.
    */
   open<R = unknown, D = unknown>(
     component: Type<unknown>,
     data?: D,
-    options: { width?: string; maxHeight?: string } = {},
+    options: { width?: string; maxHeight?: string; phoneHeight?: string } = {},
   ): Observable<R | undefined> {
     if (this.breakpoints.phone()) {
       return this.drawers
-        .open<unknown, D, R>(component, { data, position: 'bottom', size: 'auto' })
+        .open<unknown, D, R>(component, {
+          data,
+          position: 'bottom',
+          size: options.phoneHeight ?? 'auto',
+        })
         .afterClosed();
     }
     return this.modals

@@ -22,30 +22,55 @@
       </tr>
     </thead>
 
-    <tbody>
-      @for (row of _rows(); track _trackRow($index, row); let i = $index) {
-        <tr (click)="rowClick.emit(row)">
-          @for (col of columns(); track col.key) {
-            <td
-              [class.text-center]="col.align === 'center'"
-              [class.text-end]="col.align === 'right'"
-            >
-              @if (_cellTemplate(col.key); as tpl) {
-                <ng-container
-                  [ngTemplateOutlet]="tpl"
-                  [ngTemplateOutletContext]="{
-                    $implicit: row,
-                    value: _value(row, col.key),
-                    row: row,
-                    column: col,
-                    index: i,
-                  }"
-                />
-              } @else {
-                {{ _value(row, col.key) }}
-              }
-            </td>
-          }
+    <tbody #body>
+      @if (virtualScroll() && _window().before) {
+        <tr class="l-table__spacer" aria-hidden="true">
+          <td [attr.colspan]="columns().length" [style.height.px]="_window().before"></td>
+        </tr>
+      }
+      @for (entry of _visibleEntries(); track _trackEntry(entry)) {
+        @if (entry.kind === 'group') {
+          <tr class="l-table__group" [style.height.px]="virtualScroll() ? groupRowHeight() : null">
+            <th scope="colgroup" [attr.colspan]="columns().length">
+              <ng-container
+                [ngTemplateOutlet]="_group()!.template"
+                [ngTemplateOutletContext]="{ $implicit: entry.key, rows: entry.rows }"
+              />
+            </th>
+          </tr>
+        } @else {
+          <tr
+            [class.is-selected]="rowSelected()?.(entry.row) ?? false"
+            [style.height.px]="virtualScroll() ? rowHeight() : null"
+            (click)="rowClick.emit(entry.row)"
+          >
+            @for (col of columns(); track col.key) {
+              <td
+                [class.text-center]="col.align === 'center'"
+                [class.text-end]="col.align === 'right'"
+              >
+                @if (_cellTemplate(col.key); as tpl) {
+                  <ng-container
+                    [ngTemplateOutlet]="tpl"
+                    [ngTemplateOutletContext]="{
+                      $implicit: entry.row,
+                      value: _value(entry.row, col.key),
+                      row: entry.row,
+                      column: col,
+                      index: entry.index,
+                    }"
+                  />
+                } @else {
+                  {{ _value(entry.row, col.key) }}
+                }
+              </td>
+            }
+          </tr>
+        }
+      }
+      @if (virtualScroll() && _window().after) {
+        <tr class="l-table__spacer" aria-hidden="true">
+          <td [attr.colspan]="columns().length" [style.height.px]="_window().after"></td>
         </tr>
       }
     </tbody>

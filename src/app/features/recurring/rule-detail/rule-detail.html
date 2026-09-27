@@ -1,0 +1,192 @@
+@if (store.loading()) {
+  <div class="rule-page">
+    <l-skeleton height="56px" />
+    <l-skeleton height="220px" />
+    <l-skeleton height="200px" />
+  </div>
+} @else if (view(); as view) {
+  <div class="rule-page">
+    <l-breadcrumb [items]="[{ label: 'Recurring', link: '/recurring' }, { label: view.name }]" />
+
+    <div class="rule-page__header">
+      <app-symbol-icon
+        [icon]="view.icon"
+        [color]="view.color ?? 'var(--text-tertiary)'"
+        [size]="48"
+      />
+      <div class="rule-page__title">
+        <h1 class="text-ellipsis">{{ view.name }}</h1>
+        <div class="rule-page__meta">
+          <span>{{ view.schedule }}</span>
+          @if (view.status === 'paused') {
+            <l-chip size="sm">Paused</l-chip>
+          }
+          @if (view.status === 'ended') {
+            <l-chip size="sm">Ended</l-chip>
+          }
+          @if (view.rule.mode === 'confirm') {
+            <l-chip size="sm">Asks first</l-chip>
+          }
+        </div>
+      </div>
+      <div class="rule-page__actions">
+        <l-button variant="outlined" size="lg" (click)="actions.edit(view.rule)">
+          <l-icon name="edit" color="inherit" />
+          Edit
+        </l-button>
+        <l-menu mode="right">
+          <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+            <l-icon name="more_vert" color="inherit" />
+            <span class="visually-hidden">More actions</span>
+          </l-button>
+          @if (view.status === 'ended') {
+            <!-- Nothing to pause: edit its end to run it again. -->
+          } @else if (view.rule.active) {
+            <button type="button" dropdown-item (click)="actions.pause(view)">
+              <l-icon name="pause" [size]="18" />Pause
+            </button>
+          } @else {
+            <button type="button" dropdown-item (click)="actions.resume(view)">
+              <l-icon name="play_arrow" [size]="18" />Resume
+            </button>
+          }
+          <button type="button" dropdown-item class="danger" (click)="delete(view)">
+            <l-icon name="delete" [size]="18" color="inherit" />Delete
+          </button>
+        </l-menu>
+      </div>
+    </div>
+
+    @if (view.status === 'missing_account') {
+      <p class="alert error">
+        An account this rule uses was deleted, so it can't add entries. Edit the rule to pick
+        another account.
+      </p>
+    } @else if (view.status === 'paused') {
+      <p class="alert warn">Paused: no entries are added until you resume it.</p>
+    }
+
+    @if (view.rule.mode === 'confirm' && view.due.length) {
+      <l-card title="Waiting for you">
+        <div class="rule-due">
+          <p>
+            Due {{ upcoming()[0]?.label }}
+            @if (view.due.length > 1) {
+              <span class="rule-due__more">· then {{ view.due.length - 1 }} more</span>
+            }
+          </p>
+          <div class="rule-due__actions">
+            <l-button size="lg" (click)="actions.confirm(view, view.due[0])">
+              <l-icon name="check" color="inherit" />
+              Confirm
+            </l-button>
+            <l-button variant="outlined" size="lg" (click)="actions.skip(view, view.due[0])">
+              <l-icon name="skip_next" color="inherit" />
+              Skip
+            </l-button>
+            <l-button variant="ghost" size="lg" (click)="actions.editAndConfirm(view, view.due[0])">
+              <l-icon name="edit" color="inherit" />
+              Edit
+            </l-button>
+          </div>
+        </div>
+      </l-card>
+    }
+
+    <l-card title="Details">
+      <dl class="rule-facts">
+        <div>
+          <dt>Amount</dt>
+          <dd>
+            <app-tx-amount
+              [kind]="view.kind"
+              [amount]="view.amount"
+              [currency]="store.currency()"
+            />
+          </dd>
+        </div>
+        @if (categoryLabel()) {
+          <div>
+            <dt>Category</dt>
+            <dd>{{ categoryLabel() }}</dd>
+          </div>
+        }
+        <div>
+          <dt>Account</dt>
+          <dd>{{ view.accountLabel }}</dd>
+        </div>
+        <div>
+          <dt>Starts</dt>
+          <dd>{{ startLabel() }}</dd>
+        </div>
+        <div>
+          <dt>Ends</dt>
+          <dd>{{ endText() }}</dd>
+        </div>
+        <div>
+          <dt>On the due date</dt>
+          <dd>{{ view.rule.mode === 'confirm' ? 'Asks you first' : 'Adds it automatically' }}</dd>
+        </div>
+        <div>
+          <dt>Added so far</dt>
+          <dd>{{ createdText() }}</dd>
+        </div>
+      </dl>
+
+      @if (upcoming().length) {
+        <h2 class="rule-page__subhead">Next dates</h2>
+        <ul class="rule-next">
+          @for (item of upcoming(); track item.date) {
+            <li>
+              {{ item.label }}
+              @if (item.due) {
+                <l-chip size="sm" variant="warn">Due</l-chip>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </l-card>
+
+    <l-card title="Entries added" [flush]="true">
+      @if (historyLoading()) {
+        <div class="rule-skeleton"><l-skeleton height="56px" /><l-skeleton height="56px" /></div>
+      } @else if (!historyRows().length) {
+        <app-empty-state
+          icon="receipt_long"
+          title="Nothing added yet"
+          [message]="
+            view.next
+              ? 'Entries show up here from their due date.'
+              : 'This rule ended without adding any entries.'
+          "
+        >
+          <l-button variant="outlined" size="lg" (click)="actions.edit(view.rule)"
+            >Edit rule</l-button
+          >
+        </app-empty-state>
+      } @else {
+        <ul class="rule-history">
+          @for (row of historyRows(); track row.id) {
+            <li><app-transaction-row [row]="row" (open)="openTransaction(row)" /></li>
+          }
+        </ul>
+        @if (hasMore()) {
+          <div card-footer class="rule-history__footer">
+            <l-button variant="outlined" size="lg" (click)="showMore()">Show more</l-button>
+          </div>
+        }
+      }
+    </l-card>
+  </div>
+} @else {
+  <l-card>
+    <app-empty-state
+      icon="event_repeat"
+      title="Rule not found"
+      message="It may have been deleted, perhaps on another device."
+    >
+      <l-button size="lg" (click)="back()">Back to recurring</l-button>
+    </app-empty-state>
+  </l-card>
+}

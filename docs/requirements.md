@@ -243,6 +243,8 @@ Layout follows section 10: one column on phones in the order above, with the per
 | RPT-06 | Show cash flow per account (money in vs out). | Could |
 | RPT-07 | List top payees and largest expenses. | Could |
 
+Reports follow the totals rules of the dashboard (DSH-12): no transfers or balance adjustments in income, expense and category figures, and subcategories rolled up to their parent. Cash flow per account (RPT-06) is the exception for transfers: it counts them as money out of one account and into the other, shown apart from income and expense, and still leaves adjustments out. The trend (RPT-02) is the current month period and the eleven before it; the yearly summary (RPT-05) is the twelve month periods of a year, starting with the one that contains 1 January (as for yearly budgets). Percentages are whole numbers rounded half up; a change from nothing reads "New".
+
 ### 3.11 Import, export and backup
 
 | ID | Requirement | Priority |
@@ -347,7 +349,7 @@ Account balance = opening balance + the sum of the effects of all its transactio
 | BR-05 | A month with start day D runs from day D to the day before D in the next month. The current period contains today (D = 25 on 10 Sep: 25 Aug – 24 Sep). Show the date range, not a month name, when D isn't 1. |
 | BR-06 | Dates are the user's local calendar date (`YYYY-MM-DD`); a transaction never shifts to another day when the time zone changes. |
 | BR-07 | Budget spent = sum of expenses in the budget's categories and their subcategories within the period. |
-| BR-08 | Budget state from % used: under 80 is on track, 80–99 is warning, 100 or more is over. |
+| BR-08 | Budget state from % used: under 80 is on track, 80–99 is warning, 100 or more is over. Compare in integers (spent × 100 ≥ threshold × limit) and show % used rounded down, so 79.6% reads 79%, on track; a zero limit shows "—" and is over. |
 | BR-09 | A monthly repeat on day 29–31 falls on the last day of shorter months. |
 | BR-10 | Future-dated transactions change balances immediately and show as "Upcoming" (v1 rule; a projected balance can come later). |
 | BR-11 | Calculate with integers; round only for display (percentages to whole numbers). |
@@ -530,31 +532,33 @@ users/{uid}                        profile and preferences
 | --- | --- | --- |
 | name | string | shown on the budget card |
 | amount | int | limit per period, minor units |
-| period | string | monthly (weekly and yearly later) |
-| categoryIds | string[] | empty = all expenses |
-| rollover | bool | BUD-07 |
+| period | string | weekly · monthly · yearly (BUD-08). Monthly follows `monthStartDay` (BR-05); weekly runs 7 days from `weekStartDay`; yearly is 12 month periods starting with the one that contains 1 January (25 Dec – 24 Dec with start day 25; the calendar year with start day 1). Readers treat an unknown value as monthly |
+| categoryIds | string[] | expense categories, each including its subcategories (BR-07); empty = all expenses |
+| rollover | bool | BUD-07: this period's limit = amount + (amount − the previous period's spent), never below 0. One period back only, not compounding, and nothing rolls in from a period that ended before the budget was created |
 | alertThresholds | int[] | default [80, 100] |
-| lastAlert | map? | {periodStart, threshold}; stops repeat alerts |
-| active | bool | |
+| lastAlert | map? | {periodStart, threshold}: the highest threshold already alerted in the period starting on periodStart; stops repeat alerts. Written by whichever app shows the alert (in-app on web until the budgetAlerts function, section 12) |
+| active | bool | false = paused: settings kept, no progress shown, no alerts |
 | createdAt, updatedAt | timestamp | |
 
 ### recurringRules/{ruleId} (v1.1)
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| template | map | type, amount, accountId, toAccountId, categoryId, payee, note, tags |
-| frequency | string | daily · weekly · monthly · yearly |
+| template | map | type, amount, accountId, toAccountId, categoryId, payee, note, tags. Each occurrence is written with these, `time` null, `currency` from the account, `recurringRuleId`, and `source: recurring` |
+| frequency | string | daily · weekly · monthly · yearly. Readers treat an unknown value as monthly |
 | interval | int | 1 or more ("every 2 weeks" = 2) |
-| weekdays | int[] | weekly rules, 1–7 |
-| dayOfMonth | int | monthly rules, 1–31, clamped to month end (BR-09) |
-| startDate | string | YYYY-MM-DD |
+| weekdays | int[] | weekly rules, ISO 1–7; empty means the start date's weekday. Weeks run Monday to Sunday, counted from the one that contains startDate, whatever `weekStartDay` is |
+| dayOfMonth | int? | monthly rules, 1–31, clamped to month end (BR-09), so 31 means the last day; null for other frequencies (then the start date's day). Months are counted from startDate's month |
+| startDate | string | YYYY-MM-DD. The first occurrence is the first schedule date on or after it. Daily rules count every `interval` days from it; yearly rules repeat its day and month (29 Feb falls on 28 Feb in common years) |
 | endType | string | never · count · until |
-| endDate, maxCount | string?, int? | for until and count |
-| occurrences | int | created so far |
-| nextDueDate | string | YYYY-MM-DD |
-| mode | string | auto · confirm |
-| active | bool | |
+| endDate, maxCount | string?, int? | until: no occurrence after endDate. count: the rule ends once `occurrences` reaches maxCount |
+| occurrences | int | created so far; skipped ones don't count |
+| nextDueDate | string | YYYY-MM-DD: the next schedule date not yet created or skipped. Creating or skipping moves it to the next schedule date. A schedule edit sets it to the first new schedule date on or after today (or on or after an earlier nextDueDate still waiting to be confirmed); resuming sets it to the first on or after the later of nextDueDate and today, so dates that passed while paused are left out (REC-07) |
+| mode | string | auto · confirm. Readers treat an unknown value as confirm, so a newer app's mode never creates money on its own |
+| active | bool | false = paused |
 | createdAt, updatedAt | timestamp | |
+
+An occurrence is created in one Firestore transaction that reads the rule and the occurrence's document `{ruleId}_{YYYYMMDD}` (the schedule date, even if the user edits the entry's date when confirming), writes the entry and its balance increments if it doesn't exist yet, and advances `nextDueDate` and `occurrences`. That makes it exactly-once across devices and the server job (REC-05). Until generateRecurring runs (section 12), the web app does this on the device for automatic rules, catching up every missed date (REC-06) in transactions of at most 100 occurrences. If an account the entry needs is missing, nothing is written and the rule shows as needing a new account.
 
 ### devices/{deviceId} (v1.1)
 
@@ -744,7 +748,7 @@ Build on Angular 22, the current major since June 2026, with standalone componen
 | Firebase | Firebase JS SDK (modular) in your own injectable services | AngularFire has lagged new Angular majors ([issue #3737](https://github.com/angular/angularfire/issues/3737)); adopt it only once it supports your version |
 | State | One signal-based store service per feature | Move to NgRx SignalStore only if features share a lot of state |
 | Forms | Typed reactive forms (`FormBuilder.nonNullable`) | Lumen inputs are `ControlValueAccessor`s and their inline validation reads `NgControl`; Signal Forms are not used |
-| Charts | ngx-echarts (Apache ECharts) or ng2-charts (Chart.js) | ECharts has more chart types; Chart.js is smaller |
+| Charts | Lumen UI's own `l-bar-chart` and `l-donut-chart` (HTML/CSS and SVG) | Decided over ngx-echarts and ng2-charts: no dependency, theme tokens, a built-in table view (NFR-09) |
 | Dates | date-fns | Tree-shakable; works directly on `YYYY-MM-DD` strings |
 | CSV | PapaParse | Import and export |
 | PWA | `@angular/pwa` | Service worker, manifest, offline app shell |

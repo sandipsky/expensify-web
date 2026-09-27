@@ -14,10 +14,15 @@
     <div
       class="l-icon-grid"
       role="radiogroup"
+      [class.l-icon-grid--labelled]="showLabels()"
       [attr.aria-labelledby]="label() ? name() + '-label' : null"
     >
       @for (option of options(); track option.value) {
-        <label class="l-icon-tile" [class.is-checked]="_isChecked(option.value)">
+        <label
+          class="l-icon-tile"
+          [class.is-checked]="_isChecked(option.value)"
+          [style.--tile-color]="_tileColor(option)"
+        >
           <input
             type="radio"
             class="l-icon-tile__input"
@@ -28,7 +33,14 @@
             (change)="_select(option.value)"
             (blur)="_handleBlur()"
           />
-          <l-icon [name]="_iconName(option.value)" [size]="24" color="inherit" />
+          @if (showLabels()) {
+            <span class="l-icon-tile__badge">
+              <l-icon [name]="_iconName(option)" [size]="20" color="inherit" />
+            </span>
+            <span class="l-icon-tile__label" aria-hidden="true">{{ option.label }}</span>
+          } @else {
+            <l-icon [name]="_iconName(option)" [size]="24" color="inherit" />
+          }
         </label>
       }
     </div>

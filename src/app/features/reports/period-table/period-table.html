@@ -1,0 +1,45 @@
+<div class="period-table__scroll">
+  <table class="period-table">
+    <caption class="visually-hidden">
+      {{
+        caption()
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Period</th>
+        <th scope="col">Income</th>
+        <th scope="col">Expense</th>
+        <th scope="col">Net</th>
+        <th scope="col" class="period-table__rate">Saved</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.key) {
+        <tr [class.is-current]="row.current" [attr.aria-current]="row.current ? 'true' : null">
+          <th scope="row">
+            <button type="button" (click)="open.emit(row.summary.range)">
+              <span class="period-table__long">{{ row.label }}</span>
+              <span class="period-table__short">{{ row.shortLabel }}</span>
+            </button>
+          </th>
+          <td>{{ money()(row.summary.income) }}</td>
+          <td>{{ money()(row.summary.expense) }}</td>
+          <td>{{ signedMoney()(row.summary.net) }}</td>
+          <td class="period-table__rate">{{ percent(row.summary.savingsRate) }}</td>
+        </tr>
+      }
+    </tbody>
+    @if (total(); as total) {
+      <tfoot>
+        <tr>
+          <th scope="row">{{ totalLabel() }}</th>
+          <td>{{ money()(total.income) }}</td>
+          <td>{{ money()(total.expense) }}</td>
+          <td>{{ signedMoney()(total.net) }}</td>
+          <td class="period-table__rate">{{ percent(total.savingsRate) }}</td>
+        </tr>
+      </tfoot>
+    }
+  </table>
+</div>

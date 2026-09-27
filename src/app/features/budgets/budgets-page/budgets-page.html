@@ -1,0 +1,74 @@
+<div class="budgets-page">
+  <div class="budgets-page__header">
+    <l-breadcrumb title="Budgets" />
+    @if (store.all().length) {
+      <l-button size="lg" (click)="add()">
+        <l-icon name="add" color="inherit" />
+        Add budget
+      </l-button>
+    }
+  </div>
+
+  @if (store.loading()) {
+    <l-row [gutter]="[16, 16]" align="stretch">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <l-col [span]="12" [md]="6" [xl]="4"><l-skeleton height="196px" /></l-col>
+      }
+    </l-row>
+  } @else if (!store.all().length) {
+    <l-card>
+      <app-empty-state
+        icon="donut_large"
+        title="No budgets yet"
+        message="Set a limit for all your spending, or for categories such as Food or Transport, and see what's safe to spend each day."
+      >
+        <l-button size="lg" (click)="add()">Add budget</l-button>
+      </app-empty-state>
+    </l-card>
+  } @else {
+    @if (store.active().length) {
+      <l-row [gutter]="[16, 16]" align="stretch">
+        @for (budget of store.active(); track budget.id) {
+          <l-col [span]="12" [md]="6" [xl]="4">
+            <app-budget-card
+              [budget]="budget"
+              [progress]="store.progressOf(budget)"
+              (edit)="actions.edit(budget)"
+              (pause)="actions.pause(budget)"
+              (delete)="actions.delete(budget)"
+            />
+          </l-col>
+        }
+      </l-row>
+    } @else {
+      <l-card>
+        <app-empty-state
+          icon="pause"
+          title="All your budgets are paused"
+          message="Resume one from the paused list, or add a new budget."
+        >
+          <l-button size="lg" (click)="add()">Add budget</l-button>
+        </app-empty-state>
+      </l-card>
+    }
+
+    @if (store.paused().length) {
+      <l-accordion>
+        <l-accordion-item [title]="'Paused (' + store.paused().length + ')'">
+          <l-row [gutter]="[16, 16]" align="stretch">
+            @for (budget of store.paused(); track budget.id) {
+              <l-col [span]="12" [md]="6" [xl]="4">
+                <app-budget-card
+                  [budget]="budget"
+                  (edit)="actions.edit(budget)"
+                  (resume)="actions.resume(budget)"
+                  (delete)="actions.delete(budget)"
+                />
+              </l-col>
+            }
+          </l-row>
+        </l-accordion-item>
+      </l-accordion>
+    }
+  }
+</div>

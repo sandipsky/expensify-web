@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { FormValidation } from '../../../../directives/form-validation';
 import { BaseBooleanInput, provideInputValueAccessor } from '../input';
 
@@ -11,4 +11,7 @@ import { BaseBooleanInput, provideInputValueAccessor } from '../input';
   providers: [provideInputValueAccessor(() => Checkbox)],
   hostDirectives: [{ directive: FormValidation, inputs: ['useValidation'] }],
 })
-export class Checkbox extends BaseBooleanInput {}
+export class Checkbox extends BaseBooleanInput {
+  /** Accessible name when there is no visible `label`, e.g. "Select Groceries". */
+  readonly ariaLabel = input<string>();
+}

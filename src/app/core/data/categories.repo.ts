@@ -4,6 +4,7 @@ import { DEFAULT_CATEGORY_ICON, PALETTE, replaceCategoryIds } from '../domain/ca
 import { SeedCategory } from '../domain/default-categories';
 import { Budget } from '../models/budget';
 import { Category } from '../models/category';
+import { RecurringRule } from '../models/recurring';
 import { Transaction } from '../models/transaction';
 import { LocalBatch, LocalDb, LocalDoc, serverTimestamp } from './local-db';
 import { WriteErrors } from './write-errors';
@@ -19,6 +20,8 @@ export interface Reassignment {
   replacementId: string;
   transactions: readonly Pick<Transaction, 'id'>[];
   budgets: readonly Pick<Budget, 'id' | 'categoryIds'>[];
+  /** Recurring rules whose entries use the category. */
+  rules?: readonly Pick<RecurringRule, 'id'>[];
 }
 
 /**
@@ -94,7 +97,7 @@ export class CategoriesRepo {
 
   /**
    * Deletes the categories in one batch. With a reassignment, the same batch
-   * moves their transactions and budgets to the replacement first (CAT-06), so
+   * moves their transactions, budgets and recurring rules to the replacement first (CAT-06), so
    * nothing is ever left pointing at a deleted category. Firestore caps a batch
    * at 500 writes, so the Firestore version must chunk, keeping the category
    * deletes in the last chunk.
@@ -113,6 +116,12 @@ export class CategoriesRepo {
       for (const budget of reassignment.budgets) {
         batch.update(`${this.db.userPath}/budgets/${budget.id}`, {
           categoryIds: replaceCategoryIds(budget.categoryIds, removed, replacementId),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      for (const rule of reassignment.rules ?? []) {
+        batch.update(`${this.db.userPath}/recurringRules/${rule.id}`, {
+          'template.categoryId': replacementId,
           updatedAt: serverTimestamp(),
         });
       }

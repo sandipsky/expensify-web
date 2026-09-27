@@ -35,3 +35,15 @@
     right: 8px;
   }
 }
+
+// allowExpressions: the worked-out result while an expression is typed.
+.l-number-input__result {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+
+  &:empty {
+    display: none;
+  }
+}

@@ -1,0 +1,166 @@
+<div class="reports-page">
+  <l-breadcrumb title="Reports" />
+
+  <section class="reports-toolbar" aria-label="What the report shows">
+    @if (breakpoints.desktop()) {
+      <l-segmented-control
+        aria-label="Report"
+        size="lg"
+        [options]="viewOptions"
+        [ngModel]="store.view()"
+        (ngModelChange)="setView($event)"
+      />
+    } @else {
+      <l-select
+        class="reports-toolbar__view"
+        label="Report"
+        bindValue="value"
+        bindLabel="label"
+        [items]="viewOptions"
+        [useValidation]="false"
+        [ngModel]="store.view()"
+        (ngModelChange)="setView($event)"
+      />
+    }
+
+    <div class="reports-toolbar__row">
+      @if (usesPeriod()) {
+        @if (breakpoints.phone()) {
+          <l-select
+            class="reports-toolbar__select"
+            ariaLabel="Period"
+            bindValue="value"
+            bindLabel="label"
+            [items]="periodOptions"
+            [useValidation]="false"
+            [ngModel]="store.preset()"
+            (ngModelChange)="setPreset($event)"
+          />
+        } @else {
+          <l-segmented-control
+            aria-label="Period"
+            size="lg"
+            [options]="periodOptions"
+            [ngModel]="store.preset()"
+            (ngModelChange)="setPreset($event)"
+          />
+        }
+      }
+
+      @switch (store.view()) {
+        @case ('compare') {
+          <l-select
+            class="reports-toolbar__select"
+            label="Compare"
+            bindValue="value"
+            bindLabel="label"
+            [items]="store.compareOptions()"
+            [useValidation]="false"
+            [ngModel]="store.compareA().value"
+            (ngModelChange)="setCompare('a', $event)"
+          />
+          <l-select
+            class="reports-toolbar__select"
+            label="With"
+            bindValue="value"
+            bindLabel="label"
+            [items]="store.compareOptions()"
+            [useValidation]="false"
+            [ngModel]="store.compareB().value"
+            (ngModelChange)="setCompare('b', $event)"
+          />
+        }
+        @case ('year') {
+          <div class="reports-toolbar__year" role="group" aria-label="Year">
+            <l-button
+              variant="outlined"
+              size="lg"
+              [rounded]="true"
+              [disabled]="!store.canGoBackAYear()"
+              (click)="moveYear(-1)"
+            >
+              <l-icon name="chevron_left" color="inherit" />
+              <span class="visually-hidden">Previous year</span>
+            </l-button>
+            <span class="reports-toolbar__label" aria-live="polite">{{ store.yearLabel() }}</span>
+            <l-button
+              variant="outlined"
+              size="lg"
+              [rounded]="true"
+              [disabled]="store.yearOffset() >= 0"
+              (click)="moveYear(1)"
+            >
+              <l-icon name="chevron_right" color="inherit" />
+              <span class="visually-hidden">Next year</span>
+            </l-button>
+          </div>
+        }
+        @case ('trend') {
+          <p class="reports-toolbar__label">{{ trendLabel() }}</p>
+        }
+      }
+
+      @if (usesType()) {
+        <l-segmented-control
+          aria-label="Expense or income"
+          size="lg"
+          [options]="typeOptions"
+          [ngModel]="store.type()"
+          (ngModelChange)="setType($event)"
+        />
+      }
+    </div>
+
+    @if (usesPeriod()) {
+      <p class="reports-toolbar__label" aria-live="polite">{{ store.periodLabel() }}</p>
+      @if (store.preset() === 'custom') {
+        <div class="reports-toolbar__custom">
+          <l-date-input
+            label="From"
+            calendar="ad"
+            [clearable]="false"
+            [useValidation]="false"
+            [ngModel]="customStart()"
+            (ngModelChange)="setCustomDate('start', $event)"
+          />
+          <l-date-input
+            label="To"
+            calendar="ad"
+            [clearable]="false"
+            [useValidation]="false"
+            [ngModel]="customEnd()"
+            (ngModelChange)="setCustomDate('end', $event)"
+          />
+        </div>
+      }
+    }
+  </section>
+
+  @if (store.loading()) {
+    <div class="reports-page__skeleton">
+      <l-skeleton height="96px" />
+      <l-skeleton height="280px" />
+    </div>
+  } @else {
+    @switch (store.view()) {
+      @case ('categories') {
+        <app-category-report />
+      }
+      @case ('trend') {
+        <app-trend-report />
+      }
+      @case ('compare') {
+        <app-compare-report />
+      }
+      @case ('year') {
+        <app-year-report />
+      }
+      @case ('accounts') {
+        <app-cash-flow-report />
+      }
+      @case ('payees') {
+        <app-payees-report />
+      }
+    }
+  }
+</div>

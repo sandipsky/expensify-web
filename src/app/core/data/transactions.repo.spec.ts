@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { NewTransaction } from '../models/transaction';
+import { toNewTransaction } from '../domain/transactions';
+import { NewTransaction, Transaction } from '../models/transaction';
 import { AccountsRepo } from './accounts.repo';
 import { LocalDb } from './local-db';
 import { TransactionsRepo } from './transactions.repo';
@@ -92,5 +93,95 @@ describe('TransactionsRepo', () => {
     expect(await dates(50)).toEqual(['2026-09-04', '2026-09-03', '2026-09-01']);
     expect(await dates(2)).toEqual(['2026-09-04', '2026-09-03']);
     expect((await repo.listByAccount(bank)).length).toBe(2);
+  });
+
+  const read = async (id: string) => (await firstValueFrom(repo.watch(id)))!;
+
+  it('watches a period by date, newest first, optionally a page at a time', async () => {
+    repo.add(expense(cash, '2026-08-31'));
+    repo.add(expense(cash, '2026-09-01'));
+    repo.add(expense(bank, '2026-09-15'));
+    repo.add(expense(cash, '2026-09-30'));
+    repo.add(expense(cash, '2026-10-01'));
+
+    const range = { start: '2026-09-01', end: '2026-09-30' };
+    const dates = async (limit?: number) =>
+      (await firstValueFrom(repo.watchRange(range, limit))).map((t) => t.date);
+    expect(await dates()).toEqual(['2026-09-30', '2026-09-15', '2026-09-01']);
+    expect(await dates(2)).toEqual(['2026-09-30', '2026-09-15']);
+    const recent = await firstValueFrom(repo.watchRecent(2));
+    expect(recent.map((t) => t.date)).toEqual(['2026-10-01', '2026-09-30']);
+  });
+
+  it('moves both accounts when an edit changes amount and account (US-03)', async () => {
+    const id = repo.add(expense(cash, '2026-09-26', 3000));
+    const before = await read(id);
+    expect(await balances()).toEqual({ Bank: 100000, Cash: 2000 });
+
+    repo.update(before, { ...toNewTransaction(before), amount: 4500, accountId: bank });
+
+    expect(await balances()).toEqual({ Bank: 95500, Cash: 5000 });
+    const after = await read(id);
+    expect(after).toMatchObject({ amount: 4500, accountId: bank, accountIds: [bank] });
+    expect(after.createdAt!.toMillis()).toBe(before.createdAt!.toMillis());
+  });
+
+  it('turns an expense into a transfer, updating every balance it touches (TXN-06)', async () => {
+    const id = repo.add(expense(bank, '2026-09-26', 1000));
+    const before = await read(id);
+    repo.update(before, {
+      ...toNewTransaction(before),
+      type: 'transfer',
+      categoryId: null,
+      toAccountId: cash,
+    });
+
+    // Bank: −1000 either way. Cash gains the transfer.
+    expect(await balances()).toEqual({ Bank: 99000, Cash: 6000 });
+    expect(await read(id)).toMatchObject({ categoryId: null, accountIds: [bank, cash] });
+  });
+
+  it('writes nothing when an edit changes nothing', async () => {
+    const id = repo.add(expense(cash, '2026-09-26'));
+    const before = await read(id);
+    repo.update(before, toNewTransaction(before));
+    expect((await read(id)).updatedAt!.toMillis()).toBe(before.updatedAt!.toMillis());
+  });
+
+  it('deletes with the balance effect reversed, and restores it all on Undo (TXN-07)', async () => {
+    const id = repo.add({
+      type: 'transfer',
+      amount: 20000,
+      currency: 'USD',
+      accountId: bank,
+      toAccountId: cash,
+      date: '2026-09-26',
+      tags: ['move'],
+    });
+    const tx = await read(id);
+
+    repo.delete(tx);
+    expect(await firstValueFrom(repo.watch(id))).toBeNull();
+    expect(await balances()).toEqual({ Bank: 100000, Cash: 5000 });
+
+    repo.restore([tx]);
+    expect(await read(id)).toMatchObject({ tags: ['move'], accountIds: [bank, cash] });
+    expect(await balances()).toEqual({ Bank: 80000, Cash: 25000 });
+  });
+
+  it('deletes and edits many transactions in one batch each (TXN-13)', async () => {
+    const ids = [
+      repo.add(expense(cash, '2026-09-24', 500)),
+      repo.add(expense(cash, '2026-09-25', 700)),
+      repo.add(expense(bank, '2026-09-26', 900)),
+    ];
+    const txs: Transaction[] = await Promise.all(ids.map(read));
+    expect(await balances()).toEqual({ Bank: 99100, Cash: 3800 });
+
+    repo.updateMany(txs.slice(0, 2).map((t) => ({ before: t, after: { ...t, accountId: bank } })));
+    expect(await balances()).toEqual({ Bank: 97900, Cash: 5000 });
+
+    repo.deleteMany(await Promise.all(ids.map(read)));
+    expect(await balances()).toEqual({ Bank: 100000, Cash: 5000 });
   });
 });

@@ -62,3 +62,60 @@
     transition: none;
   }
 }
+
+// With labels: taller tiles in wider columns, each icon on a tint of its own color.
+.l-icon-grid--labelled {
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+
+  .l-icon-tile {
+    --tile: var(--tile-color, var(--pick-color));
+
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+    height: auto;
+    min-height: 76px;
+    padding: 8px 2px 6px;
+
+    &.is-checked {
+      border-color: var(--tile);
+      background: color-mix(in srgb, var(--tile) 12%, transparent);
+      color: var(--text-primary);
+    }
+  }
+}
+
+.l-icon-tile__badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--tile) 12%, transparent);
+  color: var(--tile);
+  pointer-events: none;
+}
+
+// Two lines at most, so a long name doesn't stretch its row. 11px fits a word like
+// "Entertainment" on one line of an 80px tile.
+.l-icon-tile__label {
+  display: -webkit-box;
+  overflow: hidden;
+  max-width: 100%;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  overflow-wrap: break-word;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  pointer-events: none;
+
+  .is-checked & {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+}

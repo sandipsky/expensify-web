@@ -2,6 +2,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { BudgetsRepo } from '../../core/data/budgets.repo';
 import { CategoriesRepo, CategoryChanges } from '../../core/data/categories.repo';
+import { RecurringRepo } from '../../core/data/recurring.repo';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import {
   CategoryNode,
@@ -15,6 +16,7 @@ import {
 import { DEFAULT_CATEGORIES } from '../../core/domain/default-categories';
 import { Budget } from '../../core/models/budget';
 import { Category, CategoryInput, CategoryType } from '../../core/models/category';
+import { RecurringRule } from '../../core/models/recurring';
 import { Transaction } from '../../core/models/transaction';
 
 /** How the Categories page lists one type's categories. */
@@ -33,6 +35,13 @@ export interface CategoryUsage {
   categories: Category[];
   transactions: Transaction[];
   budgets: Budget[];
+  /** Recurring rules whose entries use them. */
+  rules: RecurringRule[];
+}
+
+/** Whether anything would point at the category once it's gone (CAT-06). */
+export function isUsed(usage: Pick<CategoryUsage, 'transactions' | 'budgets' | 'rules'>): boolean {
+  return usage.transactions.length > 0 || usage.budgets.length > 0 || usage.rules.length > 0;
 }
 
 /**
@@ -45,6 +54,7 @@ export class CategoriesStore {
   private readonly repo = inject(CategoriesRepo);
   private readonly transactions = inject(TransactionsRepo);
   private readonly budgets = inject(BudgetsRepo);
+  private readonly rules = inject(RecurringRepo);
 
   private readonly _all = toSignal(this.repo.watchAll());
 
@@ -170,13 +180,19 @@ export class CategoriesStore {
   /** What uses the category or its subcategories (CAT-06). */
   async usage(category: Category): Promise<CategoryUsage> {
     const categories = [category, ...this.subcategories(category)];
-    const [transactions, budgets] = await Promise.all([
+    const [transactions, budgets, rules] = await Promise.all([
       Promise.all(categories.map((c) => this.transactions.listByCategory(c.id))),
       Promise.all(categories.map((c) => this.budgets.listByCategory(c.id))),
+      Promise.all(categories.map((c) => this.rules.listByCategory(c.id))),
     ]);
     // A budget can name the parent and a subcategory both.
     const uniqueBudgets = new Map(budgets.flat().map((b) => [b.id, b]));
-    return { categories, transactions: transactions.flat(), budgets: [...uniqueBudgets.values()] };
+    return {
+      categories,
+      transactions: transactions.flat(),
+      budgets: [...uniqueBudgets.values()],
+      rules: rules.flat(),
+    };
   }
 
   /**
@@ -189,14 +205,19 @@ export class CategoriesStore {
     if (category.isSystem) throw new Error("System categories can't be deleted.");
     const usage = await this.usage(category);
     const ids = usage.categories.map((c) => c.id);
-    const used = usage.transactions.length > 0 || usage.budgets.length > 0;
+    const used = isUsed(usage);
     if (used && (!replacementId || ids.includes(replacementId))) {
       throw new Error('A used category needs a replacement before it can be deleted.');
     }
     this.repo.delete(
       ids,
       used && replacementId
-        ? { replacementId, transactions: usage.transactions, budgets: usage.budgets }
+        ? {
+            replacementId,
+            transactions: usage.transactions,
+            budgets: usage.budgets,
+            rules: usage.rules,
+          }
         : undefined,
     );
     return usage;

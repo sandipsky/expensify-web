@@ -18,7 +18,7 @@ function usageMessage(category: Category, usage: CategoryUsage): string {
   const what = subs
     ? `${category.name} and its ${countOf(subs, 'subcategory', 'subcategories')}`
     : category.name;
-  const one = usage.transactions.length + usage.budgets.length === 1;
+  const one = usage.transactions.length + usage.budgets.length + usage.rules.length === 1;
   return `${usageSummary(usage)} ${one ? 'uses' : 'use'} ${what}. Choose where ${one ? 'it goes' : 'they go'}, then delete.`;
 }
 

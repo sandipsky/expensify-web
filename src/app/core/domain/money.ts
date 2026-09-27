@@ -57,6 +57,26 @@ export function currencySymbol(currency: string, locale: string): string {
 }
 
 /**
+ * Minor units as short currency for chart axes and captions ("Rs 12K", "$1.2M"),
+ * in the locale's compact notation, at most one decimal (BR-11: display only).
+ */
+export function formatCompactMoney(
+  minor: number,
+  currency: string,
+  locale: string,
+  signDisplay: 'auto' | 'exceptZero' = 'auto',
+): string {
+  return formatter(locale, {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+    signDisplay,
+  }).format(minor / 10 ** fractionDigits(currency));
+}
+
+/**
  * Formats minor units as currency for the user's locale. Division happens only
  * here, for display (BR-11). `signDisplay: 'exceptZero'` gives the +/− that
  * income and expense need alongside color (NFR-09). Uses the short symbol, so

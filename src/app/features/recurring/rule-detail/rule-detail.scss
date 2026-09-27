@@ -1,0 +1,127 @@
+.rule-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.rule-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.rule-page__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+
+  h1 {
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 28px;
+  }
+}
+
+.rule-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.rule-page__actions,
+.rule-due__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rule-due {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.rule-due__more {
+  color: var(--text-tertiary);
+}
+
+// Label on the left, value on the right, one fact per row.
+.rule-facts {
+  display: flex;
+  flex-direction: column;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 16px;
+    min-height: 40px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--separator-light);
+  }
+
+  dt {
+    color: var(--text-tertiary);
+  }
+
+  dd {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+  }
+}
+
+.rule-page__subhead {
+  margin: 16px 0 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rule-next {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  color: var(--text-primary);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.rule-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.rule-history {
+  list-style: none;
+}
+
+// Rows draw their own bottom border; the card edge replaces the last one.
+.rule-history li:last-child app-transaction-row {
+  border-bottom: 0;
+}
+
+.rule-history__footer {
+  display: flex;
+  justify-content: center;
+}

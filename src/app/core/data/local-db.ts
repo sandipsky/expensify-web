@@ -4,7 +4,7 @@ import { TimestampLike } from '../models/timestamp';
 
 /*
  * Stand-in for Cloud Firestore until the Firebase SDK and sign-in land (M0). It keeps
- * Firestore's document paths and write semantics (atomic batches, increment(),
+ * Firestore's document paths and write semantics (atomic batches, transactions, increment(),
  * serverTimestamp(), auto IDs, undefined fields ignored) and persists to
  * localStorage, so the repos built on it can switch to the modular SDK without
  * their callers changing. Nothing syncs: the data stays in this browser.
@@ -94,6 +94,44 @@ export class LocalBatch {
   }
 }
 
+/**
+ * Like Firestore's `Transaction`: reads see the latest data, and the writes
+ * apply together only if nothing read changed in the meantime; otherwise
+ * `runTransaction` runs the function again. Unlike Firestore's, it also works
+ * offline, since everything here is local.
+ */
+export class LocalTransaction {
+  /** What each read saw, to detect a concurrent change before committing. */
+  readonly reads = new Map<string, LocalDoc | null>();
+  readonly writes: Write[] = [];
+
+  constructor(private readonly docs: () => ReadonlyMap<string, LocalDoc>) {}
+
+  get(path: string): Promise<LocalDoc | null> {
+    const doc = this.docs().get(path) ?? null;
+    if (!this.reads.has(path)) this.reads.set(path, doc);
+    return Promise.resolve(doc);
+  }
+
+  set(path: string, data: DocData): this {
+    this.writes.push({ kind: 'set', path, data });
+    return this;
+  }
+
+  update(path: string, data: DocData): this {
+    this.writes.push({ kind: 'update', path, data });
+    return this;
+  }
+
+  delete(path: string): this {
+    this.writes.push({ kind: 'delete', path });
+    return this;
+  }
+}
+
+/** Like Firestore's default: give up after this many runs that kept seeing changes. */
+const TRANSACTION_ATTEMPTS = 5;
+
 const STORAGE_KEY = 'expensify.local-db.v1';
 const ID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
@@ -121,11 +159,41 @@ export class LocalDb {
     return new LocalBatch((writes) => this.apply(writes));
   }
 
+  /**
+   * Like Firestore's `runTransaction`: runs `update`, then applies its writes
+   * at once, unless a document it read changed while it ran, in which case it
+   * runs again. Resolves to what `update` returned; rejects, applying nothing,
+   * if `update` throws or an update targets a missing document.
+   */
+  async runTransaction<T>(update: (tx: LocalTransaction) => Promise<T>): Promise<T> {
+    for (let attempt = 1; ; attempt++) {
+      const tx = new LocalTransaction(() => this.docs$.value);
+      const result = await update(tx);
+      const current = this.docs$.value;
+      const changed = [...tx.reads].some(([path, doc]) => (current.get(path) ?? null) !== doc);
+      if (!changed) {
+        if (tx.writes.length) this.apply(tx.writes);
+        return result;
+      }
+      if (attempt >= TRANSACTION_ATTEMPTS) {
+        throw new Error('Transaction failed: the documents it read kept changing.');
+      }
+    }
+  }
+
   /** Live query over one collection, like `onSnapshot`. Emits again only when the result changes. */
   watch(collectionPath: string, query: LocalQuery = {}): Observable<LocalDoc[]> {
     return this.docs$.pipe(
       map((docs) => runQuery(docs, collectionPath, query)),
       distinctUntilChanged((a, b) => a.length === b.length && a.every((doc, i) => doc === b[i])),
+    );
+  }
+
+  /** Live view of one document, like `onSnapshot` on a doc; `null` while it doesn't exist. */
+  watchDoc(path: string): Observable<LocalDoc | null> {
+    return this.docs$.pipe(
+      map((docs) => docs.get(path) ?? null),
+      distinctUntilChanged(),
     );
   }
 
@@ -149,11 +217,13 @@ export class LocalDb {
       const data: DocData = write.kind === 'update' ? { ...existing } : {};
       for (const [field, value] of Object.entries(write.data)) {
         if (value === undefined) continue;
+        // An update's `a.b` names a nested field, as in Firestore; a set's keys are plain names.
+        const path = write.kind === 'update' ? field.split('.') : [field];
         if (value instanceof Increment) {
-          const previous = existing?.[field];
-          data[field] = (typeof previous === 'number' ? previous : 0) + value.by;
+          const previous = valueAt(existing, path);
+          setAt(data, path, (typeof previous === 'number' ? previous : 0) + value.by);
         } else {
-          data[field] = value === SERVER_TIMESTAMP ? now : value;
+          setAt(data, path, value === SERVER_TIMESTAMP ? now : value);
         }
       }
       next.set(write.path, { id: idOf(write.path), data });
@@ -167,6 +237,32 @@ function idOf(path: string): string {
   return path.slice(path.lastIndexOf('/') + 1);
 }
 
+/** The value at a field path such as `['template', 'categoryId']`, or undefined. */
+function valueAt(data: Readonly<DocData> | undefined, path: readonly string[]): unknown {
+  let value: unknown = data;
+  for (const key of path) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+    value = (value as DocData)[key];
+  }
+  return value;
+}
+
+/** Sets a field path in `data`, copying the maps along it so stored documents stay unchanged. */
+function setAt(data: DocData, path: readonly string[], value: unknown): void {
+  const [key, ...rest] = path;
+  if (!rest.length) {
+    data[key] = value;
+    return;
+  }
+  const current = data[key];
+  const child: DocData =
+    current && typeof current === 'object' && !Array.isArray(current)
+      ? { ...(current as DocData) }
+      : {};
+  setAt(child, rest, value);
+  data[key] = child;
+}
+
 function runQuery(
   docs: ReadonlyMap<string, LocalDoc>,
   collectionPath: string,
@@ -177,8 +273,10 @@ function runQuery(
   for (const [path, doc] of docs) {
     if (path.startsWith(prefix) && !path.includes('/', prefix.length)) rows.push(doc);
   }
+  // Fields may be paths into maps, such as `template.categoryId`, as in Firestore.
+  const at = (doc: LocalDoc, field: string) => valueAt(doc.data, field.split('.'));
   for (const [field, op, value] of query.where ?? []) {
-    rows = rows.filter((doc) => matches(doc.data[field], op, value));
+    rows = rows.filter((doc) => matches(at(doc, field), op, value));
   }
   const orderBy = query.orderBy ?? [];
   if (orderBy.length) {
@@ -186,7 +284,7 @@ function runQuery(
     const tieDirection = orderBy[orderBy.length - 1][1];
     rows.sort((a, b) => {
       for (const [field, direction] of orderBy) {
-        const c = compare(a.data[field], b.data[field]);
+        const c = compare(at(a, field), at(b, field));
         if (c) return direction === 'desc' ? -c : c;
       }
       const c = compare(a.id, b.id);

@@ -1,0 +1,269 @@
+.tx-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.tx-page__header,
+.tx-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.tx-page__header {
+  justify-content: space-between;
+}
+
+// Period, search, filters and chips.
+.tx-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tx-toolbar__period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.tx-toolbar__preset {
+  flex: 1 1 160px;
+}
+
+.tx-toolbar__label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.tx-toolbar__custom {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  gap: 12px;
+}
+
+.tx-toolbar__search {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.tx-toolbar__search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-toolbar__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text-white);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+}
+
+// Income, expense and net of what's shown (LST-03).
+.tx-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tx-totals__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+
+  dt {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 16px;
+  }
+
+  dd {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 24px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.tx-totals__note {
+  margin-top: 8px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Selection bar (TXN-13): stays in view at the top while scrolling.
+.tx-bulk {
+  position: sticky;
+  top: calc(-1 * var(--l-layout-content-padding, 16px));
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  background: var(--accent-bg);
+}
+
+.tx-bulk__select {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tx-bulk__count {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-bulk__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// A day's net, in the day header and the table's group rows.
+.tx-amount {
+  flex-shrink: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// Phone and tablet: day headers, exactly 40px for the virtual list (rows are 64px).
+.tx-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--separator-light);
+  background: var(--bg-light);
+}
+
+.tx-day__label {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tx-day__net {
+  font-size: 12px;
+}
+
+// Desktop table cells: one line each, as the virtual table needs.
+.tx-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tx-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.tx-cell__open {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.tx-cell__extra {
+  min-width: 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+// Income green, expense red, always beside a sign and an icon (NFR-09).
+.tx-totals__item dd,
+.tx-amount {
+  &.is-income {
+    color: var(--success);
+  }
+
+  &.is-expense {
+    color: var(--error);
+  }
+}
+
+.tx-footer {
+  display: flex;
+  justify-content: center;
+}
+
+// Phones: one line per figure, label left and amount right, so nothing truncates.
+@media (max-width: 599.98px) {
+  .tx-totals {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .tx-totals__item {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    dt {
+      font-size: 14px;
+    }
+  }
+}

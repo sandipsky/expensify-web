@@ -1,0 +1,90 @@
+@if (tableToggle()) {
+  <div class="l-chart__top">
+    <l-chart-toggle class="l-chart__toggle" [(pressed)]="showTable" />
+  </div>
+}
+
+@if (showTable()) {
+  <l-chart-table
+    [caption]="label()"
+    [columns]="['Amount', 'Share']"
+    [rows]="_tableRows()"
+    [clickable]="clickable()"
+    (rowClick)="_onRowClick($event)"
+  />
+} @else {
+  <div class="l-donut-chart__body">
+    <div class="l-donut-chart__ring" [style.width.px]="size()">
+      <svg
+        [attr.viewBox]="'0 0 ' + size() + ' ' + size()"
+        [attr.width]="size()"
+        [attr.height]="size()"
+        [attr.role]="clickable() ? 'group' : 'img'"
+        [attr.aria-label]="label()"
+        (mouseleave)="_hover.set(null)"
+      >
+        @for (arc of _arcs(); track arc.segment.key) {
+          <path
+            class="l-donut-chart__arc"
+            fill-rule="evenodd"
+            [attr.d]="arc.path"
+            [style.fill]="arc.segment.color"
+            [class.is-dim]="_emphasis() !== null && _emphasis() !== arc.segment.key"
+            [attr.role]="clickable() ? 'button' : null"
+            [attr.tabindex]="clickable() ? 0 : null"
+            [attr.aria-label]="arc.aria"
+            [attr.aria-current]="arc.segment.key === selected() ? 'true' : null"
+            [attr.aria-describedby]="_tip()?.arc === arc ? _tipId : null"
+            (click)="_activate(arc.segment)"
+            (keydown.enter)="_activate(arc.segment, $event)"
+            (keydown.space)="_activate(arc.segment, $event)"
+            (keydown.escape)="_hideTip()"
+            (mouseenter)="_hover.set(arc.segment.key)"
+            (focus)="_focus.set(arc.segment.key)"
+            (blur)="_focus.set(null)"
+          />
+        } @empty {
+          <circle
+            class="l-donut-chart__track"
+            [attr.cx]="size() / 2"
+            [attr.cy]="size() / 2"
+            [attr.r]="size() / 2 - thickness() / 2"
+            [attr.stroke-width]="thickness()"
+          />
+        }
+      </svg>
+
+      <div class="l-donut-chart__center" [style.width.%]="_holePct()">
+        <ng-content />
+      </div>
+
+      @if (_tip(); as tip) {
+        <l-chart-tip
+          [id]="_tipId"
+          [rows]="tip.rows"
+          [note]="tip.note"
+          [style.left.%]="tip.arc.tip.left"
+          [style.top.%]="tip.arc.tip.top"
+          [style.translate]="tip.arc.tip.shift"
+        />
+      }
+    </div>
+
+    @if (legend() && _arcs().length) {
+      <ul class="l-donut-chart__legend">
+        @for (arc of _arcs(); track arc.segment.key) {
+          <li
+            [class.is-on]="_emphasis() === arc.segment.key"
+            (mouseenter)="_hover.set(arc.segment.key)"
+            (mouseleave)="_hover.set(null)"
+          >
+            <span class="l-chart__swatch" [style.background]="arc.segment.color"></span>
+            <span class="l-donut-chart__name">{{ arc.segment.label }}</span>
+            <span class="l-donut-chart__num">{{ arc.text }}</span>
+            <span class="l-donut-chart__num">{{ arc.share }}%</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

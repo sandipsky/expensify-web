@@ -1,0 +1,325 @@
+<div class="tx-page">
+  <div class="tx-page__header">
+    <l-breadcrumb title="Transactions" />
+    <div class="tx-page__actions">
+      @if (!list.selecting() && list.visible().length) {
+        <l-button variant="outlined" size="lg" (click)="list.startSelecting()">
+          <l-icon name="checklist" color="inherit" />
+          Select
+        </l-button>
+      }
+    </div>
+  </div>
+
+  <section class="tx-toolbar" aria-label="Period and filters">
+    <div class="tx-toolbar__period">
+      @if (breakpoints.phone()) {
+        <l-select
+          class="tx-toolbar__preset"
+          ariaLabel="Period"
+          bindValue="value"
+          bindLabel="label"
+          [items]="periodOptions"
+          [useValidation]="false"
+          [ngModel]="list.preset()"
+          (ngModelChange)="setPreset($event)"
+        />
+      } @else {
+        <l-segmented-control
+          aria-label="Period"
+          size="lg"
+          [options]="periodOptions"
+          [ngModel]="list.preset()"
+          (ngModelChange)="setPreset($event)"
+        />
+      }
+      <p class="tx-toolbar__label" aria-live="polite">{{ periodLabel() }}</p>
+    </div>
+
+    @if (list.preset() === 'custom') {
+      <div class="tx-toolbar__custom">
+        <l-date-input
+          label="From"
+          calendar="ad"
+          [clearable]="false"
+          [useValidation]="false"
+          [ngModel]="customStart()"
+          (ngModelChange)="setCustomDate('start', $event)"
+        />
+        <l-date-input
+          label="To"
+          calendar="ad"
+          [clearable]="false"
+          [useValidation]="false"
+          [ngModel]="customEnd()"
+          (ngModelChange)="setCustomDate('end', $event)"
+        />
+      </div>
+    }
+
+    <div class="tx-toolbar__search">
+      <l-text-input
+        class="tx-toolbar__search-input"
+        ariaLabel="Search transactions"
+        placeholder="Search payee, note or tag"
+        [useValidation]="false"
+        [ngModel]="list.filter().search"
+        (ngModelChange)="list.setSearch($event)"
+      />
+      <l-button variant="outlined" size="lg" (click)="openFilters()">
+        <l-icon name="filter_list" color="inherit" />
+        Filters
+        @if (list.filterCount()) {
+          <span class="tx-toolbar__count">{{ list.filterCount() }}</span>
+          <span class="visually-hidden">set</span>
+        }
+      </l-button>
+    </div>
+
+    @if (chips().length) {
+      <ul class="tx-chips" aria-label="Active filters">
+        @for (chip of chips(); track chip.key) {
+          <li>
+            <l-chip
+              variant="primary"
+              [removable]="true"
+              [removeLabel]="'Remove filter ' + chip.label"
+              (removed)="chip.remove()"
+            >
+              {{ chip.label }}
+            </l-chip>
+          </li>
+        }
+        <li>
+          <l-button variant="ghost" size="sm" (click)="list.clearFilters()">Clear all</l-button>
+        </li>
+      </ul>
+    }
+  </section>
+
+  @if (list.loading()) {
+    <l-skeleton height="84px" />
+    <l-skeleton height="320px" />
+  } @else {
+    <l-card padding="lg">
+      <dl class="tx-totals">
+        <div class="tx-totals__item">
+          <dt>
+            <l-icon name="south_west" [size]="16" color="var(--success)" />
+            Income
+          </dt>
+          <dd class="is-income">{{ list.totals().income | money: currency() : 'exceptZero' }}</dd>
+        </div>
+        <div class="tx-totals__item">
+          <dt>
+            <l-icon name="north_east" [size]="16" color="var(--error)" />
+            Expense
+          </dt>
+          <dd class="is-expense">
+            {{ -list.totals().expense | money: currency() : 'exceptZero' }}
+          </dd>
+        </div>
+        <div class="tx-totals__item">
+          <dt>Net</dt>
+          <dd [class.is-income]="list.totals().net > 0" [class.is-expense]="list.totals().net < 0">
+            {{ list.totals().net | money: currency() : 'exceptZero' }}
+          </dd>
+        </div>
+      </dl>
+      @if (list.hasMore()) {
+        <p class="tx-totals__note">
+          These totals cover the {{ list.loaded().length }} entries loaded so far. Load more for the
+          rest of the period.
+        </p>
+      }
+    </l-card>
+
+    @if (list.selecting()) {
+      <div class="tx-bulk" role="region" aria-label="Selection">
+        <div class="tx-bulk__select">
+          <l-checkbox
+            label="Select all"
+            [useValidation]="false"
+            [ngModel]="list.allSelected()"
+            (ngModelChange)="list.toggleAll()"
+          />
+          <span class="tx-bulk__count" aria-live="polite"
+            >{{ list.selected().length }} selected</span
+          >
+        </div>
+        <div class="tx-bulk__actions">
+          <l-button
+            variant="outlined"
+            size="lg"
+            [disabled]="!list.selected().length"
+            (click)="bulk('recategorize')"
+          >
+            <l-icon name="category" color="inherit" />
+            Recategorize
+          </l-button>
+          <l-button
+            variant="outlined"
+            size="lg"
+            [disabled]="!list.selected().length"
+            (click)="bulk('move')"
+          >
+            <l-icon name="drive_file_move" color="inherit" />
+            Move
+          </l-button>
+          <l-button
+            variant="danger"
+            size="lg"
+            [disabled]="!list.selected().length"
+            (click)="bulk('delete')"
+          >
+            <l-icon name="delete" color="inherit" />
+            Delete
+          </l-button>
+          <l-button variant="ghost" size="lg" (click)="list.stopSelecting()">Done</l-button>
+        </div>
+      </div>
+    }
+
+    <l-card [flush]="true">
+      @if (!list.visible().length) {
+        @if (list.filtering()) {
+          <app-empty-state
+            icon="search_off"
+            title="No matches"
+            [message]="'Nothing in ' + periodLabel() + ' matches your search and filters.'"
+          >
+            <l-button size="lg" (click)="list.clearFilters()">Clear search and filters</l-button>
+          </app-empty-state>
+        } @else {
+          <app-empty-state
+            icon="receipt_long"
+            [title]="'No transactions in ' + periodLabel()"
+            message="Log an expense, income or transfer and it shows up here."
+          >
+            <l-button size="lg" (click)="add()">Add transaction</l-button>
+            @if (list.preset() !== 'this_month') {
+              <l-button variant="outlined" size="lg" (click)="list.setPreset('this_month')">
+                Show this month
+              </l-button>
+            }
+          </app-empty-state>
+        }
+      } @else if (breakpoints.desktop()) {
+        <l-table
+          rowKey="id"
+          groupBy="date"
+          [columns]="columns()"
+          [data]="list.visibleRows()"
+          [virtualScroll]="true"
+          [rowHeight]="rowHeight"
+          [groupRowHeight]="36"
+          [rowSelected]="isSelected"
+          (rowClick)="open($event)"
+        >
+          <ng-template lTableGroup let-date>
+            @if (dayOf(date); as day) {
+              <span class="tx-group">
+                <span>{{ day.label }}</span>
+                <span
+                  class="tx-amount"
+                  [class.is-income]="day.net > 0"
+                  [class.is-expense]="day.net < 0"
+                >
+                  <span class="visually-hidden">Net</span>
+                  {{ day.net | money: currency() : 'exceptZero' }}
+                </span>
+              </span>
+            }
+          </ng-template>
+          <ng-template lTableCell="select" let-row>
+            <l-checkbox
+              [ariaLabel]="'Select ' + row.title + ', ' + row.dateLabel"
+              [useValidation]="false"
+              [ngModel]="list.isSelected(row.id)"
+              (ngModelChange)="list.toggle(row.id)"
+              (click)="$event.stopPropagation()"
+            />
+          </ng-template>
+          <ng-template lTableCell="date" let-row>{{ row.dateLabel }}</ng-template>
+          <ng-template lTableCell="title" let-row>
+            <span class="tx-cell">
+              <app-symbol-icon
+                [icon]="row.icon"
+                [color]="row.color ?? 'var(--text-tertiary)'"
+                [size]="28"
+              />
+              <button
+                type="button"
+                class="tx-cell__open text-ellipsis"
+                (click)="$event.stopPropagation(); open(row)"
+              >
+                {{ row.title }}
+              </button>
+              @if (row.upcoming) {
+                <l-chip size="sm" variant="info">Upcoming</l-chip>
+              }
+              @if (row.pending) {
+                <l-icon name="schedule" [size]="14" />
+                <span class="visually-hidden">Not synced yet</span>
+              }
+              @if (row.tx.tags.length || row.tx.note) {
+                <span class="tx-cell__extra text-ellipsis">
+                  {{ row.tx.note }}
+                  @for (tag of row.tx.tags; track tag) {
+                    #{{ tag }}
+                  }
+                </span>
+              }
+            </span>
+          </ng-template>
+          <ng-template lTableCell="categoryLabel" let-row>
+            <span class="text-ellipsis">{{ row.categoryLabel }}</span>
+          </ng-template>
+          <ng-template lTableCell="accountLabel" let-row>
+            <span class="text-ellipsis">{{ row.accountLabel }}</span>
+          </ng-template>
+          <ng-template lTableCell="amount" let-row>
+            <app-tx-amount [row]="row" />
+          </ng-template>
+        </l-table>
+      } @else {
+        <l-virtual-list
+          [items]="items()"
+          [itemSize]="itemSize"
+          [trackBy]="itemKey"
+          (endReached)="list.loadMore()"
+        >
+          <ng-template lVirtualItem let-item>
+            @if (item.kind === 'day') {
+              <div class="tx-day">
+                <h2 class="tx-day__label">{{ item.day.label }}</h2>
+                <span
+                  class="tx-amount tx-day__net"
+                  [class.is-income]="item.day.net > 0"
+                  [class.is-expense]="item.day.net < 0"
+                >
+                  <span class="visually-hidden">Net</span>
+                  {{ item.day.net | money: currency() : 'exceptZero' }}
+                </span>
+              </div>
+            } @else {
+              <app-transaction-row
+                [row]="item.row"
+                [selecting]="list.selecting()"
+                [selected]="list.isSelected(item.row.id)"
+                (open)="open(item.row)"
+                (toggle)="list.toggle(item.row.id)"
+              />
+            }
+          </ng-template>
+        </l-virtual-list>
+      }
+
+      @if (list.hasMore()) {
+        <div card-footer class="tx-footer">
+          <l-button variant="outlined" size="lg" (click)="list.loadMore()">Load more</l-button>
+        </div>
+      }
+    </l-card>
+  }
+</div>

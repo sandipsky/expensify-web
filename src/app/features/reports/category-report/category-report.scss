@@ -1,0 +1,38 @@
+// The donut beside the list on wide screens, above it on phones.
+.category-report {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px 32px;
+}
+
+.category-report__donut {
+  flex: 0 0 auto;
+  margin: 0 auto;
+}
+
+.category-report__total {
+  display: block;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.category-report__caption {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.category-report__list {
+  flex: 1 1 320px;
+  min-width: 0;
+  margin: 0 -16px;
+  list-style: none;
+
+  li + li {
+    border-top: 1px solid var(--separator-light);
+  }
+}

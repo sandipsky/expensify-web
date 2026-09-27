@@ -1,0 +1,109 @@
+@if (series().length >= 2 || tableToggle()) {
+  <div class="l-chart__top">
+    @if (series().length >= 2) {
+      <ul class="l-chart__legend">
+        @for (s of series(); track s.key) {
+          <li><span class="l-chart__swatch" [style.background]="s.color"></span>{{ s.label }}</li>
+        }
+      </ul>
+    }
+    @if (tableToggle()) {
+      <l-chart-toggle class="l-chart__toggle" [(pressed)]="showTable" />
+    }
+  </div>
+}
+
+@if (showTable() && tableToggle()) {
+  <l-chart-table
+    [caption]="label()"
+    [columns]="_columns()"
+    [rows]="_tableRows()"
+    [clickable]="clickable()"
+    (rowClick)="_onRowClick($event)"
+  />
+} @else {
+  <div class="l-bar-chart__frame" [style.--l-bar-chart-h]="height() + 'px'">
+    @if (_rows().length) {
+      <div class="l-bar-chart__axis" aria-hidden="true">
+        @for (tick of _ticks(); track $index) {
+          <span>{{ _tickFormat()(tick) }}</span>
+        }
+      </div>
+    }
+    <div
+      class="l-bar-chart__plot"
+      [attr.role]="clickable() ? 'group' : 'img'"
+      [attr.aria-label]="label()"
+      (mouseleave)="_hover.set(null)"
+    >
+      @if (_rows().length) {
+        <div class="l-bar-chart__grid" aria-hidden="true">
+          @for (tick of _ticks(); track $index) {
+            <span></span>
+          }
+        </div>
+      }
+      <div class="l-bar-chart__groups" [class.is-dense]="_rows().length > 6">
+        @for (row of _rows(); track row.group.key; let i = $index) {
+          @if (clickable()) {
+            <button
+              type="button"
+              class="l-bar-chart__group"
+              [class.is-active]="_tip()?.index === i"
+              [class.is-selected]="row.group.key === selected()"
+              [attr.aria-label]="row.aria"
+              [attr.aria-current]="row.group.key === selected() ? 'true' : null"
+              [attr.aria-describedby]="_tip()?.index === i ? _tipId : null"
+              (click)="_onClick(row.group)"
+              (mouseenter)="_hover.set(i)"
+              (focus)="_focus.set(i)"
+              (blur)="_focus.set(null)"
+              (keydown.escape)="_hideTip()"
+            >
+              <ng-container *ngTemplateOutlet="column; context: { $implicit: row }" />
+            </button>
+          } @else {
+            <div
+              class="l-bar-chart__group"
+              [class.is-active]="_tip()?.index === i"
+              [class.is-selected]="row.group.key === selected()"
+              [attr.aria-current]="row.group.key === selected() ? 'true' : null"
+              (mouseenter)="_hover.set(i)"
+            >
+              <ng-container *ngTemplateOutlet="column; context: { $implicit: row }" />
+            </div>
+          }
+        }
+      </div>
+
+      @if (_tip(); as tip) {
+        <l-chart-tip
+          class="l-bar-chart__tip"
+          [id]="_tipId"
+          [heading]="tip.row.name"
+          [rows]="tip.row.bars"
+          [style.left]="tip.left"
+          [style.right]="tip.right"
+          [style.max-width]="tip.maxWidth"
+          [style.translate]="tip.shift"
+        />
+      }
+    </div>
+  </div>
+}
+
+<ng-template #column let-row>
+  <span class="l-bar-chart__bars">
+    @for (bar of row.bars; track bar.key) {
+      <span
+        class="l-bar-chart__bar"
+        [style.height.%]="bar.pct"
+        [style.background]="bar.color"
+      ></span>
+    }
+  </span>
+  <span class="l-bar-chart__label">{{ row.group.label }}</span>
+  @if (row.group.caption) {
+    <span class="l-bar-chart__caption">{{ row.group.caption }}</span>
+  }
+</ng-template>

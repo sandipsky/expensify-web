@@ -38,9 +38,34 @@
   }
 }
 
+// How many items wait, such as recurring entries to confirm.
+.app-nav__count {
+  min-width: 20px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text-white);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
 // The collapsed desktop rail is 70px wide: icons only.
 .app-nav.is-collapsed {
+  .app-nav__count {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    min-width: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+
   .app-nav__link {
+    position: relative;
     justify-content: center;
     padding: 0;
   }
@@ -52,4 +77,56 @@
     overflow: hidden;
     clip-path: inset(50%);
   }
+}
+
+.app-header {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-header__key {
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+}
+
+// Phones: the + button of TXN-05, above the content and below sheets and the nav drawer.
+.app-fab {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-white);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-dark) 35%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--accent-bg);
+    outline-offset: 2px;
+  }
+}
+
+.app-fab-space {
+  height: 72px;
 }

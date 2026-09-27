@@ -1,9 +1,11 @@
 import {
   ApplicationRef,
+  computed,
   createComponent,
   EnvironmentInjector,
   inject,
   Injectable,
+  signal,
   Injector,
   TemplateRef,
   Type,
@@ -24,6 +26,10 @@ export class ModalService {
   private readonly appRef = inject(ApplicationRef);
   private readonly injector = inject(Injector);
   private readonly envInjector = inject(EnvironmentInjector);
+
+  private readonly _openCount = signal(0);
+  /** Whether any modal is open, e.g. to hold off page-level keyboard shortcuts. */
+  readonly hasOpen = computed(() => this._openCount() > 0);
 
   private readonly openModals: ModalRef[] = [];
 
@@ -49,6 +55,7 @@ export class ModalService {
     document.body.appendChild(containerRef.location.nativeElement);
 
     this.openModals.push(modalRef);
+    this._openCount.set(this.openModals.length);
     this.lockBodyScroll();
 
     modalRef.afterClosed().subscribe(() => this.dispose(modalRef));
@@ -67,6 +74,7 @@ export class ModalService {
       return;
     }
     this.openModals.splice(index, 1);
+    this._openCount.set(this.openModals.length);
 
     const containerRef = modalRef._containerRef;
     if (containerRef) {

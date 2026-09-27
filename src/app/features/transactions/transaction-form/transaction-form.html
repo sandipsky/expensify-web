@@ -1,0 +1,190 @@
+<div class="sheet-form">
+  <div class="tx-form__header">
+    <h2 class="sheet-form__title">{{ title }}</h2>
+    @if (original) {
+      <l-menu mode="right">
+        <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+          <l-icon name="more_vert" color="inherit" />
+          <span class="visually-hidden">More actions</span>
+        </l-button>
+        <button type="button" dropdown-item (click)="duplicate()">
+          <l-icon name="content_copy" [size]="18" />Duplicate
+        </button>
+        @if (original.recurringRuleId; as ruleId) {
+          <button type="button" dropdown-item (click)="openRule(ruleId)">
+            <l-icon name="event_repeat" [size]="18" />Open recurring rule
+          </button>
+        } @else {
+          <button type="button" dropdown-item (click)="makeRecurring()">
+            <l-icon name="event_repeat" [size]="18" />Make recurring
+          </button>
+        }
+        <button type="button" dropdown-item class="danger" (click)="delete()">
+          <l-icon name="delete" [size]="18" color="inherit" />Delete
+        </button>
+      </l-menu>
+    }
+  </div>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    <l-segmented-control
+      formControlName="type"
+      aria-label="Type"
+      size="lg"
+      [options]="typeOptions"
+      [fullWidth]="true"
+    />
+
+    <div class="sheet-form__field">
+      <l-number-input
+        class="tx-form__amount"
+        formControlName="amount"
+        label="Amount"
+        placeholder="0"
+        [prefix]="symbol"
+        [decimalPlaces]="decimalPlaces"
+        [allowExpressions]="true"
+        (enter)="save()"
+      />
+      @if (!breakpoints.phone()) {
+        <p class="sheet-form__hint">You can type a sum, such as 120+45.</p>
+      }
+    </div>
+
+    @if (!hasAccounts()) {
+      <p class="alert warn">Add an account on the Accounts page first; entries need one.</p>
+    }
+
+    @if (type() === 'transfer') {
+      <l-select
+        label="From account"
+        formControlName="accountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+      <l-select
+        label="To account"
+        formControlName="toAccountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+    } @else {
+      <div class="sheet-form__field">
+        @if (categoryOptions().length) {
+          <l-icon-picker
+            label="Category"
+            formControlName="categoryId"
+            [showLabels]="true"
+            [options]="visibleCategories()"
+          />
+          @if (hiddenCategories() || suggestedFrom()) {
+            <div class="tx-form__category-footer">
+              @if (suggestedFrom()) {
+                <p class="sheet-form__hint">
+                  Picked from your last entry for {{ suggestedFrom() }}.
+                </p>
+              }
+              @if (hiddenCategories()) {
+                <l-button variant="ghost" size="lg" (click)="showAllCategories.set(true)">
+                  Show all {{ categoryOptions().length }} categories
+                </l-button>
+              }
+            </div>
+          }
+        } @else {
+          <div class="alert info tx-form__no-categories">
+            <span>No {{ type() }} categories yet.</span>
+            <l-button variant="outlined-primary" size="lg" (click)="seedCategories()">
+              Add default categories
+            </l-button>
+          </div>
+        }
+      </div>
+
+      <l-select
+        label="Account"
+        formControlName="accountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+    }
+
+    <div class="sheet-form__field">
+      <div class="tx-form__date">
+        <l-date-input
+          class="tx-form__date-input"
+          label="Date"
+          formControlName="date"
+          calendar="ad"
+          [clearable]="false"
+        />
+        <div class="tx-form__date-chips" role="group" aria-label="Quick dates">
+          <l-button
+            size="lg"
+            [variant]="isToday() ? 'outlined-primary' : 'outlined'"
+            [attr.aria-pressed]="isToday()"
+            (click)="setDaysAgo(0)"
+          >
+            Today
+          </l-button>
+          <l-button
+            size="lg"
+            [variant]="isYesterday() ? 'outlined-primary' : 'outlined'"
+            [attr.aria-pressed]="isYesterday()"
+            (click)="setDaysAgo(1)"
+          >
+            Yesterday
+          </l-button>
+        </div>
+      </div>
+      @if (upcoming()) {
+        <p class="sheet-form__hint">
+          A future date: it shows as upcoming, and balances change now.
+        </p>
+      }
+    </div>
+
+    @if (showMore()) {
+      <l-text-input
+        label="Payee"
+        formControlName="payee"
+        placeholder="Who you paid or who paid you"
+        [suggestions]="payees()"
+        (enter)="save()"
+      />
+      <l-time-input label="Time" formControlName="time" />
+      <l-select
+        label="Tags"
+        formControlName="tags"
+        placeholder="Add tags"
+        [items]="tagItems()"
+        [multiple]="true"
+        [searchable]="true"
+        [addTag]="tagFromText"
+        [maxCount]="maxTags"
+      />
+      <l-textarea label="Note" formControlName="note" [rows]="3" />
+    } @else {
+      <l-button class="tx-form__more" variant="ghost" size="lg" (click)="showMore.set(true)">
+        <l-icon name="add" color="inherit" />
+        Payee, time, tags and note
+      </l-button>
+    }
+  </div>
+
+  <div class="sheet-form__actions tx-form__actions">
+    <l-button variant="outlined" size="lg" (click)="close()">Cancel</l-button>
+    @if (!original && !draft) {
+      <l-button variant="outlined-primary" size="lg" (click)="save(true)">
+        Save and add another
+      </l-button>
+    }
+    <l-button size="lg" (click)="save()">{{ draft?.saveLabel ?? 'Save' }}</l-button>
+  </div>
+</div>

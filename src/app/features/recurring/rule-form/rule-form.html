@@ -1,0 +1,183 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">{{ rule ? 'Edit recurring rule' : 'Add recurring rule' }}</h2>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    @if (rule) {
+      <p class="alert info">
+        Changes apply to entries from now on. Entries already added stay as they are.
+      </p>
+    }
+
+    <h3 class="rule-form__section">Entry</h3>
+
+    <l-segmented-control
+      formControlName="type"
+      aria-label="Type"
+      size="lg"
+      [options]="typeOptions"
+      [fullWidth]="true"
+    />
+
+    <l-number-input
+      formControlName="amount"
+      label="Amount"
+      placeholder="0"
+      [prefix]="symbol"
+      [decimalPlaces]="decimalPlaces"
+      (enter)="save()"
+    />
+
+    @if (type() === 'transfer') {
+      <l-select
+        label="From account"
+        formControlName="accountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+      <l-select
+        label="To account"
+        formControlName="toAccountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+    } @else {
+      <l-select
+        label="Category"
+        formControlName="categoryId"
+        placeholder="Choose a category"
+        bindValue="value"
+        bindLabel="label"
+        [items]="categoryItems()"
+        [searchable]="true"
+      />
+      <l-select
+        label="Account"
+        formControlName="accountId"
+        placeholder="Choose an account"
+        bindValue="value"
+        bindLabel="label"
+        [items]="accountItems()"
+      />
+    }
+
+    <l-text-input
+      label="Payee"
+      formControlName="payee"
+      placeholder="Such as your employer, landlord or Netflix"
+      [suggestions]="payees()"
+      (enter)="save()"
+    />
+    <l-select
+      label="Tags"
+      formControlName="tags"
+      placeholder="Add tags"
+      [items]="tagItems()"
+      [multiple]="true"
+      [searchable]="true"
+      [addTag]="tagFromText"
+      [maxCount]="maxTags"
+    />
+    <l-textarea label="Note" formControlName="note" [rows]="2" />
+
+    <h3 class="rule-form__section">Schedule</h3>
+
+    <l-segmented-control
+      formControlName="frequency"
+      aria-label="Repeats"
+      size="lg"
+      [options]="frequencyOptions"
+      [fullWidth]="true"
+    />
+
+    <div class="rule-form__row">
+      <l-number-input
+        class="rule-form__interval"
+        formControlName="interval"
+        label="Every"
+        [suffix]="unit()"
+        [decimalPlaces]="0"
+        [allowZero]="false"
+      />
+      @if (frequency() === 'weekly') {
+        <l-select
+          class="rule-form__grow"
+          label="On"
+          formControlName="weekdays"
+          placeholder="Pick days"
+          bindValue="value"
+          bindLabel="label"
+          [items]="weekdayItems"
+          [multiple]="true"
+        />
+      } @else if (frequency() === 'monthly') {
+        <l-select
+          class="rule-form__grow"
+          label="On the"
+          formControlName="dayOfMonth"
+          bindValue="value"
+          bindLabel="label"
+          [items]="dayItems"
+        />
+      }
+    </div>
+    @if (frequency() === 'monthly') {
+      <p class="sheet-form__hint rule-form__tight">
+        The 29th to 31st fall on the last day of shorter months.
+      </p>
+    }
+
+    <div class="sheet-form__field">
+      <l-date-input label="Starts" formControlName="startDate" calendar="ad" [clearable]="false" />
+      @if (pastHint()) {
+        <p class="sheet-form__hint">{{ pastHint() }}</p>
+      }
+    </div>
+
+    <div class="sheet-form__field">
+      <span class="rule-form__label" aria-hidden="true">Ends</span>
+      <l-segmented-control
+        formControlName="endType"
+        aria-label="Ends"
+        size="lg"
+        [options]="endOptions"
+        [fullWidth]="true"
+      />
+      @if (endType() === 'count') {
+        <l-number-input
+          formControlName="maxCount"
+          label="Number of entries"
+          [suffix]="'in all'"
+          [decimalPlaces]="0"
+          [allowZero]="false"
+        />
+      } @else if (endType() === 'until') {
+        <l-date-input
+          label="Last date"
+          formControlName="endDate"
+          calendar="ad"
+          [clearable]="false"
+        />
+      }
+    </div>
+
+    <l-radio
+      label="On the due date"
+      formControlName="mode"
+      orientation="stacked"
+      [options]="modeOptions"
+    />
+
+    @if (preview()) {
+      <p class="rule-form__preview" aria-live="polite">{{ preview() }}</p>
+    }
+  </div>
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" (click)="save()">{{ rule ? 'Save' : 'Add rule' }}</l-button>
+  </div>
+</div>

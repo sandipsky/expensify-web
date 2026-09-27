@@ -1,0 +1,5 @@
+// The browser's clock button, toned down to sit with the other inputs' icons.
+.form-control::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+  cursor: pointer;
+}

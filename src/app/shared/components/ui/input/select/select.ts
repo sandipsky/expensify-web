@@ -30,6 +30,8 @@ interface NormalizedOption {
   group: unknown;
   /** Index into the flat, filtered list — drives keyboard navigation. */
   index: number;
+  /** The "Add …" row that `addTag` offers for the search text. */
+  isNew?: boolean;
 }
 
 /** Gap (px) between rendered tags — kept in sync with `.l-select__tags` gap. */
@@ -70,6 +72,8 @@ export class Select implements ControlValueAccessor {
   readonly placeholder = input<string>('Select…');
   readonly disabled = input<boolean>(false);
   readonly id = input<string>(`l-select-${_uid++}`);
+  /** Accessible name when there is no visible `label`. */
+  readonly ariaLabel = input<string>();
 
   /** Allow selecting more than one option. The value becomes an array and the trigger shows tags. */
   readonly multiple = input(false);
@@ -98,6 +102,13 @@ export class Select implements ControlValueAccessor {
 
   /** Show an in-dropdown search box that filters options by label. */
   readonly searchable = input(false);
+  /**
+   * With `searchable`, offer the search text as a new option ("Add …") when no
+   * option has that label: `true` uses the trimmed text as the value, a function
+   * turns the text into one (e.g. lowercasing a tag). New values show in the
+   * trigger even though `items` lacks them.
+   */
+  readonly addTag = input<boolean | ((term: string) => string)>(false);
   /** Show the chevron affix on the right. */
   readonly showArrow = input(true);
   /** Replace the option list with a spinner — useful while an async `search` is in flight. */
@@ -165,10 +176,12 @@ export class Select implements ControlValueAccessor {
   constructor() {
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
+      this._measureTags();
+      // Missing in jsdom and very old browsers; tags are then measured on selection only.
+      if (typeof ResizeObserver === 'undefined') return;
       const observer = new ResizeObserver(() => this._measureTags());
       observer.observe(this._host.nativeElement);
       destroyRef.onDestroy(() => observer.disconnect());
-      this._measureTags();
     });
 
     // Re-measure whenever the rendered tags or the tag-count policy change.
@@ -208,7 +221,7 @@ export class Select implements ControlValueAccessor {
     if (!this.multiple()) return [];
     const all = this._all();
     return this._selectedArray()
-      .map((value) => all.find((o) => o.value === value))
+      .map((value) => all.find((o) => o.value === value) ?? this._added(value))
       .filter((o): o is NormalizedOption => !!o);
   });
 
@@ -250,13 +263,38 @@ export class Select implements ControlValueAccessor {
     this.items().map((item, index) => this._normalize(item, index)),
   );
 
+  /** The value `addTag` would add for the search text, or null when there's nothing new to add. */
+  private readonly _newTag = computed<unknown>(() => {
+    const addTag = this.addTag();
+    const term = this._searchText().trim();
+    if (!addTag || !this.searchable() || !term) return null;
+    const value = typeof addTag === 'function' ? addTag(term) : term;
+    if (value === '' || value === null || value === undefined) return null;
+    const key = term.toLowerCase();
+    const exists = this._all().some((o) => o.value === value || o.label.toLowerCase() === key);
+    return exists || this._isSelected(value) ? null : value;
+  });
+
   /** Options surviving the current search text, re-indexed to their rendered position. */
   protected readonly _visible = computed<NormalizedOption[]>(() => {
     const term = this.searchable() ? this._searchText().trim().toLowerCase() : '';
     const matched = term
       ? this._all().filter((o) => o.label.toLowerCase().includes(term))
       : this._all();
-    return matched.map((o, index) => ({ ...o, index }));
+    const visible = matched.map((o, index) => ({ ...o, index }));
+    const newTag = this._newTag();
+    // Last, so Enter still picks an existing match first.
+    if (newTag !== null) {
+      visible.push({
+        value: newTag,
+        label: `Add "${this._searchText().trim()}"`,
+        disabled: false,
+        group: undefined,
+        index: visible.length,
+        isNew: true,
+      });
+    }
+    return visible;
   });
 
   protected readonly _groups = computed(() => {
@@ -276,7 +314,7 @@ export class Select implements ControlValueAccessor {
   protected readonly _selectedLabel = computed(() => {
     const value = this._value();
     if (value === null || value === undefined) return '';
-    return this._all().find((o) => o.value === value)?.label ?? '';
+    return this._all().find((o) => o.value === value)?.label ?? this._added(value)?.label ?? '';
   });
 
   /** The selected option label(s) shown in view mode — comma-separated when multiple. */
@@ -322,6 +360,7 @@ export class Select implements ControlValueAccessor {
   protected _onOptionClick(option: NormalizedOption): void {
     if (this._optionDisabled(option)) return;
     this._select(option.value);
+    this._afterAdd(option);
   }
 
   protected _setActive(option: NormalizedOption): void {
@@ -515,7 +554,10 @@ export class Select implements ControlValueAccessor {
 
   private _selectActive(): void {
     const option = this._visible()[this._activeIndex()];
-    if (option && !this._optionDisabled(option)) this._select(option.value);
+    if (option && !this._optionDisabled(option)) {
+      this._select(option.value);
+      this._afterAdd(option);
+    }
   }
 
   private _move(delta: number): void {
@@ -575,6 +617,20 @@ export class Select implements ControlValueAccessor {
         .querySelector<HTMLElement>(`[data-index="${index}"]`)
         ?.scrollIntoView({ block: 'nearest' });
     }
+  }
+
+  /** A selected value that `addTag` created, which `items` doesn't list. */
+  private _added(value: unknown): NormalizedOption | undefined {
+    if (!this.addTag() || value === null || value === undefined) return undefined;
+    return { value, label: String(value), disabled: false, group: undefined, index: -1 };
+  }
+
+  /** After adding a new tag, clear the search so the next one can be typed. */
+  private _afterAdd(option: NormalizedOption): void {
+    if (!option.isNew || !this._open()) return;
+    this._searchText.set('');
+    this.search.emit('');
+    this._activeIndex.set(this._firstSelectable());
   }
 
   protected _isSelected(value: unknown): boolean {

@@ -18,6 +18,9 @@
       [value]="_value()"
       [placeholder]="placeholder()"
       [disabled]="_isDisabled()"
+      [attr.aria-label]="ariaLabel() || null"
+      [attr.list]="suggestions().length ? id() + '-suggestions' : null"
+      [attr.autocomplete]="suggestions().length ? 'off' : null"
       (input)="_handleInput($event)"
       (change)="change.emit($event)"
       (keyup)="keyup.emit($event)"
@@ -26,5 +29,13 @@
       (keydown.enter)="_handleEnter($event)"
       (blur)="_handleBlur()"
     />
+
+    @if (suggestions().length) {
+      <datalist [id]="id() + '-suggestions'">
+        @for (suggestion of suggestions(); track suggestion) {
+          <option [value]="suggestion"></option>
+        }
+      </datalist>
+    }
   </div>
 }

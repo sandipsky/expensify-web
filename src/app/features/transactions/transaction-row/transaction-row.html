@@ -1,0 +1,35 @@
+@if (selecting()) {
+  <l-checkbox
+    class="tx-row__check"
+    [ariaLabel]="'Select ' + row().title + ', ' + row().dateLabel"
+    [useValidation]="false"
+    [ngModel]="selected()"
+    (ngModelChange)="toggle.emit()"
+  />
+}
+<button
+  type="button"
+  class="tx-row__main"
+  [attr.tabindex]="selecting() ? -1 : null"
+  (click)="selecting() ? toggle.emit() : open.emit()"
+>
+  <app-symbol-icon
+    [icon]="row().icon"
+    [color]="row().color ?? 'var(--text-tertiary)'"
+    [size]="36"
+  />
+  <span class="tx-row__text">
+    <span class="tx-row__title">
+      <span class="text-ellipsis">{{ row().title }}</span>
+      @if (row().upcoming) {
+        <l-chip size="sm" variant="info">Upcoming</l-chip>
+      }
+      @if (row().pending) {
+        <l-icon name="schedule" [size]="14" />
+        <span class="visually-hidden">Not synced yet</span>
+      }
+    </span>
+    <span class="tx-row__subtitle text-ellipsis">{{ row().subtitle }}</span>
+  </span>
+  <app-tx-amount [row]="row()" />
+</button>

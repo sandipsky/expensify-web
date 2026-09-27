@@ -1,0 +1,51 @@
+<app-symbol-icon
+  [icon]="view().icon"
+  [color]="view().color ?? 'var(--text-tertiary)'"
+  [size]="40"
+/>
+
+<div class="rule-row__text">
+  <a class="rule-row__link" [routerLink]="['/recurring', view().id]">
+    <span class="text-ellipsis">{{ view().name }}</span>
+  </a>
+  <span class="rule-row__caption"> {{ view().schedule }} · {{ view().accountLabel }} </span>
+  @if (view().rule.mode === 'confirm' || view().status === 'missing_account') {
+    <span class="rule-row__chips">
+      @if (view().rule.mode === 'confirm') {
+        <l-chip size="sm">Asks first</l-chip>
+      }
+      @if (view().status === 'missing_account') {
+        <l-chip size="sm" variant="error">Account deleted</l-chip>
+      }
+    </span>
+  }
+</div>
+
+<span class="rule-row__end">
+  <app-tx-amount [kind]="view().kind" [amount]="view().amount" [currency]="currency()" />
+  <span class="rule-row__next">{{ nextLabel() }}</span>
+</span>
+
+<l-menu class="rule-row__menu" mode="right">
+  <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+    <l-icon name="more_vert" color="inherit" />
+    <span class="visually-hidden">Actions for {{ view().name }}</span>
+  </l-button>
+  <button type="button" dropdown-item (click)="edit.emit()">
+    <l-icon name="edit" [size]="18" />Edit
+  </button>
+  @if (view().status === 'ended') {
+    <!-- Nothing to pause: edit its end to run it again. -->
+  } @else if (view().rule.active) {
+    <button type="button" dropdown-item (click)="pause.emit()">
+      <l-icon name="pause" [size]="18" />Pause
+    </button>
+  } @else {
+    <button type="button" dropdown-item (click)="resume.emit()">
+      <l-icon name="play_arrow" [size]="18" />Resume
+    </button>
+  }
+  <button type="button" dropdown-item class="danger" (click)="delete.emit()">
+    <l-icon name="delete" [size]="18" color="inherit" />Delete
+  </button>
+</l-menu>

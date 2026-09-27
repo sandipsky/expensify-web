@@ -2,12 +2,53 @@
   <nav layout-sidebar class="app-nav" [class.is-collapsed]="navCollapsed()" aria-label="Main">
     <a
       class="app-nav__link"
+      routerLink="/transactions"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="receipt_long" color="inherit" />
+      <span class="app-nav__label">Transactions</span>
+    </a>
+    <a
+      class="app-nav__link"
       routerLink="/accounts"
       routerLinkActive="is-active"
       ariaCurrentWhenActive="page"
     >
       <l-icon name="account_balance_wallet" color="inherit" />
       <span class="app-nav__label">Accounts</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/budgets"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="donut_large" color="inherit" />
+      <span class="app-nav__label">Budgets</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/reports"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="bar_chart" color="inherit" />
+      <span class="app-nav__label">Reports</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/recurring"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="event_repeat" color="inherit" />
+      <span class="app-nav__label">Recurring</span>
+      @if (badges.recurring(); as waiting) {
+        <span class="app-nav__count">
+          {{ waiting }}<span class="visually-hidden"> waiting for you</span>
+        </span>
+      }
     </a>
     <a
       class="app-nav__link"
@@ -20,7 +61,29 @@
     </a>
   </nav>
 
-  <span layout-header class="app-brand">Expensify</span>
+  <div layout-header class="app-header">
+    <span class="app-brand">Expensify</span>
+    @if (!breakpoints.phone()) {
+      <l-button class="app-header__add" (click)="quickAdd()">
+        <l-icon name="add" color="inherit" [size]="18" />
+        Add transaction
+        <kbd class="app-header__key" aria-hidden="true">N</kbd>
+        <span class="visually-hidden">(shortcut: N)</span>
+      </l-button>
+    }
+  </div>
 
   <router-outlet />
+
+  <!-- Room at the end of every page, so the + button never covers the last item. -->
+  @if (breakpoints.phone()) {
+    <div class="app-fab-space" aria-hidden="true"></div>
+  }
 </l-layout>
+
+@if (breakpoints.phone()) {
+  <button type="button" class="app-fab" (click)="quickAdd()">
+    <l-icon name="add" color="inherit" [size]="28" />
+    <span class="visually-hidden">Add transaction</span>
+  </button>
+}

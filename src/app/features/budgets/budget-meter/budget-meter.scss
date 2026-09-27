@@ -1,0 +1,68 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.budget-meter__figures,
+.budget-meter__status,
+.budget-meter__details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+}
+
+.budget-meter__status {
+  align-items: center;
+
+  l-chip l-icon {
+    margin-right: 2px;
+  }
+}
+
+.budget-meter__spent {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-meter__of {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.budget-meter__percent {
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-meter__remaining {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+
+  &.is-over {
+    color: var(--error);
+  }
+}
+
+.budget-meter__details,
+.budget-meter__carry {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Stays at the right when it wraps under the period.
+.budget-meter__per-day {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}

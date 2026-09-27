@@ -1,0 +1,29 @@
+@let p = progress();
+@let s = state();
+
+<div class="budget-meter__figures">
+  <span class="budget-meter__spent">
+    {{ p.spent | money: currency() }}
+    <span class="budget-meter__of">of {{ p.limit | money: currency() }}</span>
+  </span>
+  <span class="budget-meter__percent">{{ percent() }}</span>
+</div>
+
+<l-progress [value]="bar()" [variant]="s.progress" [label]="name() + ' budget used'" />
+
+<div class="budget-meter__status">
+  <l-chip size="sm" [variant]="s.chip">
+    <l-icon [name]="s.icon" [size]="14" color="inherit" />
+    {{ s.label }}
+  </l-chip>
+  <span class="budget-meter__remaining" [class.is-over]="p.remaining < 0">{{ remaining() }}</span>
+</div>
+
+<div class="budget-meter__details">
+  <span>{{ periodLabel() }}</span>
+  <span class="budget-meter__per-day">{{ perDay() }}</span>
+</div>
+
+@if (carry()) {
+  <p class="budget-meter__carry">{{ carry() }}</p>
+}

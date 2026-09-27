@@ -41,6 +41,7 @@ describe('CategoryDelete', () => {
                   () => ({}) as Transaction,
                 ),
                 budgets: Array.from({ length: counts.budgets }, () => ({}) as Budget),
+                rules: [],
               },
             };
           },

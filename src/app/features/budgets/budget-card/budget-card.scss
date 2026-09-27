@@ -1,0 +1,75 @@
+:host {
+  display: block;
+  height: 100%;
+
+  l-card {
+    height: 100%;
+  }
+}
+
+// The hoverable l-card is `position: relative`, so the name link's cover fills it.
+.budget-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.budget-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.budget-card__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.budget-card__link {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  text-decoration: none;
+
+  // The link covers the card, so a tap anywhere opens the budget's page.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    // Inset, since the card clips anything drawn outside it.
+    &::after {
+      border-radius: 12px;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+  }
+}
+
+.budget-card__caption {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Above the covering link, so the menu gets its own taps.
+.budget-card__menu {
+  position: relative;
+  z-index: 1;
+}
+
+.budget-card__paused {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}

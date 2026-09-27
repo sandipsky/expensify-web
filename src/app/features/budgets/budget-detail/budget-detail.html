@@ -1,0 +1,176 @@
+@if (store.loading()) {
+  <div class="budget-page">
+    <l-skeleton height="56px" />
+    <l-skeleton height="160px" />
+    <l-skeleton height="240px" />
+  </div>
+} @else if (budget(); as budget) {
+  <div class="budget-page">
+    <l-breadcrumb [items]="[{ label: 'Budgets', link: '/budgets' }, { label: budget.name }]" />
+
+    <div class="budget-page__header">
+      @if (icon(); as icon) {
+        <app-symbol-icon [icon]="icon.icon" [color]="icon.color" [size]="48" />
+      }
+
+      <div class="budget-page__title">
+        <h1 class="text-ellipsis">{{ budget.name }}</h1>
+        <div class="budget-page__meta">
+          <span>{{ caption() }}</span>
+          @if (!budget.active) {
+            <l-chip size="sm">Paused</l-chip>
+          }
+          @if (budget.rollover) {
+            <l-chip size="sm">Rolls over</l-chip>
+          }
+          @if (!budget.alertThresholds.length) {
+            <l-chip size="sm">No alerts</l-chip>
+          }
+        </div>
+      </div>
+
+      <div class="budget-page__actions">
+        <l-button variant="outlined" size="lg" (click)="actions.edit(budget)">
+          <l-icon name="edit" color="inherit" />
+          Edit
+        </l-button>
+        <l-menu mode="right">
+          <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+            <l-icon name="more_vert" color="inherit" />
+            <span class="visually-hidden">More actions</span>
+          </l-button>
+          @if (budget.active) {
+            <button type="button" dropdown-item (click)="actions.pause(budget)">
+              <l-icon name="pause" [size]="18" />Pause
+            </button>
+          } @else {
+            <button type="button" dropdown-item (click)="actions.resume(budget)">
+              <l-icon name="play_arrow" [size]="18" />Resume
+            </button>
+          }
+          <button type="button" dropdown-item class="danger" (click)="delete(budget)">
+            <l-icon name="delete" [size]="18" color="inherit" />Delete
+          </button>
+        </l-menu>
+      </div>
+    </div>
+
+    @if (!budget.active) {
+      <p class="alert warn">
+        This budget is paused: it keeps its {{ budget.amount | money: store.currency() }}
+        {{ perPeriod() }} limit but sends no alerts. Resume it to track it again.
+      </p>
+    }
+
+    <l-card padding="lg">
+      @if (current(); as current) {
+        <app-budget-meter
+          [progress]="current"
+          [currency]="store.currency()"
+          [period]="budget.period"
+          [name]="budget.name"
+        />
+      } @else {
+        <l-skeleton height="92px" />
+      }
+    </l-card>
+
+    <l-card title="Results by period" [flush]="true">
+      @if (loadingSpending()) {
+        <div class="budget-skeleton">
+          @for (placeholder of [1, 2, 3]; track placeholder) {
+            <l-skeleton height="56px" />
+          }
+        </div>
+      } @else {
+        <ul class="period-list" aria-label="Results by period">
+          @for (row of periodRows(); track row.offset) {
+            <li>
+              <button
+                type="button"
+                class="period-row"
+                [class.is-selected]="row === selectedRow()"
+                [attr.aria-pressed]="row === selectedRow()"
+                (click)="select(row)"
+              >
+                <span class="period-row__head">
+                  <span class="period-row__label">
+                    <span class="text-ellipsis">{{ row.label }}</span>
+                    @if (row.offset === 0) {
+                      <l-chip size="sm" variant="primary">This period</l-chip>
+                    }
+                  </span>
+                  <span class="period-row__amounts">
+                    {{ row.result.spent | money: store.currency() }}
+                    <span class="period-row__of"
+                      >of {{ row.result.limit | money: store.currency() }}</span
+                    >
+                  </span>
+                </span>
+                <l-progress
+                  [value]="row.result.percent ?? 100"
+                  [variant]="row.beforeBudget ? 'accent' : row.state.progress"
+                  [label]="row.label + ' used'"
+                />
+                <span class="period-row__foot">
+                  @if (row.beforeBudget) {
+                    <span>Before this budget started</span>
+                  } @else {
+                    <span class="period-row__state">
+                      <l-icon
+                        [name]="row.state.icon"
+                        [size]="14"
+                        [color]="'var(--' + row.state.chip + ')'"
+                      />
+                      {{ row.state.label }}
+                    </span>
+                  }
+                  <span class="period-row__percent">{{ row.percent }} used</span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </l-card>
+
+    @if (selectedRow(); as period) {
+      <l-card [title]="'Transactions · ' + period.label" [flush]="true">
+        @if (!rows().length) {
+          <app-empty-state
+            icon="receipt_long"
+            title="Nothing spent in this period"
+            message="Expenses in this budget's categories show up here."
+          >
+            @if (period.offset === 0) {
+              <l-button size="lg" (click)="addExpense(budget)">Add expense</l-button>
+            }
+          </app-empty-state>
+        } @else {
+          <ul class="budget-transactions">
+            @for (row of rows(); track row.id) {
+              <li><app-transaction-row [row]="row" (open)="openTransaction(row)" /></li>
+            }
+          </ul>
+          @if (hiddenCount() > 0) {
+            <div card-footer class="budget-transactions__footer">
+              <l-button variant="outlined" size="lg" (click)="showMore()">
+                Show more ({{ hiddenCount() }})
+              </l-button>
+            </div>
+          }
+        }
+      </l-card>
+    }
+  </div>
+} @else {
+  <l-card>
+    <app-empty-state
+      icon="donut_large"
+      title="Budget not found"
+      message="It may have been deleted, perhaps on another device."
+    >
+      <l-button size="lg" (click)="backToBudgets()">Back to budgets</l-button>
+    </app-empty-state>
+  </l-card>
+}
