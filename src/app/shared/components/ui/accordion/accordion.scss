@@ -1,0 +1,18 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+// Spaced cards — each item is its own bordered surface.
+:host(.l-accordion--separated) {
+  gap: 10px;
+}
+
+// One bordered list with dividers between items.
+:host(.l-accordion--contained) {
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  background: var(--bg-lightest);
+  overflow: hidden;
+}

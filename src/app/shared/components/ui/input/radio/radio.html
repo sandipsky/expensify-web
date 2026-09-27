@@ -1,0 +1,36 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? _selectedLabel() ?? '-' }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+
+    <div class="radio-group" [class.stacked]="orientation() === 'stacked'">
+      @for (option of options(); track option.value) {
+        <label
+          class="control-row radio-control"
+          [class.label-left]="labelPosition() === 'left'"
+          [class.label-top]="labelPosition() === 'top'"
+        >
+          <input
+            type="radio"
+            class="radio-input"
+            [name]="name()"
+            [checked]="_isChecked(option.value)"
+            [disabled]="_isDisabled() || !!option.disabled"
+            (change)="_select(option.value)"
+            (blur)="_handleBlur()"
+          />
+          <span class="radio-dot" aria-hidden="true"></span>
+          <span class="control-label">{{ option.label }}</span>
+        </label>
+      }
+    </div>
+  </div>
+}

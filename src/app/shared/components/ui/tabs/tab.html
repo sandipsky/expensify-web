@@ -1,0 +1,11 @@
+<div
+  class="l-tab__panel"
+  role="tabpanel"
+  [id]="panelId"
+  [attr.aria-labelledby]="tabId"
+  [class.is-active]="_active()"
+  [hidden]="!_active()"
+  [attr.inert]="_active() ? null : ''"
+>
+  <ng-content />
+</div>

@@ -1,0 +1,43 @@
+<div class="breadcrumb-group">
+  @if (title()) {
+    <h1 class="breadcrumb-title">{{ title() }}</h1>
+  }
+
+  @if (items().length) {
+    <nav aria-label="Breadcrumb">
+      <ol class="breadcrumb-list">
+        @for (item of items(); track $index; let last = $last) {
+          <li class="breadcrumb-item">
+            @if (last) {
+              <span class="breadcrumb-sub-title active" aria-current="page">{{ item.label }}</span>
+            } @else if (item.link) {
+              <a class="breadcrumb-sub-title" [routerLink]="item.link">{{ item.label }}</a>
+            } @else {
+              <span class="breadcrumb-sub-title">{{ item.label }}</span>
+            }
+
+            @if (!last) {
+              <svg
+                class="breadcrumb-caret"
+                width="16"
+                height="16"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M7.5 5L12.5 10L7.5 15"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            }
+          </li>
+        }
+      </ol>
+    </nav>
+  }
+</div>

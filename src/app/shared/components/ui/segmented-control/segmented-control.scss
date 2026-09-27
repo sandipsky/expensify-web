@@ -1,0 +1,124 @@
+:host {
+  // Ant Design Segmented color scheme (overridable per instance).
+  --l-seg-track-bg: rgba(0, 0, 0, 0.04);
+  --l-seg-item-color: rgba(0, 0, 0, 0.65);
+  --l-seg-item-hover-color: rgba(0, 0, 0, 0.88);
+  --l-seg-item-hover-bg: rgba(0, 0, 0, 0.06);
+  --l-seg-selected-color: rgba(0, 0, 0, 0.88);
+  --l-seg-thumb-bg: #fff;
+  --l-seg-disabled-color: rgba(0, 0, 0, 0.25);
+
+  position: relative;
+  display: inline-flex;
+  flex-direction: row;
+  padding: 2px;
+  background: var(--l-seg-track-bg);
+  border-radius: 8px;
+  box-sizing: border-box;
+  vertical-align: middle;
+
+  // Ant Design font stack + base size.
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-size: 14px;
+}
+
+:host(.l-segmented--vertical) {
+  flex-direction: column;
+}
+
+:host(.l-segmented--full) {
+  display: flex;
+  width: 100%;
+
+  .l-segmented__item {
+    flex: 1;
+  }
+}
+
+:host(.is-disabled) {
+  opacity: 0.65;
+}
+
+// ── Sliding thumb (the white selected surface) ─────────────────
+.l-segmented__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: 6px;
+  background: var(--l-seg-thumb-bg);
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 1px 6px -1px rgba(0, 0, 0, 0.02),
+    0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  pointer-events: none;
+
+  &.is-ready {
+    transition:
+      transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1),
+      width 0.3s cubic-bezier(0.645, 0.045, 0.355, 1),
+      height 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+  }
+}
+
+// ── Segments ───────────────────────────────────────────────────
+.l-segmented__item {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 11px;
+  border-radius: 6px;
+  font: inherit;
+  color: var(--l-seg-item-color);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  &:hover:not(.is-selected):not(:disabled) {
+    color: var(--l-seg-item-hover-color);
+    background: var(--l-seg-item-hover-bg);
+  }
+
+  &.is-selected {
+    color: var(--l-seg-selected-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    color: var(--l-seg-disabled-color);
+    cursor: not-allowed;
+  }
+}
+
+// ── Sizes (Ant control heights 24 / 32 / 40) ───────────────────
+:host(.l-segmented--sm) .l-segmented__item {
+  min-height: 20px;
+  padding: 0 7px;
+}
+
+:host(.l-segmented--lg) .l-segmented__item {
+  min-height: 36px;
+  padding: 0 11px;
+  font-size: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-segmented__thumb.is-ready,
+  .l-segmented__item {
+    transition: none;
+  }
+}

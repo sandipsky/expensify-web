@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+.breadcrumb-group {
+  flex: 1;
+}
+
+.breadcrumb-title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+}
+
+.breadcrumb-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-sub-title {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  text-decoration: none;
+
+  &.active {
+    color: var(--accent);
+  }
+}
+
+a.breadcrumb-sub-title {
+  cursor: pointer;
+  transition: color 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.breadcrumb-caret {
+  flex-shrink: 0;
+  color: var(--text-quaternary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a.breadcrumb-sub-title {
+    transition: none;
+  }
+}

@@ -1,0 +1,38 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? (_viewText() || '-') }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [attr.for]="id()">{{ label() }}</label>
+    }
+
+    <div class="input-affix" [class.has-prefix]="prefix()" [class.has-suffix]="suffix()">
+      @if (prefix()) {
+        <span class="affix prefix">{{ prefix() }}</span>
+      }
+
+      <input
+        class="form-control"
+        type="text"
+        [id]="id()"
+        [attr.inputmode]="_inputMode()"
+        [value]="_display()"
+        [placeholder]="placeholder()"
+        [disabled]="_isDisabled()"
+        (keydown)="_handleKeydown($event)"
+        (input)="_handleInput($event)"
+        (focus)="_handleFocus()"
+        (blur)="_handleBlur()"
+      />
+
+      @if (suffix()) {
+        <span class="affix suffix">{{ suffix() }}</span>
+      }
+    </div>
+  </div>
+}

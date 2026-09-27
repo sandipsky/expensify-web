@@ -1,0 +1,48 @@
+:host {
+  // Themeable via tokens; override these vars to recolor the skeleton.
+  --l-skeleton-base: var(--bg-dark);
+  --l-skeleton-overlay: var(--separator-dark);
+
+  display: block;
+  position: relative;
+}
+
+// Overlay mode: cover any projected content and swallow interaction.
+:host([data-visible]) {
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+// The opaque base fill that hides whatever sits beneath it.
+:host([data-visible])::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: var(--l-skeleton-base);
+}
+
+// A darker layer whose opacity pulses to create the two-tone shimmer.
+:host([data-animate])::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  background: var(--l-skeleton-overlay);
+  opacity: 0;
+  animation: l-skeleton-pulse 1.4s linear infinite alternate;
+}
+
+@keyframes l-skeleton-pulse {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host([data-animate])::after {
+    animation: none;
+  }
+}

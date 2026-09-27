@@ -1,0 +1,15 @@
+// Unscoped (ViewEncapsulation.None): the svg is injected via innerHTML, which
+// emulated encapsulation can't reach.
+.lui-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+  // Default tint — the gray the source svgs were drawn with (#646663).
+  color: var(--text-tertiary);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}

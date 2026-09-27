@@ -1,0 +1,37 @@
+// Prefix/suffix: positioned, non-editable text adornments. Same idea as
+// `.input-wrapper`'s icons, but padding is applied only on the adorned side.
+.input-affix {
+  position: relative;
+  width: 100%;
+
+  .form-control {
+    width: 100%;
+  }
+
+  &.has-prefix .form-control {
+    padding-left: 32px;
+  }
+
+  &.has-suffix .form-control {
+    padding-right: 32px;
+  }
+
+  .affix {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 14px;
+    line-height: 20px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .affix.prefix {
+    left: 8px;
+  }
+
+  .affix.suffix {
+    right: 8px;
+  }
+}

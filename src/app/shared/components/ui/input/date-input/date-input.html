@@ -1,0 +1,250 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? (_displayValue() || '-') }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [attr.for]="id()">{{ label() }}</label>
+    }
+
+    <div class="l-date-input" [class.is-open]="_open()" (focusout)="_onBlur($event)">
+      <div
+        #trigger
+        class="form-control l-date-input__trigger"
+        [attr.aria-disabled]="_isDisabled()"
+        (click)="_onTriggerClick()"
+      >
+        <input
+          #field
+          type="text"
+          class="l-date-input__field"
+          [attr.id]="id()"
+          [value]="_displayValue()"
+          [placeholder]="placeholder()"
+          [disabled]="_isDisabled()"
+          [readonly]="!typableDateInput()"
+          [class.is-readonly]="!typableDateInput()"
+          autocomplete="off"
+          role="combobox"
+          aria-haspopup="dialog"
+          [attr.aria-expanded]="_open()"
+          (focus)="_onFocus()"
+          (input)="_onTyped($event)"
+          (keydown)="_onInputKeydown($event)"
+        />
+
+        <div class="l-date-input__affixes">
+          @if (_showClear()) {
+            <button
+              type="button"
+              class="l-date-input__clear"
+              tabindex="-1"
+              aria-label="Clear date"
+              (click)="_clear($event)"
+            >
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M15 5L5 15M5 5L15 15"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          }
+
+          @if (showCalendarIcon()) {
+            <svg
+              class="l-date-input__icon"
+              width="15"
+              height="15"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect
+                x="2.75"
+                y="4.25"
+                width="14.5"
+                height="13"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.5"
+              />
+              <path
+                d="M2.75 8.25H17.25M6.5 2.5V5.5M13.5 2.5V5.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          }
+        </div>
+      </div>
+
+      @if (_open()) {
+        <div
+          class="l-date-input__panel"
+          role="dialog"
+          aria-label="Choose date"
+          [class.is-up]="_dropUp()"
+          [style.left.px]="_panelLeft()"
+          [style.top.px]="_panelTop()"
+          [style.bottom.px]="_panelBottom()"
+        >
+          <div class="l-date-input__header">
+            <button
+              type="button"
+              class="l-date-input__nav"
+              aria-label="Previous year"
+              (click)="_superPrev()"
+            >
+              «
+            </button>
+            <button
+              type="button"
+              class="l-date-input__nav"
+              aria-label="Previous month"
+              (click)="_prev()"
+            >
+              ‹
+            </button>
+
+            <div class="l-date-input__header-label">
+              @if (_view() === 'year') {
+                <span class="l-date-input__header-range">{{ _yearRangeLabel() }}</span>
+              } @else {
+                @if (_view() === 'date') {
+                  <button type="button" class="l-date-input__header-btn" (click)="_showMonthView()">
+                    {{ _headerMonthLabel() }}
+                  </button>
+                }
+                <button type="button" class="l-date-input__header-btn" (click)="_showYearView()">
+                  {{ _headerYearLabel() }}
+                </button>
+              }
+            </div>
+
+            <button
+              type="button"
+              class="l-date-input__nav"
+              aria-label="Next month"
+              (click)="_next()"
+            >
+              ›
+            </button>
+            <button
+              type="button"
+              class="l-date-input__nav"
+              aria-label="Next year"
+              (click)="_superNext()"
+            >
+              »
+            </button>
+          </div>
+
+          @switch (_view()) {
+            @case ('date') {
+              <div class="l-date-input__weekdays" aria-hidden="true">
+                @for (day of _weekdays(); track day) {
+                  <span class="l-date-input__weekday">{{ day }}</span>
+                }
+              </div>
+
+              <div
+                #grid
+                class="l-date-input__grid"
+                role="grid"
+                tabindex="0"
+                aria-label="Calendar days"
+                (keydown)="_onGridKeydown($event)"
+              >
+                @for (cell of _cells(); track cell.key) {
+                  <button
+                    type="button"
+                    class="l-date-input__cell"
+                    role="gridcell"
+                    tabindex="-1"
+                    [class.is-outside]="!cell.inMonth"
+                    [class.is-today]="cell.today"
+                    [class.is-selected]="cell.selected"
+                    [class.is-active]="cell.active"
+                    [disabled]="cell.disabled"
+                    [attr.aria-selected]="cell.selected"
+                    [attr.aria-label]="cell.aria || null"
+                    (click)="_selectDay(cell)"
+                  >
+                    {{ cell.label }}
+                  </button>
+                }
+              </div>
+            }
+            @case ('month') {
+              <div class="l-date-input__months">
+                @for (month of _monthCells(); track month.index) {
+                  <button
+                    type="button"
+                    class="l-date-input__unit"
+                    [class.is-selected]="month.selected"
+                    (click)="_selectMonth(month.index)"
+                  >
+                    {{ month.label }}
+                  </button>
+                }
+              </div>
+            }
+            @case ('year') {
+              <div class="l-date-input__years">
+                @for (year of _yearCells(); track year.year) {
+                  <button
+                    type="button"
+                    class="l-date-input__unit"
+                    [class.is-selected]="year.selected"
+                    [disabled]="year.disabled"
+                    (click)="_selectYear(year)"
+                  >
+                    {{ year.label }}
+                  </button>
+                }
+              </div>
+            }
+          }
+
+          <div class="l-date-input__footer">
+            <div class="l-date-input__mode" role="group" aria-label="Calendar system">
+              <button
+                type="button"
+                class="l-date-input__mode-btn"
+                [class.is-active]="_mode() === 'ad'"
+                [attr.aria-pressed]="_mode() === 'ad'"
+                (click)="_setMode('ad')"
+              >
+                AD
+              </button>
+              <button
+                type="button"
+                class="l-date-input__mode-btn"
+                [class.is-active]="_mode() === 'bs'"
+                [attr.aria-pressed]="_mode() === 'bs'"
+                (click)="_setMode('bs')"
+              >
+                BS
+              </button>
+            </div>
+
+            @if (showToday()) {
+              <button type="button" class="l-date-input__today" (click)="_selectToday()">
+                Today
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

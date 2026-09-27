@@ -1,0 +1,31 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value pre-wrap">{{ viewValue() ?? (_value() || '-') }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [attr.for]="id()">{{ label() }}</label>
+    }
+
+    <textarea
+      class="form-control"
+      [class.resizable]="resizable()"
+      [id]="id()"
+      [rows]="rows()"
+      [value]="_value()"
+      [placeholder]="placeholder()"
+      [disabled]="_isDisabled()"
+      (input)="_handleInput($event)"
+      (change)="change.emit($event)"
+      (keyup)="keyup.emit($event)"
+      (keydown)="keydown.emit($event)"
+      (keypress)="keypress.emit($event)"
+      (keydown.enter)="_handleEnter($event)"
+      (blur)="_handleBlur()"
+    ></textarea>
+  </div>
+}

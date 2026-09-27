@@ -1,0 +1,41 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? (_checked() ? 'Yes' : 'No') }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    <label
+      class="control-row checkbox-control"
+      [class.label-left]="labelPosition() === 'left'"
+      [class.label-top]="labelPosition() === 'top'"
+    >
+      <input
+        type="checkbox"
+        class="check-input"
+        [id]="id()"
+        [checked]="_checked()"
+        [disabled]="_isDisabled()"
+        (change)="_handleChange($event)"
+        (blur)="_handleBlur()"
+      />
+      <span class="check-box" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M3.5 8.5L6.5 11.5L12.5 5"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+
+      @if (label()) {
+        <span class="control-label">{{ label() }}</span>
+      }
+    </label>
+  </div>
+}

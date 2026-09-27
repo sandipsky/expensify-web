@@ -1,0 +1,59 @@
+// Each region is a fixed, non-interactive column; only the cards capture clicks.
+.notif-region {
+  position: fixed;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  pointer-events: none;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+// Top regions render newest-first so a new toast appears at the top edge and
+// pushes older ones down. (Bottom regions keep natural order: newest at the
+// bottom edge.)
+.notif-region--top,
+.notif-region--topLeft,
+.notif-region--topRight {
+  flex-direction: column-reverse;
+}
+
+.notif-region--top {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.notif-region--bottom {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  align-items: center;
+}
+
+.notif-region--topLeft {
+  top: 0;
+  left: 0;
+  align-items: flex-start;
+}
+
+.notif-region--topRight {
+  top: 0;
+  right: 0;
+  align-items: flex-end;
+}
+
+.notif-region--bottomLeft {
+  bottom: 0;
+  left: 0;
+  align-items: flex-start;
+}
+
+.notif-region--bottomRight {
+  bottom: 0;
+  right: 0;
+  align-items: flex-end;
+}

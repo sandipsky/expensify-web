@@ -1,0 +1,25 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-image {
+  object-fit: cover;
+}
+
+.avatar-initials {
+  font-size: 0.875em;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
+}

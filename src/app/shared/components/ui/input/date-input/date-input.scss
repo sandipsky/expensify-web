@@ -1,0 +1,398 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.l-date-input {
+  position: relative;
+  width: 100%;
+}
+
+// Built on the shared `.form-control` box; the inner input is chromeless.
+.l-date-input__trigger {
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  cursor: text;
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out;
+
+  &:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-light);
+  }
+}
+
+.is-open .l-date-input__trigger {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.l-date-input__field {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+
+  &::placeholder {
+    color: var(--text-quaternary);
+  }
+
+  // Picker-only mode — the whole field acts as a button.
+  &.is-readonly:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+.l-date-input__affixes {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.l-date-input__trigger:not([aria-disabled='true']) .l-date-input__icon {
+  cursor: pointer;
+}
+
+.l-date-input__icon {
+  color: var(--text-tertiary);
+}
+
+.l-date-input__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    background 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--separator);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+// Fixed positioning (top/left/bottom set inline from the trigger rect) so the
+// panel escapes any `overflow` clipping on ancestors and can flip upward.
+.l-date-input__panel {
+  position: fixed;
+  z-index: 1000;
+  width: 288px;
+  padding: 8px;
+  background: var(--bg-lightest);
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(13, 13, 18, 0.12);
+  animation: l-date-input-in 120ms ease-out;
+
+  &.is-up {
+    animation-name: l-date-input-in-up;
+  }
+}
+
+@keyframes l-date-input-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes l-date-input-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+// ── Header ─────────────────────────────────────────────────────
+
+.l-date-input__header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--separator-light);
+}
+
+.l-date-input__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text-quaternary);
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    background 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-light);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-date-input__header-label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.l-date-input__header-btn {
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: color 120ms ease-out;
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-date-input__header-range {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// ── Day grid ───────────────────────────────────────────────────
+
+.l-date-input__weekdays,
+.l-date-input__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.l-date-input__weekday {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.l-date-input__grid {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.l-date-input__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 120ms ease-out;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-light);
+  }
+
+  &.is-outside {
+    color: var(--text-quaternary);
+  }
+
+  &.is-active:not(.is-selected) {
+    background: var(--accent-bg);
+  }
+
+  &.is-today {
+    box-shadow: inset 0 0 0 1px var(--accent);
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  &.is-selected {
+    background: var(--accent);
+    color: var(--text-white);
+    font-weight: 600;
+
+    &:hover {
+      background: var(--accent-dark);
+    }
+  }
+
+  &:disabled {
+    color: var(--text-quaternary);
+    background: transparent;
+    cursor: not-allowed;
+  }
+}
+
+// ── Month / year pickers ───────────────────────────────────────
+
+.l-date-input__months,
+.l-date-input__years {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  min-height: 224px;
+  align-content: center;
+}
+
+.l-date-input__unit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 120ms ease-out;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-light);
+  }
+
+  &.is-selected {
+    background: var(--accent);
+    color: var(--text-white);
+    font-weight: 600;
+  }
+
+  &:disabled {
+    color: var(--text-quaternary);
+    cursor: not-allowed;
+  }
+}
+
+// ── Footer: AD/BS toggle + Today ───────────────────────────────
+
+.l-date-input__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  margin-top: 8px;
+  border-top: 1px solid var(--separator-light);
+}
+
+.l-date-input__mode {
+  display: inline-flex;
+  padding: 2px;
+  gap: 2px;
+  background: var(--bg-light);
+  border-radius: 6px;
+}
+
+.l-date-input__mode-btn {
+  padding: 2px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    background 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.is-active {
+    background: var(--bg-lightest);
+    color: var(--accent-dark);
+    box-shadow: 0 1px 2px rgba(13, 13, 18, 0.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-date-input__today {
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 120ms ease-out;
+
+  &:hover {
+    color: var(--accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-date-input__trigger,
+  .l-date-input__panel,
+  .l-date-input__cell,
+  .l-date-input__unit,
+  .l-date-input__nav {
+    transition: none;
+    animation: none;
+  }
+}

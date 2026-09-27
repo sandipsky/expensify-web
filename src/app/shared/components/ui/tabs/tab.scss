@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+.l-tab__panel {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--text-secondary);
+
+  &.is-active {
+    animation: l-tab-fade 220ms ease-out;
+  }
+}
+
+@keyframes l-tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-tab__panel.is-active {
+    animation: none;
+  }
+}

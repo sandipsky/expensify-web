@@ -1,0 +1,15 @@
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+}
+
+textarea.form-control {
+  width: 100%;
+  resize: none;
+  min-height: 72px;
+
+  &.resizable {
+    resize: vertical;
+  }
+}

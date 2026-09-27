@@ -1,0 +1,16 @@
+@if (dot()) {
+  <span class="l-chip__dot" aria-hidden="true"></span>
+}
+<ng-content />
+@if (removable()) {
+  <button
+    type="button"
+    class="l-chip__remove"
+    [attr.aria-label]="removeLabel()"
+    (click)="removed.emit()"
+  >
+    <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+      <path d="M3 3l6 6M9 3l-6 6" />
+    </svg>
+  </button>
+}

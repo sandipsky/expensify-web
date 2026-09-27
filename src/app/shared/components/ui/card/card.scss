@@ -1,0 +1,117 @@
+// Card — the shared page-section surface (previously the global _section.scss)
+// as a component. Unscoped (ViewEncapsulation.None): every selector is
+// component-prefixed, and the header/footer visibility rules must see the
+// consumer's projected content.
+.lui-card {
+  --l-card-pad: 12px;
+
+  display: block;
+  align-self: stretch;
+  border-radius: 12px;
+  border: 1px solid var(--separator);
+  background: var(--bg-lightest);
+  overflow: hidden;
+  min-height: fit-content;
+}
+
+.lui-card.lui-card-dark {
+  background: var(--bg-light);
+}
+
+// Padding: applied per region so header/footer dividers span the full width.
+.lui-card-pad-none {
+  --l-card-pad: 0px;
+}
+
+.lui-card-pad-sm {
+  --l-card-pad: 8px;
+}
+
+.lui-card-pad-md {
+  --l-card-pad: 12px;
+}
+
+.lui-card-pad-lg {
+  --l-card-pad: 20px;
+}
+
+.lui-card-borderless {
+  border-color: transparent;
+}
+
+// Shadows
+.lui-card-shadow-sm {
+  box-shadow: 0 1px 2px rgba(7, 9, 15, 0.06);
+}
+
+.lui-card-shadow-md {
+  box-shadow: 0 2px 8px rgba(7, 9, 15, 0.08);
+}
+
+.lui-card-shadow-lg {
+  box-shadow: 0 8px 24px rgba(7, 9, 15, 0.12);
+}
+
+.lui-card-hoverable {
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(7, 9, 15, 0.12);
+    transform: translateY(-2px);
+  }
+}
+
+// Regions
+.lui-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: var(--l-card-pad);
+  border-bottom: 1px solid var(--separator);
+
+  // Collapse when there is neither a title nor [card-extra] content.
+  &:not(:has(> .lui-card__title, > .lui-card__extra:not(:empty))) {
+    display: none;
+  }
+}
+
+.lui-card__title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.lui-card__extra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.lui-card__body {
+  padding: var(--l-card-pad);
+}
+
+.lui-card__footer {
+  padding: var(--l-card-pad);
+  border-top: 1px solid var(--separator);
+  color: var(--text-secondary);
+
+  // Collapse when no [card-footer] content is projected.
+  &:empty {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lui-card-hoverable {
+    transition: none;
+  }
+}

@@ -1,0 +1,81 @@
+:host {
+  display: inline-block;
+}
+
+.dropdown-menu {
+  position: relative;
+
+  &.active {
+    ::ng-deep [dropdown-display] {
+      background-color: var(--separator);
+      border-radius: 8px;
+    }
+  }
+}
+
+// Fixed positioning (top/bottom/left/right set inline from the trigger rect) so
+// the panel escapes any `overflow` clipping on ancestors and can flip upward.
+.dropdown-content {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 8px;
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  background: var(--bg-lightest);
+  box-shadow: 0 6px 16px rgba(13, 13, 18, 0.12);
+  overflow-y: auto;
+
+  // No `transform` here — a transform (even translateY(0)) establishes a
+  // containing block that traps `position: fixed` descendants, which would
+  // break the viewport-relative positioning of a nested l-select dropdown
+  // (and make it flicker). Animate opacity only.
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+
+  &.visible {
+    opacity: 1;
+  }
+
+  &.nopadding {
+    padding: 0;
+  }
+}
+
+:host ::ng-deep [dropdown-item] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--text-primary);
+  transition:
+    background-color 120ms ease-out,
+    color 120ms ease-out;
+
+  &:hover {
+    background-color: var(--separator);
+  }
+
+  &.active {
+    background-color: var(--accent-bg);
+    color: var(--accent-dark);
+  }
+}
+
+:host ::ng-deep [dropdown-display] {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-content {
+    transition: none;
+  }
+}

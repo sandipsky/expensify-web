@@ -1,0 +1,27 @@
+@if (_thumb().visible) {
+  <span
+    class="l-segmented__thumb"
+    [class.is-ready]="_ready()"
+    [style.width.px]="_thumb().width"
+    [style.height.px]="_thumb().height"
+    [style.transform]="'translate(' + _thumb().x + 'px, ' + _thumb().y + 'px)'"
+  ></span>
+}
+
+@for (option of _options(); track option.value; let i = $index) {
+  <button
+    #segment
+    type="button"
+    role="radio"
+    class="l-segmented__item"
+    [class.is-selected]="_isSelected(option.value)"
+    [attr.aria-checked]="_isSelected(option.value)"
+    [attr.aria-label]="option.label"
+    [attr.tabindex]="option.value === _tabbableValue() ? 0 : -1"
+    [disabled]="_isDisabled() || option.disabled"
+    (click)="_select(option)"
+    (keydown)="_onKeydown($event, i)"
+  >
+    <span class="l-segmented__label">{{ option.label }}</span>
+  </button>
+}

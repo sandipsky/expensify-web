@@ -1,0 +1,11 @@
+:host {
+  display: block;
+
+  // Shared tokens — inherited by the nested l-tree-item elements.
+  --l-tree-indent: 24px;
+  --l-tree-line: var(--separator-dark);
+  --l-tree-row-min-height: 30px;
+
+  font-size: 14px;
+  color: var(--text-primary);
+}

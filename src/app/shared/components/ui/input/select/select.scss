@@ -1,0 +1,307 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.l-select {
+  position: relative;
+  width: 100%;
+}
+
+// Built on the shared `.form-control` box; we only layer on the trigger behavior.
+.l-select__trigger {
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out;
+
+  &.is-placeholder .l-select__label {
+    color: var(--text-quaternary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-light);
+  }
+}
+
+.is-open .l-select__trigger {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.l-select__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.l-select__arrow {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform 150ms ease-out;
+}
+
+.is-open .l-select__arrow {
+  transform: rotate(180deg);
+}
+
+// ── Multi-select trigger, tags (Mantine-inspired) & clear affix ─
+.l-select__trigger.is-multiple {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  min-height: 34px;
+  gap: 6px;
+}
+
+.l-select__affixes {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.l-select__clear,
+.l-select__tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    background 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--separator);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-select__tags {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.l-select__tag {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  max-width: 100%;
+  height: 22px;
+  padding: 0 2px 0 8px;
+  gap: 2px;
+  background: var(--bg-dark);
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+
+  &--count {
+    padding: 0 8px;
+    color: var(--text-secondary);
+  }
+}
+
+.l-select__tag-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Off-screen mirror of every tag, used only to measure widths for responsive mode.
+.l-select__tags-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 4px;
+}
+
+// Fixed positioning (top/left/width/bottom set inline from the trigger rect) so
+// the menu escapes any `overflow` clipping on ancestors and can flip upward.
+.l-select__dropdown {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: var(--bg-lightest);
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(13, 13, 18, 0.12);
+  animation: l-select-in 120ms ease-out;
+  transform-origin: top center;
+
+  &.is-up {
+    transform-origin: bottom center;
+    animation-name: l-select-in-up;
+  }
+}
+
+@keyframes l-select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes l-select-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.l-select__search {
+  padding: 4px 4px 8px;
+}
+
+.l-select__search-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--separator);
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-primary);
+
+  &::placeholder {
+    color: var(--text-quaternary);
+  }
+
+  &:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+}
+
+.l-select__options {
+  max-height: 252px;
+  overflow-y: auto;
+}
+
+.l-select__spacer {
+  position: relative;
+}
+
+.l-select__group-label {
+  padding: 6px 8px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-quaternary);
+}
+
+.l-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  &.is-active {
+    background: var(--bg-light);
+  }
+
+  &.is-selected {
+    background: var(--accent-bg);
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  &.is-disabled {
+    color: var(--text-quaternary);
+    cursor: not-allowed;
+    background: transparent;
+  }
+}
+
+.l-select__option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.l-select__check {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.l-select__status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+
+  &--empty {
+    color: var(--text-quaternary);
+  }
+}
+
+.l-select__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--separator-dark);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: l-select-spin 600ms linear infinite;
+}
+
+@keyframes l-select-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-select__trigger,
+  .l-select__arrow,
+  .l-select__dropdown {
+    transition: none;
+    animation: none;
+  }
+
+  .l-select__spinner {
+    animation-duration: 1.6s;
+  }
+}

@@ -1,0 +1,88 @@
+<div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        @for (col of columns(); track col.key) {
+          <th
+            [class.sort-by]="col.sortable"
+            [class.asc]="col.sortable && _sortClass(col) === 'asc'"
+            [class.desc]="col.sortable && _sortClass(col) === 'desc'"
+            [class.none]="col.sortable && _sortClass(col) === 'none'"
+            [class.text-center]="col.align === 'center'"
+            [class.text-end]="col.align === 'right'"
+            [style.width]="col.width || null"
+            [attr.tabindex]="col.sortable ? 0 : null"
+            [attr.aria-sort]="_ariaSort(col)"
+            (click)="_toggleSort(col)"
+            (keydown)="_onHeaderKeydown($event, col)"
+          >
+            <span class="th-label">{{ col.header }}</span>
+          </th>
+        }
+      </tr>
+    </thead>
+
+    <tbody>
+      @for (row of _rows(); track _trackRow($index, row); let i = $index) {
+        <tr (click)="rowClick.emit(row)">
+          @for (col of columns(); track col.key) {
+            <td
+              [class.text-center]="col.align === 'center'"
+              [class.text-end]="col.align === 'right'"
+            >
+              @if (_cellTemplate(col.key); as tpl) {
+                <ng-container
+                  [ngTemplateOutlet]="tpl"
+                  [ngTemplateOutletContext]="{
+                    $implicit: row,
+                    value: _value(row, col.key),
+                    row: row,
+                    column: col,
+                    index: i,
+                  }"
+                />
+              } @else {
+                {{ _value(row, col.key) }}
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (loading()) {
+    <div class="l-table__overlay">
+      <span class="l-table__spinner" aria-hidden="true"></span>
+      <span class="l-table__overlay-text">Loading…</span>
+    </div>
+  } @else if (!_rows().length) {
+    <div class="no-data">
+      <svg
+        class="no-data__icon"
+        width="112"
+        height="112"
+        viewBox="0 0 120 120"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle cx="60" cy="60" r="48" fill="var(--accent-bg)" />
+        <rect
+          x="41"
+          y="29"
+          width="38"
+          height="60"
+          rx="6"
+          fill="var(--bg-lightest)"
+          stroke="var(--separator-light)"
+        />
+        <rect x="51" y="72" width="18" height="3" rx="1.5" fill="var(--separator-dark)" />
+        <rect x="55" y="79" width="10" height="3" rx="1.5" fill="var(--separator-dark)" />
+        <circle cx="60" cy="53" r="13" fill="var(--accent)" />
+        <rect x="58.5" y="45.5" width="3" height="9" rx="1.5" fill="var(--bg-lightest)" />
+        <circle cx="60" cy="58.5" r="2" fill="var(--bg-lightest)" />
+      </svg>
+      <p>{{ emptyText() }}</p>
+    </div>
+  }
+</div>

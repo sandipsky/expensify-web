@@ -1,0 +1,117 @@
+:host {
+  // Every variant resolves into these two, so a theme (or one-off instance)
+  // can restyle a chip by overriding just this pair.
+  --l-chip-bg: var(--bg-dark);
+  --l-chip-color: var(--text-primary);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--l-chip-bg);
+  color: var(--l-chip-color);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+// ── Variants ───────────────────────────────────────────────────
+:host.l-chip--primary {
+  --l-chip-bg: var(--accent-bg);
+  --l-chip-color: var(--accent);
+}
+
+:host.l-chip--success {
+  --l-chip-bg: var(--success-bg);
+  --l-chip-color: var(--success);
+}
+
+:host.l-chip--error {
+  --l-chip-bg: var(--error-bg);
+  --l-chip-color: var(--error);
+}
+
+:host.l-chip--warn {
+  --l-chip-bg: var(--warn-bg);
+  --l-chip-color: var(--warn);
+}
+
+:host.l-chip--info {
+  --l-chip-bg: var(--info-bg);
+  --l-chip-color: var(--info);
+}
+
+:host.l-chip--premium {
+  --l-chip-bg: var(--premium-bg);
+  --l-chip-color: var(--premium);
+}
+
+// ── Sizes ──────────────────────────────────────────────────────
+:host.l-chip--sm {
+  padding: 4px 10px;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+:host.l-chip--md {
+  padding: 6px 16px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+:host.l-chip--lg {
+  padding: 8px 20px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+// ── Parts ──────────────────────────────────────────────────────
+.l-chip__dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.l-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  // Pull into the pill's padding so the label stays optically centered.
+  margin-right: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+
+  svg {
+    width: 8px;
+    height: 8px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 14%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-chip__remove {
+    transition: none;
+  }
+}

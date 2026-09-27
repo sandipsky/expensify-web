@@ -1,0 +1,28 @@
+<div class="l-otp__boxes">
+  @for (char of _chars(); track $index; let i = $index; let last = $last) {
+    <input
+      #cell
+      class="l-otp__box"
+      [class.is-filled]="char"
+      [type]="_inputType()"
+      [attr.inputmode]="_inputMode()"
+      [value]="char"
+      [disabled]="_isDisabled()"
+      [name]="name() + '-' + i"
+      [attr.aria-label]="'Character ' + (i + 1) + ' of ' + length()"
+      autocomplete="one-time-code"
+      autocapitalize="off"
+      spellcheck="false"
+      maxlength="1"
+      (input)="_onInput($event, i)"
+      (keydown)="_onKeydown($event, i)"
+      (paste)="_onPaste($event, i)"
+      (focus)="_onFocus($event)"
+      (blur)="_onBlur()"
+    />
+
+    @if (separator() && !last) {
+      <span class="l-otp__separator" aria-hidden="true">–</span>
+    }
+  }
+</div>

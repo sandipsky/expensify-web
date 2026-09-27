@@ -1,0 +1,263 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? (_viewText() || '-') }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [attr.for]="id()">{{ label() }}</label>
+    }
+
+    <div class="l-select" [class.is-open]="_open()" (focusout)="_onBlur($event)">
+      <div
+        #trigger
+        class="form-control l-select__trigger"
+        [class.is-placeholder]="!_hasValue()"
+        [class.is-multiple]="multiple()"
+        [attr.id]="id()"
+        role="combobox"
+        [attr.tabindex]="_isDisabled() ? -1 : 0"
+        [attr.aria-haspopup]="'listbox'"
+        [attr.aria-expanded]="_open()"
+        [attr.aria-disabled]="_isDisabled()"
+        [attr.aria-controls]="id() + '-listbox'"
+        (click)="_toggle()"
+        (keydown)="_onKeydown($event, false)"
+      >
+        @if (multiple()) {
+          @if (_hasValue()) {
+            <div #tagsArea class="l-select__tags">
+              @for (option of _shownTags(); track option.value) {
+                <span class="l-select__tag">
+                  <span class="l-select__tag-label">{{ option.label }}</span>
+                  @if (!_isDisabled()) {
+                    <button
+                      type="button"
+                      class="l-select__tag-remove"
+                      tabindex="-1"
+                      [attr.aria-label]="'Remove ' + option.label"
+                      (click)="_removeTag(option, $event)"
+                    >
+                      <ng-container [ngTemplateOutlet]="closeIcon" />
+                    </button>
+                  }
+                </span>
+              }
+              @if (_overflowCount() > 0) {
+                <span class="l-select__tag l-select__tag--count">+ {{ _overflowCount() }} …</span>
+              }
+            </div>
+          } @else {
+            <span class="l-select__label">{{ placeholder() }}</span>
+          }
+        } @else {
+          <span class="l-select__label">{{ _selectedLabel() || placeholder() }}</span>
+        }
+
+        <div class="l-select__affixes">
+          @if (_showClear()) {
+            <button
+              type="button"
+              class="l-select__clear"
+              tabindex="-1"
+              aria-label="Clear selection"
+              (click)="_clear($event)"
+            >
+              <ng-container [ngTemplateOutlet]="closeIcon" />
+            </button>
+          }
+
+          @if (showArrow()) {
+            <svg
+              class="l-select__arrow"
+              width="14"
+              height="14"
+              viewBox="0 0 20 20"
+              fill="none"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 7.5L10 12.5L15 7.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          }
+        </div>
+      </div>
+
+      @if (_isResponsive() && _hasValue()) {
+        <!-- Off-screen mirror used only to measure how many tags fit on one line. -->
+        <div #tagsMeasure class="l-select__tags-measure" aria-hidden="true">
+          @for (option of _selectedOptions(); track option.value) {
+            <span class="l-select__tag">
+              <span class="l-select__tag-label">{{ option.label }}</span>
+              @if (!_isDisabled()) {
+                <span class="l-select__tag-remove">
+                  <ng-container [ngTemplateOutlet]="closeIcon" />
+                </span>
+              }
+            </span>
+          }
+        </div>
+      }
+
+      @if (_open()) {
+        <!-- Moved to <body> after render (see the portal effect in select.ts) — the
+           focusout handler must sit here too, since events no longer bubble to .l-select. -->
+        <div
+          #dropdown
+          class="l-select__dropdown"
+          [class.is-up]="_dropUp()"
+          [style.left.px]="_menuLeft()"
+          [style.width.px]="_menuWidth()"
+          [style.top.px]="_menuTop()"
+          [style.bottom.px]="_menuBottom()"
+          (focusout)="_onBlur($event)"
+        >
+          @if (searchable()) {
+            <div class="l-select__search">
+              <input
+                #searchInput
+                type="text"
+                class="l-select__search-input"
+                [value]="_searchText()"
+                placeholder="Search…"
+                autocomplete="off"
+                (input)="_onSearch($event)"
+                (keydown)="_onKeydown($event, true)"
+              />
+            </div>
+          }
+
+          @if (showLoading()) {
+            <div class="l-select__status">
+              <span class="l-select__spinner" aria-hidden="true"></span>
+              <span>Loading…</span>
+            </div>
+          } @else if (_visible().length === 0) {
+            <div class="l-select__status l-select__status--empty">No results</div>
+          } @else if (groupBy()) {
+            <div
+              #viewport
+              class="l-select__options"
+              role="listbox"
+              [attr.id]="id() + '-listbox'"
+              [style.maxHeight.px]="_maxListHeight()"
+              (scroll)="_onScroll($event)"
+            >
+              @for (group of _groups(); track group.label) {
+                <div class="l-select__group-label">{{ group.label }}</div>
+                @for (option of group.options; track option.index) {
+                  <ng-container
+                    [ngTemplateOutlet]="optionRow"
+                    [ngTemplateOutletContext]="{ $implicit: option }"
+                  />
+                }
+              }
+            </div>
+          } @else if (_useVirtual()) {
+            <div
+              #viewport
+              class="l-select__options"
+              role="listbox"
+              [attr.id]="id() + '-listbox'"
+              [style.height.px]="_viewportHeight()"
+              (scroll)="_onScroll($event)"
+            >
+              <div class="l-select__spacer" [style.height.px]="_totalHeight()">
+                <div [style.transform]="'translateY(' + _offsetTop() + 'px)'">
+                  @for (option of _window(); track option.index) {
+                    <ng-container
+                      [ngTemplateOutlet]="optionRow"
+                      [ngTemplateOutletContext]="{ $implicit: option }"
+                    />
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div
+              #viewport
+              class="l-select__options"
+              role="listbox"
+              [attr.id]="id() + '-listbox'"
+              [style.maxHeight.px]="_maxListHeight()"
+              (scroll)="_onScroll($event)"
+            >
+              @for (option of _visible(); track option.index) {
+                <ng-container
+                  [ngTemplateOutlet]="optionRow"
+                  [ngTemplateOutletContext]="{ $implicit: option }"
+                />
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<ng-template #optionRow let-option>
+  <div
+    class="l-select__option"
+    role="option"
+    [class.is-selected]="_isSelected(option.value)"
+    [class.is-active]="_activeIndex() === option.index"
+    [class.is-disabled]="_optionDisabled(option)"
+    [style.height.px]="_rowHeight"
+    [attr.data-index]="option.index"
+    [attr.aria-selected]="_isSelected(option.value)"
+    [attr.aria-disabled]="_optionDisabled(option)"
+    (click)="_onOptionClick(option)"
+    (mouseenter)="_setActive(option)"
+  >
+    <span class="l-select__option-label">{{ option.label }}</span>
+
+    @if (_isSelected(option.value)) {
+      <svg
+        class="l-select__check"
+        width="16"
+        height="16"
+        viewBox="0 0 20 20"
+        fill="none"
+        aria-hidden="true"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16.6667 5L7.5 14.1667L3.33333 10"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    }
+  </div>
+</ng-template>
+
+<ng-template #closeIcon>
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 20 20"
+    fill="none"
+    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M15 5L5 15M5 5L15 15"
+      stroke="currentColor"
+      stroke-width="1.75"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+</ng-template>

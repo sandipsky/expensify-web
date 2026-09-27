@@ -1,0 +1,49 @@
+.check-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+// `.control-row` prefix beats the global `.form-group label span` rule so the
+// (unchecked) check stays transparent instead of inheriting the error-red color.
+.control-row .check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 1px solid var(--separator-dark);
+  border-radius: 6px;
+  background: var(--bg-lightest);
+  color: transparent;
+  transition:
+    background 150ms ease-out,
+    border-color 150ms ease-out,
+    color 150ms ease-out;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.check-input:checked + .check-box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-white);
+}
+
+.check-input:focus-visible + .check-box {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .check-box {
+    transition: none;
+  }
+}

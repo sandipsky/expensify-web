@@ -1,0 +1,103 @@
+<div class="paginator">
+  <span class="page-text">
+    <span class="page-text light">Showing </span>
+    <span class="page-text bold">{{ _itemsInView() }} </span>
+    <span class="page-text light">Entries out of </span>{{ length() }}
+  </span>
+
+  <div class="arrow-buttons" [style.--page-num-chars]="_pageNumChars()">
+    <div
+      [class.disabled]="pageIndex() === 0"
+      (click)="pageIndex() !== 0 && _goFirstPage()"
+      class="paginator-btn"
+    >
+      <svg
+        style="transform: rotate(180deg)"
+        fill="currentColor"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M8.46,8.29A1,1,0,1,0,7,9.71L9.34,12,7,14.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l3-3a1,1,0,0,0,0-1.42Zm8.5,3-3-3a1,1,0,0,0-1.42,1.42L14.84,12l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l3-3A1,1,0,0,0,17,11.29Z"
+        />
+      </svg>
+      First
+    </div>
+
+    <div
+      [class.disabled]="pageIndex() === 0"
+      (click)="pageIndex() !== 0 && _onPrevAndNext('prev')"
+      class="paginator-btn"
+    >
+      <svg
+        style="transform: rotate(180deg)"
+        fill="currentColor"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M14.83,11.29,10.59,7.05a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41L12.71,12,9.17,15.54a1,1,0,0,0,0,1.41,1,1,0,0,0,.71.29,1,1,0,0,0,.71-.29l4.24-4.24A1,1,0,0,0,14.83,11.29Z"
+        />
+      </svg>
+      Prev
+    </div>
+
+    @for (page of _visiblePages(); track page) {
+      <div
+        [class.active]="page === pageIndex() + 1"
+        (click)="_goToPage(page - 1)"
+        class="paginator-btn page-num"
+      >
+        {{ page }}
+      </div>
+    }
+
+    <div
+      [class.disabled]="pageIndex() + 1 === _totalPages()"
+      (click)="pageIndex() + 1 !== _totalPages() && _onPrevAndNext('next')"
+      class="paginator-btn"
+    >
+      Next
+      <svg fill="currentColor" width="20" height="20" viewBox="0 0 24 24">
+        <path
+          d="M14.83,11.29,10.59,7.05a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41L12.71,12,9.17,15.54a1,1,0,0,0,0,1.41,1,1,0,0,0,.71.29,1,1,0,0,0,.71-.29l4.24-4.24A1,1,0,0,0,14.83,11.29Z"
+        />
+      </svg>
+    </div>
+
+    <div
+      [class.disabled]="pageIndex() + 1 === _totalPages()"
+      (click)="pageIndex() + 1 !== _totalPages() && _goLastPage()"
+      class="paginator-btn"
+    >
+      Last
+      <svg fill="currentColor" width="20" height="20" viewBox="0 0 24 24">
+        <path
+          d="M8.46,8.29A1,1,0,1,0,7,9.71L9.34,12,7,14.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l3-3a1,1,0,0,0,0-1.42Zm8.5,3-3-3a1,1,0,0,0-1.42,1.42L14.84,12l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l3-3A1,1,0,0,0,17,11.29Z"
+        />
+      </svg>
+    </div>
+  </div>
+
+  <div class="page-items">
+    <span class="page-text">Row per page: </span>
+    <l-menu mode="right">
+      <div dropdown-display class="paginator-btn paginator-dropdown-btn">
+        {{ pageSize() }}
+        <svg fill="currentColor" width="20" height="20" viewBox="0 0 24 24">
+          <path
+            d="M14.83,11.29,10.59,7.05a1,1,0,0,0-1.42,0,1,1,0,0,0,0,1.41L12.71,12,9.17,15.54a1,1,0,0,0,0,1.41,1,1,0,0,0,.71.29,1,1,0,0,0,.71-.29l4.24-4.24A1,1,0,0,0,14.83,11.29Z"
+          />
+        </svg>
+      </div>
+
+      @for (item of pageSizeOptions(); track item) {
+        <div dropdown-item [class.active]="item === pageSize()" (click)="_onChangePageOption(item)">
+          {{ item }}
+        </div>
+      }
+    </l-menu>
+  </div>
+</div>

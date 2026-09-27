@@ -1,0 +1,98 @@
+<div
+  class="l-tree-item__row"
+  role="treeitem"
+  [attr.aria-expanded]="_hasChildren() ? _expanded() : null"
+  [attr.aria-selected]="_selected()"
+  [attr.aria-disabled]="node().disabled || null"
+  [class.is-selected]="_selected()"
+  [class.is-disabled]="node().disabled"
+  (click)="_onRow()"
+>
+  @if (_showLine()) {
+    @for (g of guides(); track $index; let cellLast = $last) {
+      <span class="l-tree-item__guide" [class.is-connector]="cellLast">
+        @if (cellLast) {
+          <span class="l-tree-item__elbow"></span>
+          @if (!isLast()) {
+            <span class="l-tree-item__continue"></span>
+          }
+        } @else if (g) {
+          <span class="l-tree-item__through"></span>
+        }
+      </span>
+    }
+  } @else {
+    @for (g of guides(); track $index) {
+      <span class="l-tree-item__indent"></span>
+    }
+  }
+
+  <span
+    class="l-tree-item__switch"
+    [class.line-down]="_showLine() && _hasChildren() && _expanded()"
+  >
+    @if (_hasChildren()) {
+      <button
+        type="button"
+        class="l-tree-item__toggle"
+        [class.is-expanded]="_expanded()"
+        [attr.aria-label]="_expanded() ? 'Collapse' : 'Expand'"
+        (click)="_onToggle($event)"
+      >
+        <svg
+          class="l-tree-item__chevron"
+          width="10"
+          height="10"
+          viewBox="0 0 10 10"
+          fill="none"
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M3 1.5L6.5 5L3 8.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    }
+  </span>
+
+  @if (_checkable()) {
+    <input
+      type="checkbox"
+      class="l-tree-item__checkbox"
+      [checked]="_checkState() === 'checked'"
+      [indeterminate]="_checkState() === 'indeterminate'"
+      [disabled]="node().disabled || node().disableCheckbox"
+      (click)="$event.stopPropagation()"
+      (change)="_onCheck()"
+    />
+  }
+
+  <span class="l-tree-item__content">
+    @if (_showIcon() && node().icon) {
+      <span class="l-tree-item__icon" aria-hidden="true">{{ node().icon }}</span>
+    }
+    <span class="l-tree-item__label">{{ node().label }}</span>
+  </span>
+</div>
+
+@if (_hasChildren()) {
+  <div
+    class="l-tree-item__children"
+    role="group"
+    [class.is-open]="_expanded()"
+    [attr.inert]="_expanded() ? null : ''"
+  >
+    <div class="l-tree-item__children-inner">
+      @if (_renderChildren()) {
+        @for (child of node().children; track child.key; let last = $last) {
+          <l-tree-item [node]="child" [guides]="_childGuides()" [isLast]="last" />
+        }
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,231 @@
+:host {
+  display: block;
+
+  // Local tokens so the whole component themes from one place.
+  --l-stepper-size: 34px;
+  --l-stepper-line: var(--separator-dark);
+  --l-stepper-line-done: var(--accent);
+  --l-stepper-gap: 12px;
+}
+
+.l-stepper__list {
+  display: flex;
+}
+
+// ── Step (the whole clickable region: indicator + label) ───────
+.l-stepper__step {
+  display: flex;
+  align-items: center;
+  gap: var(--l-stepper-gap);
+  padding: 8px 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  transition: background-color 150ms ease-out;
+
+  &.is-selectable {
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-light);
+    }
+
+    &:active {
+      background: var(--bg-dark);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  &.is-disabled {
+    opacity: 0.45;
+  }
+}
+
+// ── Indicator ──────────────────────────────────────────────────
+.l-stepper__indicator-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.l-stepper__indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--l-stepper-size);
+  height: var(--l-stepper-size);
+  border: 2px solid var(--separator-dark);
+  border-radius: 50%;
+  background: var(--bg-lightest);
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+
+.l-stepper__custom-icon {
+  font-size: 15px;
+}
+
+.l-stepper__step.is-selectable:hover .l-stepper__indicator {
+  border-color: var(--text-quaternary);
+}
+
+// ── Status: active ─────────────────────────────────────────────
+.l-stepper__step.is-active {
+  .l-stepper__indicator {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--text-white);
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+
+  .l-stepper__title {
+    color: var(--text-primary);
+  }
+
+  &.is-selectable:hover .l-stepper__indicator {
+    border-color: var(--accent);
+  }
+}
+
+// ── Status: completed ──────────────────────────────────────────
+.l-stepper__step.is-completed {
+  .l-stepper__indicator {
+    border-color: var(--success);
+    background: var(--success);
+    color: var(--text-white);
+  }
+
+  &.is-selectable:hover .l-stepper__indicator {
+    border-color: var(--success);
+  }
+}
+
+// ── Status: error ──────────────────────────────────────────────
+.l-stepper__step.is-error {
+  .l-stepper__indicator {
+    border-color: var(--error);
+    background: var(--error);
+    color: var(--text-white);
+  }
+
+  .l-stepper__title {
+    color: var(--error);
+  }
+
+  &.is-selectable:hover .l-stepper__indicator {
+    border-color: var(--error);
+  }
+}
+
+// ── Label ──────────────────────────────────────────────────────
+.l-stepper__label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.l-stepper__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-secondary);
+  transition: color 150ms ease-out;
+}
+
+.l-stepper__description {
+  font-size: 12.5px;
+  line-height: 17px;
+  color: var(--text-quaternary);
+}
+
+// ── Connector lines ────────────────────────────────────────────
+.l-stepper__connector {
+  background: var(--l-stepper-line);
+  border-radius: 2px;
+  transition: background-color 200ms ease-out;
+
+  &.is-done {
+    background: var(--l-stepper-line-done);
+  }
+}
+
+// Hide the rails but keep them as spacers so steps stay distributed.
+// (Host modifier classes must be matched with :host() under emulated encapsulation.)
+:host(.l-stepper--no-lines) .l-stepper__connector {
+  background: transparent;
+}
+
+// ═══ Horizontal layout ═════════════════════════════════════════
+:host(.l-stepper--horizontal) {
+  .l-stepper__list {
+    align-items: center;
+  }
+
+  .l-stepper__connector {
+    flex: 1;
+    height: 2px;
+    min-width: 24px;
+    margin: 0 8px;
+  }
+}
+
+// ═══ Vertical layout ═══════════════════════════════════════════
+:host(.l-stepper--vertical) {
+  .l-stepper__list {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .l-stepper__step {
+    align-items: flex-start;
+  }
+
+  .l-stepper__indicator-wrap {
+    flex-direction: column;
+    align-self: stretch;
+  }
+
+  .l-stepper__connector {
+    width: 2px;
+    flex: 1;
+    min-height: 22px;
+    margin: 6px 0;
+  }
+
+  // Space between rows gives the vertical rail its length, and the top padding
+  // optically aligns the label with the indicator's center.
+  .l-stepper__label {
+    padding-top: 6px;
+    padding-bottom: 20px;
+  }
+
+  .l-stepper__step:last-child .l-stepper__label {
+    padding-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-stepper__step,
+  .l-stepper__indicator,
+  .l-stepper__connector,
+  .l-stepper__title {
+    transition: none;
+  }
+}

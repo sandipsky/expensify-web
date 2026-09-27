@@ -1,0 +1,3 @@
+@for (node of nodes(); track node.key; let last = $last) {
+  <l-tree-item [node]="node" [guides]="[]" [isLast]="last" />
+}

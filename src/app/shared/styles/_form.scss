@@ -1,0 +1,195 @@
+// Common form styles shared across LumenUI inputs. Type-specific styles live in
+// each component's own `.scss` (e.g. toggle.scss, checkbox.scss, number-input.scss).
+
+// LumenUI input host elements (l-text-input, l-password-input, …) — block-level, full width.
+l-text-input,
+l-password-input,
+l-email-input,
+l-number-input,
+l-textarea,
+l-select,
+l-date-input {
+  display: block;
+  width: 100%;
+}
+
+// Selection controls are intrinsically sized, not full-width.
+l-toggle,
+l-checkbox,
+l-radio {
+  display: block;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: stretch;
+  gap: 6px;
+
+  label {
+    color: var(--text-primary);
+    font-size: 14;
+    font-weight: 500;
+    line-height: 20px;
+
+    span {
+      color: var(--error);
+    }
+  }
+}
+
+.form-control {
+  padding: 6px 8px;
+  border: 1px solid var(--separator);
+  background: var(--bg-lightest);
+  border-radius: 8px;
+  outline: none;
+  display: flex;
+  align-self: stretch;
+  align-items: flex-start;
+  gap: 12px;
+  box-shadow: 0 1px 2px 0 rgba(13, 13, 18, 0.06);
+
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+
+  &::placeholder {
+    color: var(--text-quaternary);
+  }
+
+  &:focus {
+    outline: none;
+    border: 1px solid var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  &.error {
+    background: var(--error-bg);
+    border: 1px solid var(--error);
+  }
+}
+
+// Shared icon wrapper used by the password and email inputs.
+.input-wrapper {
+  position: relative;
+  width: 100%;
+
+  .form-control {
+    width: 100%;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .left-icon,
+  .right-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+  }
+
+  .left-icon {
+    left: 8px;
+  }
+
+  .right-icon {
+    right: 8px;
+  }
+
+  .right-icon.clickable {
+    cursor: pointer;
+  }
+}
+
+// Inline validation message — injected at runtime by the FormValidation directive,
+// so it must stay global (dynamically created elements are not view-encapsulated).
+.alert {
+  display: flex;
+  padding: 4px 8px;
+  align-items: center;
+  gap: 8px;
+  align-self: stretch;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+
+  &.success {
+    background: var(--success-bg);
+    color: var(--success);
+  }
+
+  &.error {
+    background: var(--error-bg);
+    color: var(--error);
+  }
+
+  &.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+
+  &.info {
+    background: var(--info-bg);
+    color: var(--info);
+  }
+}
+
+// ================= View mode (`viewMode` input) =================
+// The field renders its value as plain text instead of the input container.
+
+.form-group.view-mode > label {
+  color: var(--text-quaternary);
+}
+
+.form-group .view-value {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+// Textarea values keep their line breaks.
+.form-group .view-value.pre-wrap {
+  white-space: pre-wrap;
+}
+
+// ================= Selection controls (toggle / checkbox / radio) =================
+// Layout primitives shared by all three; each control's visuals live in its own scss.
+
+.control-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+
+  &.label-left {
+    flex-direction: row-reverse;
+  }
+
+  // Label above the control — matches the 6px label/field gap of regular fields.
+  &.label-top {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  &:has(input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// More specific than `.form-group label span` (the required-asterisk rule) so the
+// control text stays primary, not error-red.
+.control-row .control-label {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}

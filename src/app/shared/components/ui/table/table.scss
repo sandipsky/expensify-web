@@ -1,0 +1,257 @@
+// ─────────────────────────────────────────────────────────────────
+// Styles copied verbatim from src/scss/_table.scss (original untouched).
+// ─────────────────────────────────────────────────────────────────
+// Deviation from the original: the sort arrows anchor to the inner
+// .th-label span so they sit right next to the header text, not at the
+// far end of the cell.
+.sort-by {
+  cursor: pointer;
+
+  .th-label {
+    position: relative;
+    display: inline-block;
+    padding-right: 20px;
+
+    &:before,
+    &:after {
+      content: '';
+      display: block;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 5px solid;
+      position: absolute;
+      color: #bcbdbe;
+      right: 4px;
+    }
+
+    &:after {
+      transform: rotate(180deg);
+      margin-top: -8px;
+    }
+
+    &:before {
+      margin-top: 2px;
+    }
+  }
+
+  &.asc .th-label:before,
+  &.desc .th-label:after {
+    color: black;
+  }
+
+  &.asc .th-label:after,
+  &.desc .th-label:before {
+    color: #bcbdbe;
+  }
+
+  &.none .th-label:before,
+  &.none .th-label:after {
+    color: #bcbdbe;
+  }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead {
+    position: sticky;
+    top: 0px;
+    z-index: 2;
+  }
+
+  th {
+    border-top: 1px solid var(--separator);
+    border-bottom: 1px solid var(--separator);
+    text-align: left;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    background: var(--bg-semi-light);
+    font-weight: 500;
+    line-height: 20px;
+    padding: 6px 8px;
+  }
+
+  td {
+    padding: 6px 8px;
+    font-weight: 400;
+    font-size: 14px;
+    white-space: nowrap;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--separator);
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+
+      img {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.text-end {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.status {
+  display: flex;
+  padding: 4px 8px;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+
+  .circle {
+    height: 6px;
+    width: 6px;
+    border-radius: 50%;
+    background: var(--text-primary);
+  }
+
+  &.success {
+    background: var(--success-bg);
+    color: var(--success);
+
+    .circle {
+      background: var(--success);
+    }
+  }
+
+  &.error {
+    background: var(--error-bg);
+    color: var(--error);
+
+    .circle {
+      background: var(--error);
+    }
+  }
+
+  &.warn {
+    background: var(--warn-bg);
+    color: var(--warn);
+
+    .circle {
+      background: var(--warn);
+    }
+  }
+
+  &.info {
+    background: var(--info-bg);
+    color: var(--info);
+
+    .circle {
+      background: var(--warn);
+    }
+  }
+
+  &.primary {
+    background: var(--accent-bg);
+    color: var(--accent);
+
+    .circle {
+      background: var(--accent);
+    }
+  }
+
+  &.cancel {
+    background: var(--cancel-bg);
+    color: var(--cancel);
+
+    .circle {
+      background: var(--cancel);
+    }
+  }
+}
+
+.no-data {
+  padding: 48px 0px;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+
+  p {
+    color: rgba(51, 51, 51, 0.5);
+    font-size: 14px;
+    line-height: 21px;
+  }
+}
+
+.no-data__icon {
+  display: block;
+  margin: 0 auto 12px;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Component additions (not part of the original file).
+// ─────────────────────────────────────────────────────────────────
+:host {
+  display: block;
+}
+
+.table-responsive {
+  position: relative;
+}
+
+.table {
+  th.sort-by:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+.l-table__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--bg-lightest) 70%, transparent);
+  backdrop-filter: blur(1px);
+  z-index: 3;
+}
+
+.l-table__overlay-text {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.l-table__spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--separator-dark);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: l-table-spin 700ms linear infinite;
+}
+
+@keyframes l-table-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-table__spinner {
+    animation-duration: 1600ms;
+  }
+}

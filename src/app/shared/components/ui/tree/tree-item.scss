@@ -1,0 +1,244 @@
+:host {
+  display: block;
+}
+
+// ── Row ────────────────────────────────────────────────────────
+.l-tree-item__row {
+  display: flex;
+  align-items: center;
+  min-height: var(--l-tree-row-min-height, 30px);
+  cursor: pointer;
+
+  &.is-disabled {
+    cursor: not-allowed;
+
+    .l-tree-item__content {
+      color: var(--text-quaternary);
+    }
+  }
+}
+
+// ── Indentation guides / rails ─────────────────────────────────
+.l-tree-item__guide,
+.l-tree-item__indent {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: var(--l-tree-indent);
+}
+
+// Pass-through vertical rail for an ancestor level that keeps going.
+.l-tree-item__through {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--l-tree-line);
+}
+
+// Curved elbow into this node: vertical top-half + rounded corner + horizontal.
+.l-tree-item__elbow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  right: calc(var(--l-tree-indent) / -2);
+  height: 50%;
+  border-left: 2px solid var(--l-tree-line);
+  border-bottom: 2px solid var(--l-tree-line);
+  border-bottom-left-radius: 10px;
+}
+
+// Rail continuing down to the next sibling (only when this node isn't last).
+.l-tree-item__continue {
+  position: absolute;
+  top: 50%;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--l-tree-line);
+}
+
+// ── Switcher (expand/collapse toggle column) ───────────────────
+.l-tree-item__switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: var(--l-tree-indent);
+
+  // Stub connecting an expanded parent down to its first child.
+  &.line-down::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--l-tree-line);
+  }
+}
+
+.l-tree-item__toggle {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: var(--bg-lightest);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+
+  &:hover {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-tree-item__chevron {
+  transition: transform 160ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.l-tree-item__toggle.is-expanded .l-tree-item__chevron {
+  transform: rotate(90deg);
+}
+
+// ── Checkbox ───────────────────────────────────────────────────
+.l-tree-item__checkbox {
+  flex: 0 0 auto;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 2px;
+  border: 1.5px solid var(--separator-dark);
+  border-radius: 4px;
+  background: var(--bg-lightest);
+  cursor: pointer;
+  position: relative;
+  transition:
+    background-color 140ms ease-out,
+    border-color 140ms ease-out;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+
+  &:checked,
+  &:indeterminate {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  &:checked::after {
+    content: '';
+    position: absolute;
+    left: 4.5px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--text-white);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  &:indeterminate::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 6px;
+    width: 8px;
+    height: 2px;
+    background: var(--text-white);
+    border-radius: 1px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Content (icon + label) ─────────────────────────────────────
+.l-tree-item__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  line-height: 20px;
+  transition:
+    background-color 140ms ease-out,
+    color 140ms ease-out;
+}
+
+.l-tree-item__icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.l-tree-item__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Children (animated collapse via the 0fr → 1fr grid trick) ──
+.l-tree-item__children {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-open {
+    grid-template-rows: 1fr;
+  }
+}
+
+.l-tree-item__children-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.l-tree-item__row:not(.is-disabled):hover .l-tree-item__content {
+  background: var(--bg-light);
+}
+
+.l-tree-item__row.is-selected .l-tree-item__content {
+  background: var(--accent-bg);
+  color: var(--accent-dark);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-tree-item__chevron,
+  .l-tree-item__toggle,
+  .l-tree-item__content,
+  .l-tree-item__checkbox,
+  .l-tree-item__children {
+    transition: none;
+  }
+}

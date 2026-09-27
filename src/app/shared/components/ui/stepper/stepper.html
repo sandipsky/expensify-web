@@ -1,0 +1,90 @@
+<div class="l-stepper__list" role="list">
+  @for (step of _steps(); track step.index; let last = $last) {
+    <button
+      type="button"
+      class="l-stepper__step"
+      role="listitem"
+      [class]="'is-' + step.status"
+      [class.is-selectable]="step.selectable"
+      [class.is-disabled]="step.disabled"
+      [disabled]="!step.selectable"
+      [attr.aria-current]="step.status === 'active' ? 'step' : null"
+      (click)="_select(step)"
+    >
+      <span class="l-stepper__indicator-wrap">
+        <span class="l-stepper__indicator">
+          @switch (step.status) {
+            @case ('completed') {
+              <svg
+                class="l-stepper__icon"
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M5 10.5L8.5 14L15 6.5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            }
+            @case ('error') {
+              <svg
+                class="l-stepper__icon"
+                width="18"
+                height="18"
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M10 5.5V11"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <circle cx="10" cy="14.5" r="1.1" fill="currentColor" />
+              </svg>
+            }
+            @default {
+              @if (step.icon) {
+                <span class="l-stepper__custom-icon" aria-hidden="true">{{ step.icon }}</span>
+              } @else {
+                <span class="l-stepper__number">{{ step.number }}</span>
+              }
+            }
+          }
+        </span>
+
+        @if (orientation() === 'vertical' && !last) {
+          <span
+            class="l-stepper__connector"
+            [class.is-done]="step.status === 'completed'"
+            aria-hidden="true"
+          ></span>
+        }
+      </span>
+
+      <span class="l-stepper__label">
+        <span class="l-stepper__title">{{ step.title }}</span>
+        @if (step.description) {
+          <span class="l-stepper__description">{{ step.description }}</span>
+        }
+      </span>
+    </button>
+
+    @if (orientation() === 'horizontal' && !last) {
+      <span
+        class="l-stepper__connector"
+        [class.is-done]="step.status === 'completed'"
+        aria-hidden="true"
+      ></span>
+    }
+  }
+</div>

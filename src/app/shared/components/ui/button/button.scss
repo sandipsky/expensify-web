@@ -1,0 +1,144 @@
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  gap: 8px;
+  border-radius: 8px;
+  outline: none;
+  border: 0px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: pointer;
+  height: fit-content;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    border-color 150ms ease-out;
+
+  &.full {
+    width: 100%;
+  }
+
+  // Sizes
+  &.btn-sm {
+    padding: 4px 8px;
+  }
+
+  &.btn-md {
+    padding: 6px 12px;
+  }
+
+  &.btn-lg {
+    padding: 8px 16px;
+  }
+
+  // Rounded: square box (width == height) so border-radius: 50% is a true
+  // circle, not an ellipse. Dimensions = line-height (20px) + 2 × padding.
+  &.rounded {
+    border-radius: 50%;
+    padding: 0;
+    aspect-ratio: 1;
+    line-height: 20;
+    width: 32px;
+    height: 32px;
+
+    &.btn-sm {
+      width: 28px;
+      height: 28px;
+    }
+
+    &.btn-lg {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    background-color: var(--bg-dark) !important;
+    border: 1px solid var(--separator);
+    color: var(--text-tertiary);
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--text-white);
+  border-bottom: 2px solid var(--accent-dark);
+  box-shadow: 0 1px 2px 0 rgba(13, 13, 18, 0.06);
+
+  &:hover {
+    background: var(--accent-dark);
+    border-bottom: 2px solid var(--accent-dark);
+  }
+}
+
+.btn-secondary {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--separator-dark);
+  box-shadow: 0 1px 2px 0 rgba(13, 13, 18, 0.06);
+
+  &:hover {
+    background: var(--separator-dark);
+    border-bottom: 2px solid var(--separator-dark);
+  }
+}
+
+.btn-outlined-primary {
+  background: var(--bg-lightest);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+
+  &:hover,
+  &.active {
+    background: var(--accent);
+    color: var(--bg-lightest);
+  }
+}
+
+.btn-outlined {
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+  border: 1px solid var(--separator-dark);
+
+  &:hover {
+    background: var(--bg-dark);
+  }
+}
+
+.btn-danger {
+  background: var(--bg-lightest);
+  color: var(--error);
+  border: 1px solid var(--error);
+
+  &:hover {
+    background: var(--error);
+    color: var(--text-white);
+  }
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid transparent;
+
+  &:hover {
+    background: var(--bg-dark);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+}

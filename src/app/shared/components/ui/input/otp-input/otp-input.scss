@@ -1,0 +1,94 @@
+:host {
+  display: inline-block;
+
+  // Local tokens — sized per `size` class below.
+  --l-otp-box: 48px;
+  --l-otp-font: 20px;
+  --l-otp-radius: 10px;
+  --l-otp-gap: 10px;
+  --l-otp-border: var(--separator-dark);
+  --l-otp-ring: var(--accent);
+  --l-otp-ring-bg: var(--accent-bg);
+}
+
+:host(.l-otp--sm) {
+  --l-otp-box: 40px;
+  --l-otp-font: 16px;
+  --l-otp-gap: 8px;
+}
+
+:host(.l-otp--lg) {
+  --l-otp-box: 56px;
+  --l-otp-font: 24px;
+  --l-otp-gap: 12px;
+}
+
+:host(.is-error) {
+  --l-otp-border: var(--error);
+  --l-otp-ring: var(--error);
+  --l-otp-ring-bg: var(--error-bg);
+}
+
+.l-otp__boxes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--l-otp-gap);
+}
+
+.l-otp__box {
+  width: var(--l-otp-box);
+  height: var(--l-otp-box);
+  padding: 0;
+  border: 1.5px solid var(--l-otp-border);
+  border-radius: var(--l-otp-radius);
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+  font-size: var(--l-otp-font);
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  caret-color: var(--l-otp-ring);
+  transition:
+    border-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    background-color 150ms ease-out;
+
+  &.is-filled {
+    border-color: var(--l-otp-ring);
+  }
+
+  &:hover:not(:disabled):not(:focus) {
+    border-color: var(--text-quaternary);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--l-otp-ring);
+    box-shadow: 0 0 0 3px var(--l-otp-ring-bg);
+  }
+
+  &:disabled {
+    background: var(--bg-light);
+    color: var(--text-quaternary);
+    cursor: not-allowed;
+  }
+
+  // Hide the native password-reveal control (Edge) when masking.
+  &::-ms-reveal,
+  &::-ms-clear {
+    display: none;
+  }
+}
+
+.l-otp__separator {
+  color: var(--text-quaternary);
+  font-size: var(--l-otp-font);
+  font-weight: 600;
+  user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-otp__box {
+    transition: none;
+  }
+}

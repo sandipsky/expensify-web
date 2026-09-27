@@ -1,0 +1,154 @@
+:host {
+  --drawer-duration: 280ms;
+}
+
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 15, 0.45);
+  animation: drawer-backdrop-in var(--drawer-duration) ease forwards;
+}
+
+.drawer-overlay--leaving .drawer-backdrop {
+  animation: drawer-backdrop-out var(--drawer-duration) ease forwards;
+}
+
+.drawer-panel {
+  position: fixed;
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+  box-shadow: 0 12px 40px rgba(13, 13, 18, 0.25);
+  overflow: auto;
+  animation-duration: var(--drawer-duration);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+// ── Edge docking & default cross-axis sizing ───────────────────
+.drawer-panel--left,
+.drawer-panel--right {
+  top: 0;
+  bottom: 0;
+  width: 380px;
+  max-width: 90vw;
+}
+.drawer-panel--left {
+  left: 0;
+}
+.drawer-panel--right {
+  right: 0;
+}
+.drawer-panel--bottom {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40vh;
+  max-height: 96vh;
+}
+
+// ── Position-driven slide animations ───────────────────────────
+// left: enters by sliding right, leaves by sliding left
+.drawer-panel--left.drawer-anim--enter {
+  animation-name: drawer-left-in;
+}
+.drawer-panel--left.drawer-anim--leave {
+  animation-name: drawer-left-out;
+}
+// The -in keyframes end at `none` (not translate(0)) so the settled panel has no
+// transform — a retained transform would become the containing block for
+// position:fixed descendants (select dropdowns, tooltips) and shift them.
+@keyframes drawer-left-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes drawer-left-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+// right: enters by sliding left, leaves by sliding right
+.drawer-panel--right.drawer-anim--enter {
+  animation-name: drawer-right-in;
+}
+.drawer-panel--right.drawer-anim--leave {
+  animation-name: drawer-right-out;
+}
+@keyframes drawer-right-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes drawer-right-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+// bottom: enters by sliding up, leaves by sliding down
+.drawer-panel--bottom.drawer-anim--enter {
+  animation-name: drawer-bottom-in;
+}
+.drawer-panel--bottom.drawer-anim--leave {
+  animation-name: drawer-bottom-out;
+}
+@keyframes drawer-bottom-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes drawer-bottom-out {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+// ── Backdrop fade ──────────────────────────────────────────────
+@keyframes drawer-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes drawer-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel,
+  .drawer-backdrop {
+    animation-duration: 1ms !important;
+  }
+}

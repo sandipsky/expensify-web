@@ -1,0 +1,242 @@
+:host {
+  --modal-duration: 250ms;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 9, 15, 0.45);
+  animation: modal-backdrop-in var(--modal-duration) ease forwards;
+}
+
+.modal-overlay--leaving .modal-backdrop {
+  animation: modal-backdrop-out var(--modal-duration) ease forwards;
+}
+
+// Scroll wrapper centers the panel and lets tall panels scroll.
+.modal-scroll {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
+}
+
+.modal-panel {
+  position: relative;
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(13, 13, 18, 0.25);
+  max-width: 90vw;
+  animation-duration: var(--modal-duration);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+// ── Backdrop fade ──────────────────────────────────────────────
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// ── Panel animations: each has an --enter and --leave variant ──
+
+// slideUp — rises from below on enter, drops on leave
+.modal-anim-slideUp.modal-anim--enter {
+  animation-name: modal-slideUp-in;
+}
+.modal-anim-slideUp.modal-anim--leave {
+  animation-name: modal-slideUp-out;
+}
+// The -in keyframes end at `transform: none` so the settled panel has no transform —
+// a retained transform would become the containing block for position:fixed
+// descendants (select dropdowns, tooltips) and shift them.
+@keyframes modal-slideUp-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes modal-slideUp-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+
+// slideDown — drops in from above
+.modal-anim-slideDown.modal-anim--enter {
+  animation-name: modal-slideDown-in;
+}
+.modal-anim-slideDown.modal-anim--leave {
+  animation-name: modal-slideDown-out;
+}
+@keyframes modal-slideDown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes modal-slideDown-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+}
+
+// slideLeft — enters from the right edge
+.modal-anim-slideLeft.modal-anim--enter {
+  animation-name: modal-slideLeft-in;
+}
+.modal-anim-slideLeft.modal-anim--leave {
+  animation-name: modal-slideLeft-out;
+}
+@keyframes modal-slideLeft-in {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes modal-slideLeft-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+}
+
+// slideRight — enters from the left edge
+.modal-anim-slideRight.modal-anim--enter {
+  animation-name: modal-slideRight-in;
+}
+.modal-anim-slideRight.modal-anim--leave {
+  animation-name: modal-slideRight-out;
+}
+@keyframes modal-slideRight-in {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes modal-slideRight-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+}
+
+// fade — opacity only
+.modal-anim-fade.modal-anim--enter {
+  animation-name: modal-fade-in;
+}
+.modal-anim-fade.modal-anim--leave {
+  animation-name: modal-fade-out;
+}
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// zoom — scales up on enter
+.modal-anim-zoom.modal-anim--enter {
+  animation-name: modal-zoom-in;
+}
+.modal-anim-zoom.modal-anim--leave {
+  animation-name: modal-zoom-out;
+}
+@keyframes modal-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes modal-zoom-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+// none — no animation
+.modal-anim-none {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel,
+  .modal-backdrop {
+    animation-duration: 1ms !important;
+  }
+}

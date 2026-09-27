@@ -1,0 +1,37 @@
+<div class="l-tabs__list" role="tablist" [attr.aria-orientation]="orientation()">
+  @for (tab of tabs(); track tab; let i = $index) {
+    <button
+      #tabBtn
+      type="button"
+      role="tab"
+      class="l-tabs__tab"
+      [id]="tab.tabId"
+      [class.is-active]="isActive(tab)"
+      [disabled]="tab.disabled()"
+      [attr.aria-selected]="isActive(tab)"
+      [attr.aria-controls]="tab.panelId"
+      [attr.tabindex]="isActive(tab) ? 0 : -1"
+      (click)="_select(tab)"
+      (keydown)="_onKeydown($event, i)"
+    >
+      @if (tab.icon()) {
+        <span class="l-tabs__icon" aria-hidden="true">{{ tab.icon() }}</span>
+      }
+      <span class="l-tabs__label">{{ tab.label() }}</span>
+    </button>
+  }
+
+  <span
+    class="l-tabs__indicator"
+    [class.is-visible]="_indicator().visible"
+    [class.is-ready]="_ready()"
+    [style.width.px]="_indicator().width"
+    [style.height.px]="_indicator().height"
+    [style.transform]="'translate(' + _indicator().x + 'px,' + _indicator().y + 'px)'"
+    aria-hidden="true"
+  ></span>
+</div>
+
+<div class="l-tabs__panels">
+  <ng-content />
+</div>

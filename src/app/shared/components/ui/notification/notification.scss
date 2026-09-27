@@ -1,0 +1,183 @@
+:host {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 14px 14px 16px;
+  border-radius: 10px;
+  background: var(--bg-lightest);
+  box-shadow: 0 8px 28px rgba(13, 13, 18, 0.16);
+  overflow: hidden;
+  pointer-events: auto;
+
+  // A colored accent bar on the leading edge, tinted per type.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--_accent);
+  }
+}
+
+// Per-type accent + icon color.
+:host(.l-notification--success) {
+  --_accent: var(--success);
+}
+:host(.l-notification--error) {
+  --_accent: var(--error);
+}
+:host(.l-notification--warn) {
+  --_accent: var(--warn);
+}
+:host(.l-notification--info) {
+  --_accent: var(--info);
+}
+
+.l-notification__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  margin-top: 1px;
+  color: var(--_accent);
+}
+
+.l-notification__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.l-notification__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.l-notification__message {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.l-notification__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  margin: -2px -2px 0 0;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    color 120ms ease-out,
+    background-color 120ms ease-out;
+
+  &:hover {
+    color: var(--text-primary);
+    background: var(--bg-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--_accent);
+    outline-offset: 1px;
+  }
+}
+
+// ── Progress / dismiss timer ───────────────────────────────────
+.l-notification__progress {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: transparent;
+
+  &.is-hidden {
+    height: 0; // still present so its animation drives the dismiss timer
+  }
+}
+
+.l-notification__progress-bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--_accent);
+  transform-origin: left center;
+  animation-name: l-notification-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+// Pause both the timer and the bar while hovered.
+:host(.pause:hover) .l-notification__progress-bar {
+  animation-play-state: paused;
+}
+
+@keyframes l-notification-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+// ── Enter / leave animations (direction follows the position) ──
+:host {
+  animation: l-notification-in 220ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+:host(.is-leaving) {
+  animation: l-notification-out 180ms ease-in forwards;
+}
+
+// Slide from the nearest edge.
+:host(.l-notification--topRight),
+:host(.l-notification--bottomRight) {
+  --_enter-x: 24px;
+}
+:host(.l-notification--topLeft),
+:host(.l-notification--bottomLeft) {
+  --_enter-x: -24px;
+}
+:host(.l-notification--top) {
+  --_enter-y: -24px;
+}
+:host(.l-notification--bottom) {
+  --_enter-y: 24px;
+}
+
+@keyframes l-notification-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--_enter-x, 0), var(--_enter-y, 0)) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes l-notification-out {
+  to {
+    opacity: 0;
+    transform: translate(var(--_enter-x, 0), var(--_enter-y, 0)) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  :host(.is-leaving) {
+    animation-duration: 1ms;
+  }
+  .l-notification__progress-bar {
+    // Keep the timer (duration honored) but drop the visual easing jank.
+    animation-timing-function: linear;
+  }
+}

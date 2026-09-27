@@ -1,0 +1,186 @@
+:host {
+  display: flex;
+
+  --l-tabs-pad-x: 16px;
+  --l-tabs-pad-y: 10px;
+  --l-tabs-font: 14px;
+  --l-tabs-gap: 2px;
+}
+
+:host(.l-tabs--sm) {
+  --l-tabs-pad-x: 12px;
+  --l-tabs-pad-y: 7px;
+  --l-tabs-font: 13px;
+}
+
+:host(.l-tabs--lg) {
+  --l-tabs-pad-x: 20px;
+  --l-tabs-pad-y: 13px;
+  --l-tabs-font: 15px;
+}
+
+:host(.l-tabs--horizontal) {
+  flex-direction: column;
+}
+
+:host(.l-tabs--vertical) {
+  flex-direction: row;
+  gap: 24px;
+}
+
+// ── Tab strip ──────────────────────────────────────────────────
+.l-tabs__list {
+  position: relative;
+  display: flex;
+  gap: var(--l-tabs-gap);
+}
+
+:host(.l-tabs--horizontal) .l-tabs__list {
+  flex-direction: row;
+}
+
+:host(.l-tabs--vertical) .l-tabs__list {
+  flex-direction: column;
+  min-width: 168px;
+}
+
+// Line variant — faint full-length track the indicator rides on.
+:host(.l-tabs--line.l-tabs--horizontal) .l-tabs__list {
+  border-bottom: 1px solid var(--separator);
+}
+
+:host(.l-tabs--line.l-tabs--vertical) .l-tabs__list {
+  border-right: 1px solid var(--separator);
+}
+
+// Pills variant — soft container that hugs the tabs.
+:host(.l-tabs--pills) .l-tabs__list {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--bg-light);
+}
+
+:host(.l-tabs--pills.l-tabs--horizontal) .l-tabs__list {
+  align-self: flex-start;
+}
+
+// ── Tab ────────────────────────────────────────────────────────
+.l-tabs__tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: var(--l-tabs-pad-y) var(--l-tabs-pad-x);
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--l-tabs-font);
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 160ms ease-out,
+    background-color 160ms ease-out;
+
+  &:hover:not(:disabled):not(.is-active) {
+    color: var(--text-primary);
+  }
+
+  &.is-active {
+    color: var(--accent-dark);
+    font-weight: 600;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.l-tabs__icon {
+  font-size: 15px;
+  line-height: 1;
+}
+
+:host(.l-tabs--vertical) .l-tabs__tab {
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+// ── Sliding indicator ──────────────────────────────────────────
+.l-tabs__indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+
+  &.is-visible {
+    opacity: 1;
+  }
+
+  &.is-ready {
+    transition:
+      transform 260ms cubic-bezier(0.4, 0, 0.2, 1),
+      width 260ms cubic-bezier(0.4, 0, 0.2, 1),
+      height 260ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+:host(.l-tabs--line) .l-tabs__indicator {
+  z-index: 0;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+:host(.l-tabs--pills) .l-tabs__indicator {
+  z-index: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  box-shadow: 0 1px 3px rgba(7, 9, 15, 0.18);
+}
+
+:host(.l-tabs--pills) .l-tabs__tab.is-active {
+  color: var(--text-white);
+}
+
+// Equal-width horizontal tabs.
+:host(.l-tabs--grow.l-tabs--horizontal) .l-tabs__list {
+  width: 100%;
+}
+
+:host(.l-tabs--grow.l-tabs--horizontal) .l-tabs__tab {
+  flex: 1;
+}
+
+// ── Panels ─────────────────────────────────────────────────────
+.l-tabs__panels {
+  position: relative;
+}
+
+:host(.l-tabs--horizontal) .l-tabs__panels {
+  padding-top: 16px;
+}
+
+:host(.l-tabs--vertical) .l-tabs__panels {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-tabs__tab,
+  .l-tabs__indicator.is-ready {
+    transition: none;
+  }
+}

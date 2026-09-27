@@ -1,0 +1,314 @@
+:host {
+  display: block;
+}
+
+.l-upload__input {
+  display: none;
+}
+
+// ── Dropzone ───────────────────────────────────────────────────
+.l-upload__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 32px 24px;
+  border: 1.5px dashed var(--separator-dark);
+  border-radius: 12px;
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    color 160ms ease-out;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-bg);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+:host(.is-dragging) .l-upload__dropzone {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--text-primary);
+}
+
+.l-upload__cloud {
+  color: var(--accent);
+}
+
+.l-upload__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.l-upload__hint {
+  font-size: 12.5px;
+  color: var(--text-quaternary);
+}
+
+// ── Button trigger ─────────────────────────────────────────────
+.l-upload__trigger-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.l-upload__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--separator-dark);
+  border-radius: 8px;
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease-out,
+    color 150ms ease-out,
+    background-color 150ms ease-out;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+// ── File list ──────────────────────────────────────────────────
+.l-upload__files {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.l-upload__file {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  background: var(--bg-lightest);
+  animation: l-upload-in 200ms ease-out;
+
+  &.is-error {
+    border-color: var(--error);
+    background: var(--error-bg);
+  }
+}
+
+.l-upload__thumb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-dark);
+  color: var(--text-tertiary);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.l-upload__badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-lightest);
+  color: var(--text-white);
+
+  &--success {
+    background: var(--success);
+  }
+
+  &--error {
+    background: var(--error);
+  }
+}
+
+.l-upload__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.l-upload__name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.l-upload__sub {
+  font-size: 12px;
+  color: var(--text-quaternary);
+}
+
+.is-error .l-upload__sub {
+  color: var(--error);
+}
+
+.l-upload__progress {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+.l-upload__progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 200ms ease-out;
+}
+
+.l-upload__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    color 140ms ease-out,
+    background-color 140ms ease-out;
+
+  &:hover {
+    color: var(--error);
+    background: var(--error-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+// ── Grid (picture cards) ───────────────────────────────────────
+:host(.l-upload--grid) .l-upload__files {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 12px;
+}
+
+:host(.l-upload--grid) .l-upload__file {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+:host(.l-upload--grid) .l-upload__thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+
+:host(.l-upload--grid) .l-upload__badge {
+  right: 6px;
+  bottom: 6px;
+}
+
+:host(.l-upload--grid) .l-upload__meta {
+  padding: 8px 10px;
+}
+
+:host(.l-upload--grid) .l-upload__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  background: rgba(7, 9, 15, 0.55);
+  color: var(--text-white);
+
+  &:hover {
+    background: var(--error);
+    color: var(--text-white);
+  }
+}
+
+@keyframes l-upload-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-upload__dropzone,
+  .l-upload__trigger,
+  .l-upload__remove,
+  .l-upload__progress-bar {
+    transition: none;
+  }
+
+  .l-upload__file {
+    animation: none;
+  }
+}

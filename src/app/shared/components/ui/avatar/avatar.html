@@ -1,0 +1,19 @@
+@if (imageUrl()) {
+  <img
+    class="avatar avatar-image"
+    [src]="imageUrl()"
+    [alt]="name()"
+    [style.width]="size()"
+    [style.height]="size()"
+  />
+} @else {
+  <span
+    class="avatar avatar-initials"
+    [style.width]="size()"
+    [style.height]="size()"
+    [style.background]="color()"
+    [style.color]="textColor()"
+  >
+    {{ _initials() }}
+  </span>
+}
