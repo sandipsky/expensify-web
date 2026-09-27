@@ -1,0 +1,7 @@
+@if (_isMobile() && mobileOpen()) {
+  <div class="l-sidebar__backdrop" (click)="mobileOpen.set(false)"></div>
+}
+
+<aside class="l-sidebar__panel">
+  <ng-content />
+</aside>

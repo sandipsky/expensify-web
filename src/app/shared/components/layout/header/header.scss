@@ -1,0 +1,55 @@
+:host {
+  --l-header-height: 40px;
+
+  display: block;
+}
+
+.l-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--l-header-height);
+  padding: 0 12px;
+  background: var(--bg-lightest);
+  border-bottom: 1px solid var(--separator);
+}
+
+.l-header__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+
+  &:hover {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.l-header__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-header__menu {
+    transition: none;
+  }
+}

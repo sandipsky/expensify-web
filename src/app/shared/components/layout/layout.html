@@ -1,0 +1,13 @@
+<l-sidebar #sidebar [(collapsed)]="collapsed" [(mobileOpen)]="mobileOpen">
+  <ng-content select="[layout-sidebar]" />
+</l-sidebar>
+
+<div class="l-layout__main">
+  <l-header (menuToggle)="sidebar.toggle()">
+    <ng-content select="[layout-header]" />
+  </l-header>
+
+  <main class="l-layout__content">
+    <ng-content />
+  </main>
+</div>

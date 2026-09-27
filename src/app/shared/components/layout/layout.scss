@@ -1,0 +1,28 @@
+:host {
+  --l-layout-content-padding: 16px;
+
+  display: flex;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.l-layout__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+l-header {
+  flex-shrink: 0;
+}
+
+/* Only the content scrolls; the header and sidebar stay put. */
+.l-layout__content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--l-layout-content-padding);
+  background: var(--bg-light);
+}

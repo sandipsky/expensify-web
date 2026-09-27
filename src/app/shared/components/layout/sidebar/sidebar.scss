@@ -1,0 +1,66 @@
+:host {
+  --l-sidebar-width: 200px;
+  --l-sidebar-width-collapsed: 70px;
+  --l-sidebar-z-index: 1000;
+
+  display: block;
+  height: 100%;
+  flex-shrink: 0;
+  width: var(--l-sidebar-width);
+  transition: width 180ms ease-out;
+}
+
+:host(.l-sidebar--collapsed) {
+  width: var(--l-sidebar-width-collapsed);
+}
+
+.l-sidebar__panel {
+  width: 100%;
+  height: 100%;
+  overflow: hidden auto;
+  background: var(--bg-lightest);
+  border-right: 1px solid var(--separator);
+  transition: width 180ms ease-out;
+}
+
+.l-sidebar__backdrop {
+  display: none;
+}
+
+/* Keep in sync with MOBILE_BREAKPOINT in sidebar.ts. */
+@media (max-width: 768px) {
+  :host,
+  :host(.l-sidebar--collapsed) {
+    width: 0;
+  }
+
+  .l-sidebar__panel {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--l-sidebar-width);
+    z-index: var(--l-sidebar-z-index);
+    transform: translateX(-100%);
+    transition: transform 200ms ease-out;
+    box-shadow: none;
+  }
+
+  :host(.l-sidebar--open) .l-sidebar__panel {
+    transform: translateX(0);
+    box-shadow: 4px 0 16px rgba(7, 9, 15, 0.12);
+  }
+
+  .l-sidebar__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--l-sidebar-z-index) - 1);
+    background: rgba(7, 9, 15, 0.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .l-sidebar__panel {
+    transition: none;
+  }
+}
