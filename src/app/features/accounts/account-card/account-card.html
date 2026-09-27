@@ -1,0 +1,68 @@
+<l-card [hoverable]="true" padding="lg">
+  <div class="account-card">
+    <div class="account-card__head">
+      <app-account-icon [icon]="account().icon" [color]="account().color" />
+
+      <div class="account-card__title">
+        <a class="account-card__link text-ellipsis" [routerLink]="['/accounts', account().id]">
+          {{ account().name }}
+        </a>
+        <span class="account-card__type">{{ typeLabel() }}</span>
+      </div>
+
+      <l-menu class="account-card__menu" mode="right">
+        <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+          <l-icon name="more_vert" color="inherit" />
+          <span class="visually-hidden">Actions for {{ account().name }}</span>
+        </l-button>
+        @if (account().archived) {
+          <button type="button" dropdown-item (click)="restore.emit()">
+            <l-icon name="unarchive" [size]="18" />Restore
+          </button>
+        } @else {
+          <ng-container ngProjectAs="[dropdown-item]">
+            <button type="button" dropdown-item (click)="edit.emit()">
+              <l-icon name="edit" [size]="18" />Edit
+            </button>
+            <button type="button" dropdown-item (click)="reconcile.emit()">
+              <l-icon name="tune" [size]="18" />Reconcile
+            </button>
+            <button type="button" dropdown-item (click)="archive.emit()">
+              <l-icon name="archive" [size]="18" />Archive
+            </button>
+          </ng-container>
+        }
+        <button type="button" dropdown-item class="danger" (click)="delete.emit()">
+          <l-icon name="delete" [size]="18" color="inherit" />Delete
+        </button>
+      </l-menu>
+    </div>
+
+    <div class="account-card__balance">
+      <span class="account-card__caption">{{ balance().caption }}</span>
+      <span class="account-card__amount" [class.is-negative]="balance().negative">
+        {{ balance().amount | money: account().currency }}
+      </span>
+    </div>
+
+    @if (utilization(); as used) {
+      <div class="account-card__credit">
+        <l-progress [value]="used.percent" [variant]="used.variant" label="Credit used" />
+        <span class="account-card__caption">
+          {{ used.percent }}% of {{ account().creditLimit | money: account().currency }} limit used
+        </span>
+      </div>
+    }
+
+    @if (!account().includeInTotal || account().archived) {
+      <div class="account-card__chips">
+        @if (account().archived) {
+          <l-chip size="sm">Archived</l-chip>
+        }
+        @if (!account().includeInTotal) {
+          <l-chip size="sm">Not in total</l-chip>
+        }
+      </div>
+    }
+  </div>
+</l-card>

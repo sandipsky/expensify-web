@@ -1,0 +1,84 @@
+<div class="accounts-page">
+  <div class="accounts-page__header">
+    <l-breadcrumb title="Accounts" />
+    @if (store.all().length) {
+      <l-button size="lg" (click)="add()">
+        <l-icon name="add" color="inherit" />
+        Add account
+      </l-button>
+    }
+  </div>
+
+  @if (store.loading()) {
+    <l-skeleton height="104px" />
+    <l-row [gutter]="[16, 16]" align="stretch">
+      @for (placeholder of [1, 2, 3]; track placeholder) {
+        <l-col [span]="12" [md]="6" [xl]="4"><l-skeleton height="148px" /></l-col>
+      }
+    </l-row>
+  } @else if (!store.all().length) {
+    <l-card>
+      <app-empty-state
+        icon="account_balance_wallet"
+        title="No accounts yet"
+        message="Add the places your money sits: cash, a bank account, a card or a mobile wallet."
+      >
+        <l-button size="lg" (click)="add()">Add account</l-button>
+      </app-empty-state>
+    </l-card>
+  } @else {
+    <l-card padding="lg">
+      <div class="accounts-total">
+        <span class="accounts-total__label">Total balance</span>
+        <span class="accounts-total__amount" [class.is-negative]="store.total() < 0">
+          {{ store.total() | money: store.currency() }}
+        </span>
+        <span class="accounts-total__note">{{ totalNote() }}</span>
+      </div>
+    </l-card>
+
+    @if (store.active().length) {
+      <l-row [gutter]="[16, 16]" align="stretch">
+        @for (account of store.active(); track account.id) {
+          <l-col [span]="12" [md]="6" [xl]="4">
+            <app-account-card
+              [account]="account"
+              (edit)="actions.edit(account)"
+              (reconcile)="actions.reconcile(account)"
+              (archive)="actions.archive(account)"
+              (delete)="actions.delete(account)"
+            />
+          </l-col>
+        }
+      </l-row>
+    } @else {
+      <l-card>
+        <app-empty-state
+          icon="archive"
+          title="All your accounts are archived"
+          message="Restore one from the archived list, or add a new account."
+        >
+          <l-button size="lg" (click)="add()">Add account</l-button>
+        </app-empty-state>
+      </l-card>
+    }
+
+    @if (store.archived().length) {
+      <l-accordion>
+        <l-accordion-item [title]="'Archived (' + store.archived().length + ')'">
+          <l-row [gutter]="[16, 16]" align="stretch">
+            @for (account of store.archived(); track account.id) {
+              <l-col [span]="12" [md]="6" [xl]="4">
+                <app-account-card
+                  [account]="account"
+                  (restore)="actions.restore(account)"
+                  (delete)="actions.delete(account)"
+                />
+              </l-col>
+            }
+          </l-row>
+        </l-accordion-item>
+      </l-accordion>
+    }
+  }
+</div>

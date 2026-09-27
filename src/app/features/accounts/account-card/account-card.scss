@@ -1,0 +1,99 @@
+:host {
+  display: block;
+  height: 100%;
+
+  l-card {
+    height: 100%;
+  }
+}
+
+// The hoverable l-card is `position: relative`, so the name link's cover fills it.
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-card__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.account-card__link {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  text-decoration: none;
+
+  // The link covers the card, so a tap anywhere opens the account page.
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    // Inset, since the card clips anything drawn outside it.
+    &::after {
+      border-radius: 12px;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+  }
+}
+
+.account-card__type,
+.account-card__caption {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Above the covering link, so the menu gets its own taps.
+.account-card__menu {
+  position: relative;
+  z-index: 1;
+}
+
+.account-card__balance {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.account-card__amount {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+
+  &.is-negative {
+    color: var(--error);
+  }
+}
+
+.account-card__credit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}

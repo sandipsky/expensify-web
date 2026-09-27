@@ -1,0 +1,50 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">Reconcile {{ account().name }}</h2>
+  <p class="sheet-form__intro">
+    Enter what your bank, card or wallet shows right now. The difference is saved as a balance
+    adjustment, which reports and budgets leave out.
+  </p>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    <l-number-input
+      formControlName="actual"
+      [label]="liability() ? 'Actual amount owed' : 'Actual balance'"
+      [prefix]="symbol"
+      [decimalPlaces]="decimalPlaces"
+      [allowNegative]="true"
+    />
+  </div>
+
+  <dl class="reconcile-summary">
+    <div class="reconcile-summary__row">
+      <dt>In the app</dt>
+      <dd>
+        {{ current().amount | money: account().currency }}
+        @if (current().caption !== 'Balance') {
+          {{ current().caption === 'Owed' ? 'owed' : 'in credit' }}
+        }
+      </dd>
+    </div>
+    <div class="reconcile-summary__row">
+      <dt>Adjustment</dt>
+      <dd [class.is-income]="(difference() ?? 0) > 0" [class.is-expense]="(difference() ?? 0) < 0">
+        @if (difference() === null) {
+          —
+        } @else if (difference() === 0) {
+          None, it already matches
+        } @else {
+          {{ difference() | money: account().currency : 'exceptZero' }}
+        }
+      </dd>
+    </div>
+  </dl>
+
+  @if (tooLarge()) {
+    <p class="alert error" role="alert">That difference is too large for one adjustment.</p>
+  }
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" [disabled]="tooLarge()" (click)="save()">Save</l-button>
+  </div>
+</div>

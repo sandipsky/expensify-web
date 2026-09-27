@@ -1,0 +1,215 @@
+@if (store.loading()) {
+  <div class="account-page">
+    <l-skeleton height="56px" />
+    <l-skeleton height="104px" />
+    <l-skeleton height="240px" />
+  </div>
+} @else if (account(); as account) {
+  <div class="account-page">
+    <l-breadcrumb [items]="[{ label: 'Accounts', link: '/accounts' }, { label: account.name }]" />
+
+    <div class="account-page__header">
+      <app-account-icon [icon]="account.icon" [color]="account.color" [size]="48" />
+
+      <div class="account-page__title">
+        <h1 class="text-ellipsis">{{ account.name }}</h1>
+        <div class="account-page__meta">
+          <span>{{ typeLabel() }}</span>
+          @if (account.archived) {
+            <l-chip size="sm">Archived</l-chip>
+          }
+          @if (!account.includeInTotal) {
+            <l-chip size="sm">Not in total</l-chip>
+          }
+        </div>
+      </div>
+
+      <div class="account-page__actions">
+        @if (account.archived) {
+          <l-button variant="outlined" size="lg" (click)="actions.restore(account)">
+            <l-icon name="unarchive" color="inherit" />
+            Restore
+          </l-button>
+        } @else {
+          <l-button variant="outlined" size="lg" (click)="actions.reconcile(account)">
+            <l-icon name="tune" color="inherit" />
+            Reconcile
+          </l-button>
+          <l-button variant="outlined" size="lg" (click)="actions.edit(account)">
+            <l-icon name="edit" color="inherit" />
+            Edit
+          </l-button>
+        }
+        <l-menu mode="right">
+          <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+            <l-icon name="more_vert" color="inherit" />
+            <span class="visually-hidden">More actions</span>
+          </l-button>
+          @if (!account.archived) {
+            <button type="button" dropdown-item (click)="actions.archive(account)">
+              <l-icon name="archive" [size]="18" />Archive
+            </button>
+          }
+          <button type="button" dropdown-item class="danger" (click)="delete(account)">
+            <l-icon name="delete" [size]="18" color="inherit" />Delete
+          </button>
+        </l-menu>
+      </div>
+    </div>
+
+    @if (account.archived) {
+      <p class="alert warn">
+        This account is archived, so it's hidden from pickers, the dashboard and your total balance.
+        Restore it to use it again.
+      </p>
+    }
+
+    <l-row [gutter]="[16, 16]" align="stretch">
+      @if (current(); as current) {
+        <l-col [span]="12" [md]="4">
+          <l-card padding="lg">
+            <div class="account-stat">
+              <span class="account-stat__label">{{ current.caption }}</span>
+              <span class="account-stat__value" [class.is-negative]="current.negative">
+                {{ current.amount | money: account.currency }}
+              </span>
+            </div>
+          </l-card>
+        </l-col>
+      }
+      @if (opening(); as opening) {
+        <l-col [span]="12" [md]="4">
+          <l-card padding="lg">
+            <div class="account-stat">
+              <span class="account-stat__label">{{ opening.caption }}</span>
+              <span class="account-stat__value">{{
+                opening.amount | money: account.currency
+              }}</span>
+            </div>
+          </l-card>
+        </l-col>
+      }
+      @if (utilization(); as used) {
+        <l-col [span]="12" [md]="4">
+          <l-card padding="lg">
+            <div class="account-stat">
+              <span class="account-stat__label">Credit limit</span>
+              <span class="account-stat__value">
+                {{ account.creditLimit | money: account.currency }}
+              </span>
+              <l-progress [value]="used.percent" [variant]="used.variant" label="Credit used" />
+              <span class="account-stat__label">{{ used.percent }}% used</span>
+            </div>
+          </l-card>
+        </l-col>
+      }
+    </l-row>
+
+    <l-card title="Transactions" [flush]="true">
+      @if (loadingTransactions()) {
+        <div class="activity-skeleton">
+          @for (placeholder of [1, 2, 3]; track placeholder) {
+            <l-skeleton height="44px" />
+          }
+        </div>
+      } @else if (!rows().length) {
+        <app-empty-state
+          icon="receipt_long"
+          title="No transactions yet"
+          message="Entries on this account show up here with its running balance. If the balance is off, reconcile it with your statement."
+        >
+          @if (!account.archived) {
+            <l-button size="lg" (click)="actions.reconcile(account)">Reconcile balance</l-button>
+          }
+        </app-empty-state>
+      } @else if (breakpoints.desktop()) {
+        <l-table [columns]="columns()" [data]="rows()" rowKey="id">
+          <ng-template lTableCell="title" let-row>
+            <div class="activity-cell">
+              <l-icon [name]="row.icon" [size]="18" />
+              <span class="text-ellipsis">{{ row.title }}</span>
+              @if (row.subtitle) {
+                <span class="activity-cell__subtitle text-ellipsis">{{ row.subtitle }}</span>
+              }
+              @if (row.pending) {
+                <l-icon name="schedule" [size]="14" />
+                <span class="visually-hidden">Not synced yet</span>
+              }
+            </div>
+          </ng-template>
+          <ng-template lTableCell="amount" let-row>
+            <span
+              class="activity-amount"
+              [class.is-income]="row.kind !== 'transfer' && row.amount > 0"
+              [class.is-expense]="row.kind !== 'transfer' && row.amount < 0"
+            >
+              {{ row.amount | money: account.currency : 'exceptZero' }}
+            </span>
+          </ng-template>
+          <ng-template lTableCell="balance" let-row>
+            <span class="activity-amount">{{ row.balance | money: account.currency }}</span>
+          </ng-template>
+        </l-table>
+      } @else {
+        @for (day of days(); track day.date) {
+          <section class="activity-day">
+            <h2 class="activity-day__label">{{ day.label }}</h2>
+            <ul class="activity-list">
+              @for (row of day.rows; track row.id) {
+                <li class="activity-row">
+                  <span class="activity-row__icon"><l-icon [name]="row.icon" [size]="20" /></span>
+                  <div class="activity-row__text">
+                    <span class="activity-row__title text-ellipsis">
+                      {{ row.title }}
+                      @if (row.pending) {
+                        <l-icon name="schedule" [size]="14" />
+                        <span class="visually-hidden">Not synced yet</span>
+                      }
+                    </span>
+                    @if (row.subtitle) {
+                      <span class="activity-row__subtitle text-ellipsis">{{ row.subtitle }}</span>
+                    }
+                  </div>
+                  <div class="activity-row__amounts">
+                    <span
+                      class="activity-amount"
+                      [class.is-income]="row.kind !== 'transfer' && row.amount > 0"
+                      [class.is-expense]="row.kind !== 'transfer' && row.amount < 0"
+                    >
+                      {{ row.amount | money: account.currency : 'exceptZero' }}
+                    </span>
+                    <span class="activity-row__balance">
+                      <span class="visually-hidden">{{ balanceLabel() }} after:</span>
+                      {{ row.balance | money: account.currency }}
+                    </span>
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      }
+
+      @if (!loadingTransactions() && (hasMore() || rows().length)) {
+        <div card-footer class="activity-footer">
+          @if (hasMore()) {
+            <l-button variant="outlined" size="lg" (click)="loadMore()">Load more</l-button>
+          } @else if (opening(); as opening) {
+            <span>{{ opening.caption }}</span>
+            <span class="activity-amount">{{ opening.amount | money: account.currency }}</span>
+          }
+        </div>
+      }
+    </l-card>
+  </div>
+} @else {
+  <l-card>
+    <app-empty-state
+      icon="account_balance_wallet"
+      title="Account not found"
+      message="It may have been deleted, perhaps on another device."
+    >
+      <l-button size="lg" (click)="backToAccounts()">Back to accounts</l-button>
+    </app-empty-state>
+  </l-card>
+}

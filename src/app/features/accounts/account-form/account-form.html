@@ -1,0 +1,50 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">{{ account ? 'Edit account' : 'Add account' }}</h2>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    <l-text-input
+      label="Name"
+      formControlName="name"
+      placeholder="e.g. Wallet, Everyday bank"
+      (enter)="save()"
+    />
+
+    <l-select
+      label="Type"
+      formControlName="type"
+      [items]="typeOptions"
+      bindValue="value"
+      bindLabel="label"
+    />
+
+    <div class="sheet-form__field">
+      <l-number-input
+        formControlName="balance"
+        [label]="balanceLabel()"
+        [prefix]="symbol"
+        [decimalPlaces]="decimalPlaces"
+        [allowNegative]="true"
+      />
+      <p class="sheet-form__hint">{{ balanceHint() }}</p>
+    </div>
+
+    @if (type() === 'credit_card') {
+      <div class="sheet-form__field">
+        <l-number-input
+          formControlName="creditLimit"
+          label="Credit limit"
+          [prefix]="symbol"
+          [decimalPlaces]="decimalPlaces"
+        />
+        <p class="sheet-form__hint">Optional. Shows how much of it you've used.</p>
+      </div>
+    }
+
+    <l-toggle label="Include in total balance" formControlName="includeInTotal" />
+  </div>
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" (click)="save()">{{ account ? 'Save' : 'Add account' }}</l-button>
+  </div>
+</div>

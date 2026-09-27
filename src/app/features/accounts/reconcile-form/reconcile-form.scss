@@ -1,0 +1,40 @@
+@use '../sheet-form';
+
+.sheet-form__intro {
+  color: var(--text-secondary);
+  line-height: 20px;
+}
+
+.reconcile-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-light);
+}
+
+.reconcile-summary__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+
+  dt {
+    color: var(--text-secondary);
+  }
+
+  dd {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .is-income {
+    color: var(--success);
+  }
+
+  .is-expense {
+    color: var(--error);
+  }
+}

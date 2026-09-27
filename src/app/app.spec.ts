@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { App } from './app';
+import { IconRegistry } from './shared/components/ui/icon/icon';
 
 describe('App', () => {
   const originalMatchMedia = window.matchMedia;
@@ -15,6 +17,11 @@ describe('App', () => {
 
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        provideRouter([]),
+        // jsdom can't fetch the svg files.
+        { provide: IconRegistry, useValue: { load: () => Promise.resolve('') } },
+      ],
     }).compileComponents();
   });
 
@@ -33,5 +40,13 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('l-layout main router-outlet')).not.toBeNull();
+  });
+
+  it('links to Accounts from the sidebar', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const link = (fixture.nativeElement as HTMLElement).querySelector('l-sidebar nav a');
+    expect(link?.getAttribute('href')).toBe('/accounts');
+    expect(link?.textContent?.trim()).toBe('Accounts');
   });
 });

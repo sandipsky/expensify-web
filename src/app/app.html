@@ -1,3 +1,17 @@
-<l-layout>
+<l-layout [(collapsed)]="navCollapsed">
+  <nav layout-sidebar class="app-nav" [class.is-collapsed]="navCollapsed()" aria-label="Main">
+    <a
+      class="app-nav__link"
+      routerLink="/accounts"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="account_balance_wallet" color="inherit" />
+      <span class="app-nav__label">Accounts</span>
+    </a>
+  </nav>
+
+  <span layout-header class="app-brand">Expensify</span>
+
   <router-outlet />
 </l-layout>

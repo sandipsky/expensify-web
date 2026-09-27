@@ -1,0 +1,40 @@
+// Layout shared by the accounts forms opened with SheetService (dialog or bottom sheet).
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.sheet-form__title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+.sheet-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// A field with help text under it.
+.sheet-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-form__hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.sheet-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}

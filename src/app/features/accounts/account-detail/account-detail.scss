@@ -1,0 +1,189 @@
+.account-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.account-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-page__title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 160px;
+
+  h1 {
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 28px;
+  }
+}
+
+.account-page__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.account-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+l-col > l-card {
+  height: 100%;
+}
+
+.account-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-stat__label {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.account-stat__value {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
+
+  &.is-negative {
+    color: var(--error);
+  }
+}
+
+.activity-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.activity-amount {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  &.is-income {
+    color: var(--success);
+  }
+
+  &.is-expense {
+    color: var(--error);
+  }
+}
+
+// Desktop table: the description cell.
+.activity-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.activity-cell__subtitle {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+// Phone and tablet: rows grouped by day.
+.activity-day__label {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--separator-light);
+  background: var(--bg-light);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.activity-list {
+  list-style: none;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 16px;
+
+  & + & {
+    border-top: 1px solid var(--separator-light);
+  }
+}
+
+.activity-row__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-light);
+}
+
+.activity-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.activity-row__title {
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.activity-row__subtitle,
+.activity-row__balance {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.activity-row__amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+
+  .activity-row__balance {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+.activity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  l-button:only-child {
+    margin: 0 auto;
+  }
+}
