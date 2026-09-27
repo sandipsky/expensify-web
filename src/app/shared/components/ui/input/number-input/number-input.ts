@@ -99,7 +99,10 @@ export class NumberInput implements ControlValueAccessor {
   }
 
   protected _handleFocus(): void {
-    this._buffer.set(this._rawString(this._value()));
+    // Edit the text as shown ("50.00" parses back fine). Swapping it for the raw
+    // number ("50") would change the value and drop the select-all that tabbing
+    // in makes, so typing would append digits instead of replacing them.
+    this._buffer.set(this._format(this._value()));
     this._focused.set(true);
   }
 

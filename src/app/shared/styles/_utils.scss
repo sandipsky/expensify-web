@@ -446,6 +446,16 @@
   transform: rotate(270deg);
 }
 
+// Hidden on screen, still read by screen readers: names for icon-only buttons.
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .scrollable {
   overflow: auto;
 }

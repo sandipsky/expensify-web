@@ -1,0 +1,34 @@
+:host {
+  --l-progress-height: 6px;
+  --_color: var(--accent);
+
+  display: block;
+  height: var(--l-progress-height);
+  border-radius: 999px;
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+:host(.l-progress--success) {
+  --_color: var(--success);
+}
+:host(.l-progress--warn) {
+  --_color: var(--warn);
+}
+:host(.l-progress--error) {
+  --_color: var(--error);
+}
+
+.l-progress__bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--_color);
+  transition: width 200ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-progress__bar {
+    transition: none;
+  }
+}

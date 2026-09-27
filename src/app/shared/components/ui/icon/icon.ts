@@ -11,85 +11,33 @@ import {
 } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
+/**
+ * Material Symbols (Outlined, weight 400) names: the same names the Android app draws from
+ * the font and that Firestore stores in category and account `icon` fields. The files in
+ * `public/svg/` come from `@material-symbols/svg-400` (Apache 2.0) with `fill="currentColor"`
+ * added to the root `<svg>`, and each is named exactly after its symbol.
+ */
 const ICON_NAMES = [
-  'account',
-  'accounting',
+  'account_balance',
+  'account_balance_wallet',
   'add',
-  'auto-code-generator',
-  'backup-restore',
-  'bde',
-  'bulk-order',
-  'calculator',
-  'calendar',
-  'cancel',
-  'caret',
-  'caret-down',
-  'cash-bank-voucher',
-  'category',
-  'close',
-  'closing',
-  'configuration',
-  'credit-note',
-  'cross',
-  'customer',
-  'dashboard',
-  'debit-note',
-  'designation',
-  'dispatch',
-  'document-numbering-scheme',
-  'download',
+  'archive',
+  'credit_card',
+  'delete',
   'edit',
-  'eye',
-  'eye-login',
-  'eye-slash',
-  'filter',
-  'finish-goods-receipt',
-  'hold',
-  'inventory',
-  'journal-entry',
-  'lock',
-  'logout',
-  'manufacturing',
-  'master',
-  'material-issue',
-  'material-issue-return',
-  'more',
-  'notification',
-  'notify',
-  'opening-balance',
-  'opening-stock',
-  'packing',
-  'payment',
-  'payment-adjustment',
-  'pending',
-  'physical-stock-master',
-  'print',
-  'printer',
-  'products',
-  'purchase',
-  'purchase-action',
-  'purchase-entry',
-  'purchase-order',
-  'purchase-return',
-  'reports',
-  'roles-permission',
-  'sales',
-  'sales-entry',
-  'sales-order',
-  'sales-return',
-  'search',
-  'settings',
-  'sidebar',
-  'sms',
-  'stock-adjustment',
-  'stock-edit',
-  'taxtype',
-  'trash',
-  'unit',
-  'user',
-  'user-plus',
-  'users',
-  'vendor',
+  'more_vert',
+  'north_east',
+  'payments',
+  'receipt_long',
+  'request_quote',
+  'savings',
+  'schedule',
+  'south_west',
+  'swap_horiz',
+  'tune',
+  'unarchive',
+  'visibility_off',
+  'wallet',
 ] as const;
 
 /**
@@ -103,10 +51,10 @@ export type IconName = (typeof ICON_NAMES)[number] | (string & {});
 export const L_ICON_NAMES: readonly IconName[] = ICON_NAMES;
 
 /**
- * The source files hardcode their gray (`stroke="#646663"`, `fill="#555755"`,
- * …) and their 20px width/height. Swap the colors for `currentColor` so the
- * `color` input (or the inherited text color) drives them, and drop the fixed
- * dimensions so the host's size wins.
+ * Source files may hardcode colors (`stroke="#646663"`, `fill="#555755"`, …)
+ * and a fixed width/height (Material Symbols ship at 48px). Swap the colors for
+ * `currentColor` so the `color` input (or the inherited text color) drives
+ * them, and drop the fixed dimensions so the host's size wins.
  */
 const normalize = (raw: string): string =>
   raw

@@ -34,8 +34,10 @@ const POSITIONS: NotificationPosition[] = [
               [showProgress]="n.showProgress"
               [showClose]="n.showClose"
               [withIcon]="n.withIcon"
+              [action]="n.action"
               [leaving]="n.leaving()"
               (requestDismiss)="dismiss(n.id)"
+              (actionClick)="_runAction(n)"
               (closed)="_remove(n.id)"
             />
           }
@@ -79,6 +81,13 @@ export class NotificationContainer {
   /** @internal Dismiss every open notification. */
   clear(): void {
     this._items().forEach((n) => n.leaving.set(true));
+  }
+
+  protected _runAction(item: NotificationData): void {
+    // Dismiss first so a second click during the leave animation can't run it twice.
+    if (item.leaving()) return;
+    this.dismiss(item.id);
+    item.action?.handler();
   }
 
   protected _remove(id: number): void {

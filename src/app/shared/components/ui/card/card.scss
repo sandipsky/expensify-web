@@ -52,15 +52,20 @@
   box-shadow: 0 8px 24px rgba(7, 9, 15, 0.12);
 }
 
+// Lifts with `top` rather than `transform`: a transform would make the card the
+// containing block for position: fixed overlays inside it (l-menu, l-select),
+// which would then sit in the wrong place and be clipped by `overflow: hidden`.
 .lui-card-hoverable {
+  position: relative;
+  top: 0;
   cursor: pointer;
   transition:
     box-shadow 0.2s ease,
-    transform 0.2s ease;
+    top 0.2s ease;
 
   &:hover {
     box-shadow: 0 8px 24px rgba(7, 9, 15, 0.12);
-    transform: translateY(-2px);
+    top: -2px;
   }
 }
 
@@ -97,6 +102,10 @@
 
 .lui-card__body {
   padding: var(--l-card-pad);
+}
+
+.lui-card-flush > .lui-card__body {
+  padding: 0;
 }
 
 .lui-card__footer {

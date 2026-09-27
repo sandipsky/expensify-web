@@ -75,6 +75,12 @@
   }
 </div>
 
+@if (action(); as action) {
+  <button type="button" class="l-notification__action" (click)="actionClick.emit()">
+    {{ action.label }}
+  </button>
+}
+
 @if (showClose()) {
   <button type="button" class="l-notification__close" aria-label="Dismiss" (click)="_onClose()">
     <svg width="14" height="14" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

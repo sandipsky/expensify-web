@@ -54,6 +54,12 @@ export class Card {
   /** Lift the card and add a shadow on hover — for clickable cards. */
   readonly hoverable = input(false);
 
+  /**
+   * Run the body edge to edge (no padding) while the header and footer keep
+   * `padding` — for tables and lists whose rows carry their own spacing.
+   */
+  readonly flush = input(false);
+
   /** Header title, rendered on the left. Adding it (or `[card-extra]` content) shows the header. */
   readonly title = input('');
 
@@ -65,6 +71,7 @@ export class Card {
       this.shadow() !== 'none' ? `lui-card-shadow-${this.shadow()}` : '',
       this.bordered() ? '' : 'lui-card-borderless',
       this.hoverable() ? 'lui-card-hoverable' : '',
+      this.flush() ? 'lui-card-flush' : '',
     ]
       .filter(Boolean)
       .join(' '),

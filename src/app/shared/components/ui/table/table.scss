@@ -101,11 +101,12 @@
   }
 }
 
-.text-end {
+// Column `align`. Scoped under .table so it beats `th { text-align: left }` above.
+.table .text-end {
   text-align: right;
 }
 
-.text-center {
+.table .text-center {
   text-align: center;
 }
 

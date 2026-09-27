@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { NotificationPosition, NotificationType } from './notification.config';
+import { NotificationAction, NotificationPosition, NotificationType } from './notification.config';
 
 /**
  * A single notification card (toast). Presentational: it renders the type icon,
@@ -30,11 +30,15 @@ export class Notification {
   readonly showProgress = input(true);
   readonly showClose = input(true);
   readonly withIcon = input(true);
+  /** Optional action button, e.g. Undo. */
+  readonly action = input<NotificationAction>();
   /** When true, the card plays its leave animation and then emits `closed`. */
   readonly leaving = input(false);
 
   /** Requests dismissal (close clicked or timer elapsed) — the container drives the leave. */
   readonly requestDismiss = output<void>();
+  /** Fired when the action button is pressed — the container runs the handler and dismisses. */
+  readonly actionClick = output<void>();
   /** Fired once the leave animation has finished and the card can be removed. */
   readonly closed = output<void>();
 
