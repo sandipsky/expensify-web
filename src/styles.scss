@@ -1,3 +1,4 @@
+@forward 'app/shared/styles/fonts';
 @forward 'app/shared/styles/colors';
 @forward 'app/shared/styles/form';
 @forward 'app/shared/styles/utils';
@@ -9,8 +10,16 @@
   scroll-behavior: smooth;
 }
 
+// Form controls default to the system font instead of inheriting the page's.
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Fira Sans', sans-serif;
   font-size: 14px;
   line-height: 1.25;
   font-weight: 400;

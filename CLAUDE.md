@@ -73,7 +73,7 @@ src/app/
 │   ├── components/      app composites built on Lumen: amount-input, category-picker, account-picker, empty-state
 │   ├── directives/      form-validation.ts (Lumen)
 │   ├── services/        spinner.service.ts (Lumen)
-│   ├── styles/          _colors.scss (tokens), _form.scss, _utils.scss; forwarded by src/styles.scss
+│   ├── styles/          _fonts.scss, _colors.scss (tokens), _form.scss, _utils.scss; forwarded by src/styles.scss
 │   └── pipes/           money.pipe.ts, …
 ├── layout/         shell: side nav ≥1024px, rail 600–1023px, bottom bar + FAB <600px; breakpoint.service.ts
 └── features/       auth, onboarding, dashboard, transactions, accounts, categories, budgets, reports, recurring, settings, admin
@@ -128,7 +128,7 @@ Lumen is our own component library, checked into this repo: standalone, `OnPush`
 - `_colors.scss` defines the CSS custom properties on `:root`: `--accent`, `--accent-bg`, `--accent-dark` (blue: primary actions, focus rings), `--success`/`--success-bg`, `--error`/`--error-bg`, `--warn`/`--warn-bg`, `--info`/`--info-bg`, `--premium`/`--premium-bg`, `--text-primary` … `--text-quaternary`, `--text-white`, `--separator`, `--separator-light`, `--separator-dark`, `--bg-lightest`, `--bg-light`, `--bg-semi-light`, `--bg-dark`. Component SCSS uses `var(--…)`, never hex literals. App meaning: income → `--success`, expense → `--error`, transfer → neutral text color, budget states → success/warn/error (BR-08).
 - **No dark values exist yet.** Dark mode (§8 `theme`) means redefining the same variables in `_colors.scss` under `:root[data-theme='dark']` and `@media (prefers-color-scheme: dark)`, never per-component dark overrides.
 - `_form.scss` provides `.form-group`, `.form-control`, `.alert` and `.control-row`; any native input you add (amount-input) uses these classes so it matches the library. `_utils.scss` has the spacing and text utilities; prefer them over one-off margins.
-- `body` is set to Inter 14 px, but nothing loads Inter (no `@font-face`, no link in `index.html`). Add a self-hosted `@font-face` (the shell must work offline, NFR-06) before relying on it, or drop the family.
+- `body` is Fira Sans 14 px, self-hosted (the shell must work offline, NFR-06): `_fonts.scss` declares `@font-face` for weights 400/500/600/700 (Latin and Latin Extended, no italics) from `public/fonts/fira-sans/`. Add the woff2 file and the weight there before using another weight. Never load fonts from a CDN. Form controls inherit the family from `styles.scss`, so components should not set their own `font-family`.
 
 ## UI, accessibility and privacy
 
