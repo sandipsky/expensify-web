@@ -6,7 +6,7 @@ Personal income/expense/transfer tracker. This repo is the **Angular web app (ph
 
 ## Current state
 
-Fresh Angular 22 CLI scaffold: `src/app/app.html` is the CLI placeholder page and `app.routes.ts` is empty. Not yet installed: Angular Material/CDK, Firebase JS SDK, date-fns, PapaParse, `@angular/pwa`, ESLint (angular-eslint), Playwright, Firebase Emulator Suite, i18n. Next milestone is **M0 Setup** (§15).
+Angular 22 CLI scaffold: `src/app/app.html` is still the CLI placeholder page and `app.routes.ts` is empty. **Lumen UI**, the in-house component library, is already in `src/app/shared/` (see the Lumen UI section) but no page uses it yet, and its icon folder `public/svg/` is empty. Not yet installed: Firebase JS SDK, date-fns, PapaParse, `@angular/pwa`, ESLint (angular-eslint), Playwright, Firebase Emulator Suite, i18n. **Angular Material and the CDK are not used**: Material 3 is the Android app's toolkit, and the web UI is Lumen. Next milestone is **M0 Setup** (§15).
 
 The spec assumes a monorepo (`web/`, `android/`, `functions/`, `firebase/`, `spec/`). Here the web app lives at the repo root, so `web/src/app/...` in the spec means `src/app/...` here. Shared artifacts (`firestore.rules`, `storage.rules`, `firestore.indexes.json`, `spec/default-categories.json`, `spec/test-vectors/*.json`) don't exist yet. **Ask where they should live before creating them.**
 
@@ -47,14 +47,16 @@ Getting these wrong corrupts balances or breaks Android parity.
 - Use `onSnapshot(..., { includeMetadataChanges: true })` and map `metadata.hasPendingWrites` to a `pending` flag for the unsynced marker (SYN-04). Sort within a day by `time`, then `createdAt`.
 - Multi-document changes use batches or transactions (NFR-14). New composite indexes go in `firestore.indexes.json` (§8).
 - **Never deploy test-mode Security Rules.** Rules follow §9 and need rules tests.
+- **Access control (§3.16, §9):** every profile has `role` (`user` · `admin`) and `status` (`pending` · `active` · `disabled`). The client creates its own profile as `user`/`pending` (or `active` when `invites/{email}` exists) and never sets its own role or status afterwards. Rules deny everything under `users/{uid}/*` unless status is `active`; admins may list profiles and change only `role` and `status` on other users, never subcollections. Account deletion deletes the profile document last.
 
 ## Angular conventions (§10)
 
-- Angular 22: standalone components (no NgModules), signals, `@if`/`@for`, **zoneless** (no zone.js, so don't add it), Signal Forms (typed reactive forms as the fallback).
+- Angular 22: standalone components (no NgModules), signals, `@if`/`@for`, **zoneless** (no zone.js, so don't add it).
+- Forms: **typed reactive forms** (`FormBuilder.nonNullable`), never Signal Forms. Lumen inputs are `ControlValueAccessor`s and their inline validation reads `NgControl`, which Signal Forms does not provide.
 - State: one signal-based store service per feature. Turn streams into signals with `toSignal()` and derive totals with `computed()`. Use NgRx SignalStore only if features end up sharing a lot of state.
-- UI: Angular Material 3 + CDK (`BreakpointObserver`, virtual scroll for lists of 1,000+ rows, drag and drop, dialogs, bottom sheets). Material Symbols for icons.
-- Routing: every feature is lazy-loaded (`loadComponent`/`loadChildren`). Every route except `/login`, `/register`, `/forgot-password` and `/onboarding` uses the functional `authGuard` + `onboardingGuard`. Route table is in §10.
-- Components use SCSS. The current scaffold uses suffix-less component files (`app.ts`/`app.html`/`app.scss`); follow the spec's names for services, guards, repos and pipes (`auth.service.ts`, `auth.guard.ts`, `accounts.repo.ts`, `money.pipe.ts`).
+- UI: **Lumen UI** from `src/app/shared/components/ui/` (next section). No Angular Material, no CDK, no other component library.
+- Routing: every feature is lazy-loaded (`loadComponent`/`loadChildren`). Every route except `/login`, `/register`, `/forgot-password` and `/no-access` uses the functional `authGuard` (signed in **and** `status: 'active'`, otherwise redirect to `/no-access`); all of those except `/onboarding` add `onboardingGuard`, and `/admin/*` adds `adminGuard`. Route table is in §10.
+- Components use SCSS. The current scaffold uses suffix-less component files (`app.ts`/`app.html`/`app.scss`); Lumen follows the same convention. Follow the spec's names for services, guards, repos and pipes (`auth.service.ts`, `auth.guard.ts`, `accounts.repo.ts`, `money.pipe.ts`).
 
 Target layout:
 
@@ -62,31 +64,88 @@ Target layout:
 src/app/
 ├── core/
 │   ├── firebase/   firebase.ts: app, Auth, Firestore (persistent cache), App Check
-│   ├── auth/       auth.service.ts, auth.guard.ts, onboarding.guard.ts
-│   ├── data/       accounts / categories / transactions / budgets .repo.ts
+│   ├── auth/       auth.service.ts, auth.guard.ts, admin.guard.ts, onboarding.guard.ts
+│   ├── data/       accounts / categories / transactions / budgets / users .repo.ts
 │   ├── domain/     money, balance, period, budget, recurrence: pure TS, no Angular or Firebase imports
 │   └── models/     interfaces mirroring §8
-├── shared/         ui/ (amount-input, category-picker, account-picker, empty-state, confirm-dialog), pipes/
-├── layout/         shell: side nav ≥1024px, rail 600–1023px, bottom bar + FAB <600px
-└── features/       auth, onboarding, dashboard, transactions, accounts, categories, budgets, reports, recurring, settings
+├── shared/
+│   ├── components/ui/   Lumen UI: generic l-* components, overlay services, layout primitives
+│   ├── components/      app composites built on Lumen: amount-input, category-picker, account-picker, empty-state
+│   ├── directives/      form-validation.ts (Lumen)
+│   ├── services/        spinner.service.ts (Lumen)
+│   ├── styles/          _colors.scss (tokens), _form.scss, _utils.scss; forwarded by src/styles.scss
+│   └── pipes/           money.pipe.ts, …
+├── layout/         shell: side nav ≥1024px, rail 600–1023px, bottom bar + FAB <600px; breakpoint.service.ts
+└── features/       auth, onboarding, dashboard, transactions, accounts, categories, budgets, reports, recurring, settings, admin
 ```
+
+## Lumen UI (`src/app/shared`)
+
+Lumen is our own component library, checked into this repo: standalone, `OnPush`, signal `input()`/`output()`/`model()`, and no dependency beyond `@angular/core`, `forms`, `common`, `router` and `rxjs`. Selectors use the `l-` prefix (`l-button`), attribute directives `l` (`lTooltip`, `lBadge`, `lTableCell`), CSS classes `l-`/`lui-`. Import from the folder's `index.ts` barrel when it has one (most folders do), otherwise from the component file (`button/button`, `card/card`, `icon/icon`, `avatar/avatar`, `loading-spinner/loading-spinner`, and every `input/*` except `otp-input`). There is no tsconfig path alias, so imports are relative.
+
+**Which component for what:**
+
+| Need                                                               | Use                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Buttons, icon buttons                                              | `l-button` (`variant`: primary · secondary · outlined · outlined-primary · danger · ghost; `size` sm/md/lg; `width="full"`; `rounded` for icon-only)                                                                                  |
+| Cards, dashboard tiles, list sections                              | `l-card` (`title`, `[card-extra]` slot top-right, `[card-footer]`, `hoverable` for clickable cards, `padding`, `shadow`)                                                                                                              |
+| Period switcher, expense/income/transfer toggle                    | `l-segmented-control` (form-bound; options as strings or `{ label, value }`)                                                                                                                                                          |
+| Expense/income tabs (categories, reports)                          | `l-tabs` + `l-tab` (`[(value)]`, `variant` line/pills)                                                                                                                                                                                |
+| Filter chips, tags, budget state labels                            | `l-chip` (`variant`: default · primary · success · error · warn · info · premium; `removable`) and `l-filter` (`filterColumns`, `(filterChange)`)                                                                                     |
+| Desktop transaction table (≥1024 px)                               | `l-table [columns] [data] [(sort)] (rowClick)`; custom cells with `<ng-template lTableCell="amount" let-row>`                                                                                                                         |
+| Text fields                                                        | `l-text-input`, `l-textarea`, `l-email-input`, `l-password-input` (`showRules`), `l-username-input`                                                                                                                                   |
+| Numbers that are not money (month start day, counts)               | `l-number-input` (`decimalPlaces`, `prefix`/`suffix`; form value is a JS `number`)                                                                                                                                                    |
+| Dropdowns and pickers                                              | `l-select` (`items`, `bindValue`, `bindLabel`, `groupBy`, `searchable`, `multiple`, `virtualScroll`, `clearable`)                                                                                                                     |
+| Dates                                                              | `l-date-input` (see the value-type rule below)                                                                                                                                                                                        |
+| Booleans and choices                                               | `l-checkbox`, `l-toggle`, `l-radio` (`options: RadioOption[]`)                                                                                                                                                                        |
+| Receipt upload (v1.1)                                              | `l-file-upload` (`accept`, `maxSizeMb`, `[(files)]`)                                                                                                                                                                                  |
+| Dialogs, forms on tablet and desktop                               | `ModalService.open(component or template, { data, width, disableClose })` returns `ModalRef` (`close(result)`, `afterClosed()`); read data with `inject(MODAL_DATA)`                                                                  |
+| Confirmations (bulk or irreversible only)                          | `ConfirmDialog` through `ModalService` with `ConfirmDialogData` (`confirmVariant: 'danger'`, optional async `onConfirm`)                                                                                                              |
+| Phone bottom sheets, side panels                                   | `DrawerService.open(..., { position: 'bottom' or 'right', size })` returns `DrawerRef`; data via `DRAWER_DATA`                                                                                                                        |
+| Toasts                                                             | `NotificationService.success/error/warn/info(title, message?, options)` (`duration`, `position`)                                                                                                                                      |
+| Row and overflow menus ("More")                                    | `l-menu` with a `[dropdown-display]` trigger and `[dropdown-item]` or `[dropdown-content]` panel content                                                                                                                              |
+| Onboarding wizard                                                  | `l-stepper` (`steps`, `[(active)]`)                                                                                                                                                                                                   |
+| First-load placeholders                                            | `l-skeleton` (sized block, or wrap content and toggle `[visible]="loading()"`)                                                                                                                                                        |
+| Blocking wait (import, delete account)                             | one `<l-loading-spinner />` in the shell plus `SpinnerService.show()/hide()` (reference-counted); never for page loads                                                                                                                |
+| Tooltips, badges, avatars, pagination, breadcrumb, accordion, tree | `[lTooltip]`, `l-badge` or `[lBadge]`, `l-avatar`, `l-pagination`, `l-breadcrumb`, `l-accordion`, `l-tree`                                                                                                                            |
+| Layout                                                             | `l-row`/`l-col` (12 columns, `gutter`, `span`, `xs…xxl` at 0/576/768/992/1200/1400 px), `l-flex`, `l-box`, `l-spacer`; utility classes from `_utils.scss` (`d-flex`, `gap-md`, `mt-lg`, `text-end`, `font-semibold`, `text-ellipsis`) |
+
+**Rules that follow from how Lumen is built:**
+
+- **Money never goes through `l-number-input`**: its form value is a float. Build `shared/components/amount-input` on `l-text-input` (or a native `<input inputmode="decimal" class="form-control">` inside `.form-group`) that parses to integer minor units (BR-01).
+- **`l-date-input` writes a `Date`** to the form control (it accepts `Date | string`). Convert at the form boundary with date-fns (`format(d, 'yyyy-MM-dd')`, `parseISO`) and store only the string (BR-06). Keep `calendar="ad"`; the BS (Nepali) calendar exists but isn't a spec feature.
+- Every `l-*` input carries the `FormValidation` host directive: it adds the required `*` and shows an error once the control is touched or dirty. Its messages are English literals in `shared/directives/form-validation.ts`; route them through the i18n solution once chosen (NFR-17). `useValidation="false"` opts a field out.
+- `l-button` renders `<button type="button">`, so it never submits a form. Call the save method from `(click)` and handle Enter with the input's `(enter)` output.
+- The toast has no action button. The 5-second Undo (TXN-07) needs an `action: { label, handler }` option on `NotificationOptions`; add it to Lumen's notification instead of building a second toast.
+- No `BreakpointObserver`. The shell's 600/1024 px breakpoints (§10) come from a small signal-based `BreakpointService` on `window.matchMedia` in `layout/`. `GridBreakpoints` in `layout/grid.ts` uses Bootstrap's widths and only drives `l-col`.
+- No virtual scrolling for lists (`l-select` has its own). Day-grouped phone lists are plain markup in the feature. For 1,000+ rows (NFR-04, LST-04) **ask before adding `@angular/cdk` `ScrollingModule`** (CDK alone, no Material) or writing a windowing directive.
+- **Icons:** `<l-icon name="…" [size]="20" color="var(--error)" />` fetches `public/svg/<name>.svg`, rebinds its colors to `currentColor` and caches it; an unknown name warns in dev and renders nothing. `public/svg/` is empty and `ICON_NAMES` in `icon/icon.ts` still lists another app's icons, so before the first screen: add the SVGs this app needs, replace `ICON_NAMES`, prune the leftovers. Category and account `icon` values in Firestore are **Material Symbols names** (§8, Appendix A) so Android can draw them from the font; on web ship those symbols as SVG files named exactly after the Material Symbols name and draw them with `l-icon`. Don't add the Material Symbols web font or another icon library without asking (NFR-01, NFR-02, offline shell).
+- Touch targets: the default `md` button is about 32 px tall. On phones give tappable controls `size="lg"` or a 48 px min-height (NFR-05).
+- Lumen is our code. Fix or extend a component in place (keep the `l-` prefix, signal inputs, `OnPush`, tokens only, no new dependencies) and add a spec for the change. Don't copy a component into a feature folder, and don't put app-specific composites (amount-input, category-picker, account-picker, empty-state) inside `components/ui/`; they live in `shared/components/`.
+
+**Styling and tokens** (`shared/styles/`, forwarded by `src/styles.scss`):
+
+- `_colors.scss` defines the CSS custom properties on `:root`: `--accent`, `--accent-bg`, `--accent-dark` (blue: primary actions, focus rings), `--success`/`--success-bg`, `--error`/`--error-bg`, `--warn`/`--warn-bg`, `--info`/`--info-bg`, `--premium`/`--premium-bg`, `--text-primary` … `--text-quaternary`, `--text-white`, `--separator`, `--separator-light`, `--separator-dark`, `--bg-lightest`, `--bg-light`, `--bg-semi-light`, `--bg-dark`. Component SCSS uses `var(--…)`, never hex literals. App meaning: income → `--success`, expense → `--error`, transfer → neutral text color, budget states → success/warn/error (BR-08).
+- **No dark values exist yet.** Dark mode (§8 `theme`) means redefining the same variables in `_colors.scss` under `:root[data-theme='dark']` and `@media (prefers-color-scheme: dark)`, never per-component dark overrides.
+- `_form.scss` provides `.form-group`, `.form-control`, `.alert` and `.control-row`; any native input you add (amount-input) uses these classes so it matches the library. `_utils.scss` has the spacing and text utilities; prefer them over one-off margins.
+- `body` is set to Inter 14 px, but nothing loads Inter (no `@font-face`, no link in `index.html`). Add a self-hosted `@font-face` (the shell must work offline, NFR-06) before relying on it, or drop the family.
 
 ## UI, accessibility and privacy
 
 - Mobile-first, usable from 320 px. Touch targets at least 48 px. WCAG 2.2 AA, including respecting reduced motion (NFR-05, NFR-08).
 - Income and expense **never rely on color alone**: each also has a +/− sign and an icon. Every chart has a table alternative (NFR-09). Amounts are right-aligned with `font-variant-numeric: tabular-nums`.
 - All UI text goes in translation files. Format numbers, currency and dates with `Intl` for the user's locale (NFR-17).
-- Single deletes get a 5-second Undo. Confirmation dialogs are only for bulk or irreversible actions. Every empty state offers the next action. Dark mode works via theme tokens from day one.
+- Single deletes get a 5-second Undo. Confirmation dialogs (`ConfirmDialog`) are only for bulk or irreversible actions. Every empty state offers the next action. Dark mode works via theme tokens from day one.
 - **No amounts, notes, payees or category names in logs, analytics or error reports** (NFR-13).
 
 ## Testing (§14)
 
 - Domain logic in `core/domain/` is pure and needs at least 80% coverage, driven by the shared JSON test vectors that the Kotlin app also runs.
-- Security Rules are tested with `@firebase/rules-unit-testing` on the Emulator. End-to-end tests use Playwright against the Emulator and cover user stories US-01 to US-09 (§5).
+- Security Rules are tested with `@firebase/rules-unit-testing` on the Emulator. End-to-end tests use Playwright against the Emulator and cover user stories US-01 to US-10 (§5).
 - The Firebase environments are the local Emulator (`firebase emulators:start`), `expense-tracker-dev` (deployed on merge to `main`) and `expense-tracker-prod` (deployed on tagged releases).
 
 ## Working with the spec
 
 - Requirements have IDs (`TXN-06`, `BR-05`, `NFR-09`, `US-03`). Cite them in test names, commit messages and PRs.
 - Priority: **Must** = MVP, **Should** = v1.1, **Could** = later. Don't build Should or Could items unless asked, because MVP scope is frozen at M1.
-- Open decisions (§16): charts (ngx-echarts vs ng2-charts) and i18n (Transloco vs `@angular/localize`) aren't chosen yet, so **ask before adding either**. For the UI library and state management, use the spec's recommendations (Material 3, signal stores) as the defaults.
+- Open decisions (§16): charts (ngx-echarts vs ng2-charts) and i18n (Transloco vs `@angular/localize`) aren't chosen yet, so **ask before adding either**. Material 3 in the spec is the Android app's toolkit (§11); the web app uses Lumen UI and shares only Android's color values and Material Symbols icon names. State management follows the spec (signal stores).
