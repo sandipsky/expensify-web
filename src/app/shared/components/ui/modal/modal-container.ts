@@ -45,6 +45,7 @@ type ModalState = 'enter' | 'leave';
           [style.width]="config.width"
           [style.height]="config.height"
           [style.maxWidth]="config.maxWidth"
+          [style.--modal-max-height]="config.maxHeight"
           (click)="$event.stopPropagation()"
           (animationend)="_onAnimationEnd($event)"
         >

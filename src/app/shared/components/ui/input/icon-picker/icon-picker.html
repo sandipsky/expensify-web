@@ -1,0 +1,36 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? _selectedLabel() ?? '-' }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [id]="name() + '-label'">{{ label() }}</label>
+    }
+
+    <div
+      class="l-icon-grid"
+      role="radiogroup"
+      [attr.aria-labelledby]="label() ? name() + '-label' : null"
+    >
+      @for (option of options(); track option.value) {
+        <label class="l-icon-tile" [class.is-checked]="_isChecked(option.value)">
+          <input
+            type="radio"
+            class="l-icon-tile__input"
+            [name]="name()"
+            [checked]="_isChecked(option.value)"
+            [disabled]="_isDisabled() || !!option.disabled"
+            [attr.aria-label]="option.label"
+            (change)="_select(option.value)"
+            (blur)="_handleBlur()"
+          />
+          <l-icon [name]="_iconName(option.value)" [size]="24" color="inherit" />
+        </label>
+      }
+    </div>
+  </div>
+}

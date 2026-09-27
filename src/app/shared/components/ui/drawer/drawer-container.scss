@@ -19,8 +19,11 @@
   animation: drawer-backdrop-out var(--drawer-duration) ease forwards;
 }
 
+// A column, so content can pin its header and actions the way it does in the modal.
 .drawer-panel {
   position: fixed;
+  display: flex;
+  flex-direction: column;
   background: var(--bg-lightest);
   color: var(--text-primary);
   box-shadow: 0 12px 40px rgba(13, 13, 18, 0.25);

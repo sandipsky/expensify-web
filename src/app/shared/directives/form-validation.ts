@@ -80,7 +80,7 @@ export class FormValidation implements OnDestroy {
     }
   }
 
-  /** Maps the first matching validator error to a human message. */
+  /** Maps the first matching validator error to a human message, or uses the validator's own. */
   private _messageFor(errors: ValidationErrors): string | null {
     if (errors['required'] || errors['requiredTrue']) return 'This field is required.';
     if (errors['minlength'])
@@ -91,7 +91,10 @@ export class FormValidation implements OnDestroy {
     if (errors['max']) return `Must be no more than ${errors['max'].max}.`;
     if (errors['pattern']) return 'Please match the required format.';
     // `email` is intentionally omitted — l-email-input renders its own format message.
-    return null;
+    // A custom validator can carry its own message as the error value:
+    // `{ nameTaken: 'That name is already in use.' }`.
+    const custom = Object.values(errors).find((error) => typeof error === 'string');
+    return typeof custom === 'string' ? custom : null;
   }
 
   private _isRequired(): boolean {

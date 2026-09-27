@@ -1,0 +1,21 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">Delete {{ category.name }}?</h2>
+  <p class="sheet-form__intro">{{ message }}</p>
+
+  <div class="sheet-form__fields">
+    <l-select
+      label="Move them to"
+      placeholder="Choose a category"
+      bindValue="value"
+      bindLabel="label"
+      [formControl]="replacement"
+      [items]="items"
+      [searchable]="items.length > 8"
+    />
+  </div>
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button variant="danger" size="lg" (click)="confirm()">Move and delete</l-button>
+  </div>
+</div>

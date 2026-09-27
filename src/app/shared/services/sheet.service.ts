@@ -19,11 +19,15 @@ export class SheetService {
   private readonly drawers = inject(DrawerService);
   private readonly breakpoints = inject(BreakpointService);
 
-  /** Emits the result passed to `close()` (or `undefined` when dismissed) once, after closing. */
+  /**
+   * Emits the result passed to `close()` (or `undefined` when dismissed) once, after
+   * closing. Dialogs are 480px wide and at most 640px tall unless `options` says
+   * otherwise; a longer form scrolls inside (see `_sheet-form.scss`).
+   */
   open<R = unknown, D = unknown>(
     component: Type<unknown>,
     data?: D,
-    options: { width?: string } = {},
+    options: { width?: string; maxHeight?: string } = {},
   ): Observable<R | undefined> {
     if (this.breakpoints.phone()) {
       return this.drawers
@@ -31,7 +35,11 @@ export class SheetService {
         .afterClosed();
     }
     return this.modals
-      .open<unknown, D, R>(component, { data, width: options.width ?? '480px' })
+      .open<unknown, D, R>(component, {
+        data,
+        width: options.width ?? '480px',
+        maxHeight: options.maxHeight ?? '640px',
+      })
       .afterClosed();
   }
 }

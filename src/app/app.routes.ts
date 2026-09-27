@@ -9,5 +9,11 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/accounts/accounts.routes').then((m) => m.ACCOUNTS_ROUTES),
   },
+  {
+    path: 'categories',
+    title: 'Categories',
+    loadComponent: () =>
+      import('./features/categories/categories-page/categories-page').then((m) => m.CategoriesPage),
+  },
   { path: '**', redirectTo: 'accounts' },
 ];

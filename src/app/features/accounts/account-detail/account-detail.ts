@@ -18,6 +18,7 @@ import { Transaction, TxType } from '../../../core/models/transaction';
 import { Preferences } from '../../../core/preferences';
 import { BreakpointService } from '../../../layout/breakpoint.service';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
+import { SymbolIcon } from '../../../shared/components/symbol-icon/symbol-icon';
 import { Breadcrumb } from '../../../shared/components/ui/breadcrumb';
 import { Button } from '../../../shared/components/ui/button/button';
 import { Card } from '../../../shared/components/ui/card/card';
@@ -29,8 +30,8 @@ import { Progress } from '../../../shared/components/ui/progress';
 import { Skeleton } from '../../../shared/components/ui/skeleton';
 import { Table, TableCellDirective, TableColumn } from '../../../shared/components/ui/table';
 import { MoneyPipe } from '../../../shared/pipes/money.pipe';
+import { CategoriesStore } from '../../categories/categories.store';
 import { AccountActions } from '../account-actions';
-import { AccountIcon } from '../account-icon/account-icon';
 import { ACCOUNT_TYPE_LABELS, balanceView, utilizationView } from '../account-labels';
 import { AccountsStore } from '../accounts.store';
 
@@ -70,7 +71,6 @@ const CURRENT_CAPTIONS = {
   selector: 'app-account-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    AccountIcon,
     Breadcrumb,
     Button,
     Card,
@@ -83,6 +83,7 @@ const CURRENT_CAPTIONS = {
     Progress,
     Row,
     Skeleton,
+    SymbolIcon,
     Table,
     TableCellDirective,
   ],
@@ -98,6 +99,7 @@ export class AccountDetail {
   protected readonly breakpoints = inject(BreakpointService);
   private readonly router = inject(Router);
   private readonly locale = inject(Preferences).locale;
+  private readonly categories = inject(CategoriesStore);
 
   protected readonly account = computed(() => this.store.byId(this.id()));
   protected readonly typeLabel = computed(() => {
@@ -202,12 +204,14 @@ export class AccountDetail {
   }
 
   private toRow(tx: Transaction, account: Account, balance: number): ActivityRow {
+    const category = this.categoryName(tx);
     return {
       id: tx.id,
       date: tx.date,
       dateLabel: this.dateFormat().format(parseISO(tx.date)),
-      title: this.describe(tx, account),
-      subtitle: [tx.time, tx.note].filter(Boolean).join(' · '),
+      title: this.describe(tx, account, category),
+      // With a payee in the title, the category moves down here.
+      subtitle: [tx.payee ? category : null, tx.time, tx.note].filter(Boolean).join(' · '),
       icon: iconFor(tx),
       kind: tx.type,
       amount: effects(tx).get(account.id) ?? 0,
@@ -216,19 +220,28 @@ export class AccountDetail {
     };
   }
 
-  /** Payee first; category names arrive with the categories feature, until then the type. */
-  private describe(tx: Transaction, account: Account): string {
+  /** Payee first, then the category, then the type. */
+  private describe(tx: Transaction, account: Account, category: string | null): string {
     if (tx.type === 'transfer') {
       const outgoing = tx.accountId === account.id;
       const otherId = outgoing ? tx.toAccountId : tx.accountId;
       const other = (otherId && this.store.byId(otherId)?.name) || 'another account';
       return outgoing ? `Transfer to ${other}` : `Transfer from ${other}`;
     }
-    if (tx.payee) return tx.payee;
+    return tx.payee || category || (tx.type === 'income' ? 'Income' : 'Expense');
+  }
+
+  /**
+   * "Food and dining › Groceries". Archived categories still name their entries
+   * (CAT-03); Balance adjustment has a name before the categories are seeded.
+   */
+  private categoryName(tx: Transaction): string | null {
+    const category = this.categories.byId(tx.categoryId);
+    if (category) return this.categories.path(category);
     if (tx.categoryId && ADJUSTMENT_CATEGORY_IDS.includes(tx.categoryId)) {
       return 'Balance adjustment';
     }
-    return tx.type === 'income' ? 'Income' : 'Expense';
+    return null;
   }
 }
 

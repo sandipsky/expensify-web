@@ -1,12 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { Icon } from '../../../shared/components/ui/icon/icon';
+import { Icon } from '../ui/icon/icon';
 
-/** An account's Material Symbols icon in its color, on a light tint of that color. */
+/**
+ * An account's or category's Material Symbols icon in its color, on a light
+ * tint of that color. Both store the pair as `icon` and `color` (§8).
+ *
+ * ```html
+ * <app-symbol-icon [icon]="category.icon" [color]="category.color" [size]="32" />
+ * ```
+ */
 @Component({
-  selector: 'app-account-icon',
+  selector: 'app-symbol-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
-  template: '<l-icon [name]="icon()" [size]="_glyph()" color="var(--account-color)" />',
+  template: '<l-icon [name]="icon()" [size]="_glyph()" color="var(--symbol-color)" />',
   styles: `
     :host {
       display: inline-flex;
@@ -14,18 +21,18 @@ import { Icon } from '../../../shared/components/ui/icon/icon';
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--account-color) 12%, transparent);
+      background: color-mix(in srgb, var(--symbol-color) 12%, transparent);
     }
   `,
   host: {
-    '[style.--account-color]': 'color()',
+    '[style.--symbol-color]': 'color()',
     '[style.width.px]': 'size()',
     '[style.height.px]': 'size()',
   },
 })
-export class AccountIcon {
+export class SymbolIcon {
   readonly icon = input.required<string>();
-  /** Hex color from the account document. */
+  /** Hex color from the document. */
   readonly color = input.required<string>();
   /** Diameter in px. */
   readonly size = input(40);

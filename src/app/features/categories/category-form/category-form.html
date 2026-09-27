@@ -1,0 +1,48 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">{{ title }}</h2>
+
+  <div class="sheet-form__fields" [formGroup]="form">
+    @if (chooseType) {
+      <l-segmented-control
+        formControlName="type"
+        aria-label="Category type"
+        size="lg"
+        [options]="typeOptions"
+        [fullWidth]="true"
+      />
+    }
+
+    <l-text-input
+      label="Name"
+      formControlName="name"
+      [placeholder]="namePlaceholder()"
+      (enter)="save()"
+    />
+
+    @if (hasSubcategories) {
+      <p class="sheet-form__hint">It has subcategories, so it stays at the top level.</p>
+    } @else if (parentItems().length) {
+      <div class="sheet-form__field">
+        <l-select
+          label="Parent category"
+          formControlName="parentId"
+          placeholder="None (top level)"
+          bindValue="value"
+          bindLabel="label"
+          [items]="parentItems()"
+          [clearable]="true"
+          [searchable]="parentItems().length > 8"
+        />
+        <p class="sheet-form__hint">Optional. Reports add a subcategory's entries to its parent.</p>
+      </div>
+    }
+
+    <l-color-picker label="Color" formControlName="color" [options]="colorOptions" />
+    <l-icon-picker label="Icon" formControlName="icon" [options]="iconOptions" [color]="color()" />
+  </div>
+
+  <div class="sheet-form__actions">
+    <l-button variant="outlined" size="lg" (click)="sheet.close()">Cancel</l-button>
+    <l-button size="lg" (click)="save()">{{ category ? 'Save' : title }}</l-button>
+  </div>
+</div>

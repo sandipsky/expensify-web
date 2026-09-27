@@ -1,7 +1,7 @@
 <l-card [hoverable]="true" padding="lg">
   <div class="account-card">
     <div class="account-card__head">
-      <app-account-icon [icon]="account().icon" [color]="account().color" />
+      <app-symbol-icon [icon]="account().icon" [color]="account().color" />
 
       <div class="account-card__title">
         <a class="account-card__link text-ellipsis" [routerLink]="['/accounts', account().id]">

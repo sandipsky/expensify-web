@@ -9,6 +9,7 @@ import { Preferences } from '../../../core/preferences';
 import { BreakpointService } from '../../../layout/breakpoint.service';
 import { IconRegistry } from '../../../shared/components/ui/icon/icon';
 import { AccountActions } from '../account-actions';
+import { CategoriesStore } from '../../categories/categories.store';
 import { AccountsStore } from '../accounts.store';
 import { AccountDetail } from './account-detail';
 
@@ -188,6 +189,22 @@ describe('AccountDetail', () => {
     const { texts } = await render(cash);
 
     expect(texts('.activity-row__title')).toEqual(['Balance adjustment', 'Transfer from Bank']);
+  });
+
+  it("names entries by their category, and a payee's entry under it", async () => {
+    const categories = TestBed.inject(CategoriesStore);
+    categories.seedDefaults();
+    const look = { icon: 'local_cafe', color: '#B45309' };
+    const coffee = categories.create('expense', { name: 'Coffee', parentId: 'exp_food', ...look });
+    const bank = store.create(input());
+    transactions.add(tx(bank, { categoryId: coffee, date: '2026-09-26', time: '09:00' }));
+    transactions.add(
+      tx(bank, { categoryId: 'exp_groceries', date: '2026-09-25', payee: 'Grocer', time: '10:00' }),
+    );
+    const { texts } = await render(bank);
+
+    expect(texts('.activity-row__title')).toEqual(['Food and dining › Coffee', 'Grocer']);
+    expect(texts('.activity-row__subtitle')).toEqual(['09:00', 'Groceries · 10:00']);
   });
 
   it('uses a table on desktop', async () => {

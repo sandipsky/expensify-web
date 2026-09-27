@@ -39,6 +39,16 @@ export class TransactionsRepo {
     return docs.map(toTransaction);
   }
 
+  /**
+   * Every transaction in the category, for moving them off it before it's deleted
+   * (CAT-06). A single-field equality, so no composite index; the category
+   * drill-down adds `date` ordering and needs categoryId ↑, date ↓ (§8).
+   */
+  async listByCategory(categoryId: string): Promise<Transaction[]> {
+    const docs = await this.db.get(this.path, { where: [['categoryId', '==', categoryId]] });
+    return docs.map(toTransaction);
+  }
+
   /** Writes the transaction and its balance increments in one batch, and returns its ID. */
   add(tx: NewTransaction): string {
     const id = this.db.newId();

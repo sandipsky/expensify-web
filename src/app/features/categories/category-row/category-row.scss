@@ -1,0 +1,62 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 8px 8px 8px 16px;
+}
+
+// Subcategories sit under their parent, lined up with its name.
+:host(.is-nested) {
+  min-height: 56px;
+  padding-left: 68px;
+}
+
+.category-row__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.category-row__edit {
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .category-row__name {
+    color: var(--accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.category-row__name {
+  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.category-row__caption {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Lines up with the menu buttons of the other rows.
+.category-row__lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}

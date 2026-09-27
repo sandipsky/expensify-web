@@ -1,0 +1,62 @@
+.l-swatches {
+  align-self: stretch;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+// 48px hit area around a 32px dot (NFR-05).
+.l-swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+}
+
+// Covers the swatch, so a tap anywhere selects it and focus scrolls it into view.
+.l-swatch__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.l-swatch__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  pointer-events: none;
+  transition: box-shadow 150ms ease-out;
+}
+
+.l-swatch__input:checked + .l-swatch__dot {
+  box-shadow:
+    0 0 0 2px var(--bg-lightest),
+    0 0 0 4px var(--swatch-color);
+}
+
+.l-swatch__input:focus-visible + .l-swatch__dot {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+}
+
+.l-swatch__input:disabled + .l-swatch__dot {
+  opacity: 0.4;
+}
+
+.l-swatch:has(.l-swatch__input:disabled) {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-swatch__dot {
+    transition: none;
+  }
+}

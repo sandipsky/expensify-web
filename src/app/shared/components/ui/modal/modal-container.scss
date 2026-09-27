@@ -30,8 +30,15 @@
   overflow: auto;
 }
 
+// Never taller than `maxHeight` or the viewport inside the wrapper's padding; taller
+// content scrolls inside. A column, so content can pin its header and actions: its
+// host takes `display: flex; flex-direction: column; min-height: 0` and scrolls its body.
 .modal-panel {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: min(var(--modal-max-height, 100dvh), calc(100dvh - 48px));
+  overflow: auto;
   background: var(--bg-lightest);
   color: var(--text-primary);
   border-radius: 12px;

@@ -18,6 +18,11 @@ export interface ModalConfig<D = any> {
   height?: string;
   /** Panel max width (defaults to 90vw). */
   maxWidth?: string;
+  /**
+   * Panel max height, e.g. '640px'. The panel never grows past the viewport
+   * either way; taller content scrolls inside it.
+   */
+  maxHeight?: string;
 
   /** Extra class(es) applied to the panel element. */
   panelClass?: string | string[];
@@ -36,7 +41,7 @@ export interface ModalConfig<D = any> {
 }
 
 export const MODAL_DEFAULTS: Required<
-  Omit<ModalConfig, 'data' | 'width' | 'height' | 'panelClass'>
+  Omit<ModalConfig, 'data' | 'width' | 'height' | 'maxHeight' | 'panelClass'>
 > = {
   maxWidth: '90vw',
   backdrop: true,

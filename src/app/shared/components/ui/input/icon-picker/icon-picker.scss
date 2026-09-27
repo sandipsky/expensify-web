@@ -1,0 +1,64 @@
+// Grows with its options; put it in a scrolling container rather than scrolling it too.
+// Stretched, since `.form-group` aligns its children to the start and a shrink-to-fit
+// grid would `auto-fill` a single column.
+.l-icon-grid {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 4px;
+}
+
+// 48px tiles (NFR-05).
+.l-icon-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out;
+
+  &:hover {
+    background: var(--bg-light);
+  }
+
+  &.is-checked {
+    border-color: var(--pick-color);
+    background: color-mix(in srgb, var(--pick-color) 12%, transparent);
+    color: var(--pick-color);
+  }
+
+  &:has(.l-icon-tile__input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  &:has(.l-icon-tile__input:disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  l-icon {
+    pointer-events: none;
+  }
+}
+
+// Covers the tile, so a tap anywhere selects it and focus scrolls it into view.
+.l-icon-tile__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .l-icon-tile {
+    transition: none;
+  }
+}

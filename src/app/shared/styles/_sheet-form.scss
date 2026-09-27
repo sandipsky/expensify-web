@@ -1,0 +1,84 @@
+// Layout for forms opened with SheetService (dialog or bottom sheet). Components `@use` it.
+// Both containers cap their height, so the title and actions stay put and the fields
+// scroll between them.
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sheet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  padding: 20px;
+
+  > :not(.sheet-form__fields) {
+    flex-shrink: 0;
+  }
+}
+
+.sheet-form__title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+}
+
+// Runs edge to edge with the padding inside, so the scrollbar sits at the edge and
+// focus rings aren't clipped; the negative margins keep the layout as it was.
+.sheet-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  margin: -4px -20px;
+  padding: 4px 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-block: 1px solid transparent;
+
+  // A hairline at each edge while more of the form is past it. Where scroll-driven
+  // animations aren't supported, it just scrolls.
+  @supports (animation-timeline: scroll()) {
+    animation: sheet-form-edges linear both;
+    animation-timeline: scroll(self);
+  }
+}
+
+@keyframes sheet-form-edges {
+  0% {
+    border-top-color: transparent;
+    border-bottom-color: var(--separator);
+  }
+  2%,
+  98% {
+    border-top-color: var(--separator);
+    border-bottom-color: var(--separator);
+  }
+  100% {
+    border-top-color: var(--separator);
+    border-bottom-color: transparent;
+  }
+}
+
+// A field with help text under it.
+.sheet-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-form__hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.sheet-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}

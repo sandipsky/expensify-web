@@ -1,0 +1,115 @@
+<div class="categories-page">
+  <div class="categories-page__header">
+    <l-breadcrumb title="Categories" />
+    @if (store.all().length) {
+      <l-button size="lg" (click)="add()">
+        <l-icon name="add" color="inherit" />
+        Add category
+      </l-button>
+    }
+  </div>
+
+  @if (store.loading()) {
+    <l-skeleton height="44px" />
+    <l-skeleton height="360px" />
+  } @else if (!store.all().length) {
+    <l-card>
+      <app-empty-state
+        icon="category"
+        title="No categories yet"
+        message="Start with the usual ones, such as Food, Transport and Salary, and change them anytime. Or build your own list."
+      >
+        <l-button size="lg" (click)="actions.seedDefaults()">Add default categories</l-button>
+        <l-button size="lg" variant="outlined" (click)="add()">Add category</l-button>
+      </app-empty-state>
+    </l-card>
+  } @else {
+    <l-tabs [value]="type()" (valueChange)="selectType($event)">
+      @for (t of types; track t) {
+        @let lists = store.lists()[t];
+        <l-tab [label]="labels[t]" [value]="t">
+          <div class="categories-panel">
+            @if (lists.tree.length) {
+              <l-card [flush]="true">
+                <ul class="category-list" [attr.aria-label]="labels[t] + ' categories'">
+                  @for (node of lists.tree; track node.category.id) {
+                    <li>
+                      <app-category-row
+                        [category]="node.category"
+                        [caption]="subcategoryCaption(node)"
+                        [canAddSubcategory]="true"
+                        (edit)="actions.edit(node.category)"
+                        (addSubcategory)="addSubcategory(node.category)"
+                        (archive)="actions.archive(node.category)"
+                        (delete)="actions.delete(node.category)"
+                      />
+                      @if (node.children.length) {
+                        <ul class="category-list" [attr.aria-label]="node.category.name">
+                          @for (child of node.children; track child.id) {
+                            <li>
+                              <app-category-row
+                                [category]="child"
+                                [nested]="true"
+                                (edit)="actions.edit(child)"
+                                (archive)="actions.archive(child)"
+                                (delete)="actions.delete(child)"
+                              />
+                            </li>
+                          }
+                        </ul>
+                      }
+                    </li>
+                  }
+                </ul>
+              </l-card>
+            } @else {
+              <l-card>
+                <app-empty-state
+                  icon="category"
+                  [title]="'No ' + labels[t].toLowerCase() + ' categories'"
+                  message="Add one to sort these entries your way."
+                >
+                  <l-button size="lg" (click)="add(t)">Add category</l-button>
+                </app-empty-state>
+              </l-card>
+            }
+
+            @if (lists.system.length) {
+              <l-card title="System categories" [flush]="true">
+                <ul class="category-list">
+                  @for (category of lists.system; track category.id) {
+                    <li>
+                      <app-category-row [category]="category" [caption]="systemCaption(category)" />
+                    </li>
+                  }
+                </ul>
+              </l-card>
+            }
+
+            @if (lists.archived.length) {
+              <l-accordion>
+                <l-accordion-item [title]="'Archived (' + lists.archived.length + ')'">
+                  <p class="categories-panel__note">
+                    Hidden from pickers. Entries that use them keep them.
+                  </p>
+                  <ul class="category-list">
+                    @for (category of lists.archived; track category.id) {
+                      <li>
+                        <app-category-row
+                          [category]="category"
+                          [caption]="archivedCaption(category)"
+                          (restore)="actions.restore(category)"
+                          (delete)="actions.delete(category)"
+                        />
+                      </li>
+                    }
+                  </ul>
+                </l-accordion-item>
+              </l-accordion>
+            }
+          </div>
+        </l-tab>
+      }
+    </l-tabs>
+  }
+</div>

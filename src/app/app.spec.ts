@@ -42,11 +42,13 @@ describe('App', () => {
     expect(compiled.querySelector('l-layout main router-outlet')).not.toBeNull();
   });
 
-  it('links to Accounts from the sidebar', async () => {
+  it('links to Accounts and Categories from the sidebar', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    const link = (fixture.nativeElement as HTMLElement).querySelector('l-sidebar nav a');
-    expect(link?.getAttribute('href')).toBe('/accounts');
-    expect(link?.textContent?.trim()).toBe('Accounts');
+    const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('l-sidebar nav a')];
+    expect(links.map((a) => [a.getAttribute('href'), a.textContent?.trim()])).toEqual([
+      ['/accounts', 'Accounts'],
+      ['/categories', 'Categories'],
+    ]);
   });
 });

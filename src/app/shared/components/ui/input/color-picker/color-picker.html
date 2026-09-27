@@ -1,0 +1,40 @@
+@if (viewMode()) {
+  <div class="form-group view-mode">
+    @if (label()) {
+      <label>{{ label() }}</label>
+    }
+    <div class="view-value">{{ viewValue() ?? _selectedLabel() ?? '-' }}</div>
+  </div>
+} @else {
+  <div class="form-group">
+    @if (label()) {
+      <label [id]="name() + '-label'">{{ label() }}</label>
+    }
+
+    <div
+      class="l-swatches"
+      role="radiogroup"
+      [attr.aria-labelledby]="label() ? name() + '-label' : null"
+    >
+      @for (option of options(); track option.value) {
+        <label class="l-swatch" [style.--swatch-color]="option.value">
+          <input
+            type="radio"
+            class="l-swatch__input"
+            [name]="name()"
+            [checked]="_isChecked(option.value)"
+            [disabled]="_isDisabled() || !!option.disabled"
+            [attr.aria-label]="option.label"
+            (change)="_select(option.value)"
+            (blur)="_handleBlur()"
+          />
+          <span class="l-swatch__dot" aria-hidden="true">
+            @if (_isChecked(option.value)) {
+              <l-icon name="check" [size]="18" color="var(--text-white)" />
+            }
+          </span>
+        </label>
+      }
+    </div>
+  </div>
+}

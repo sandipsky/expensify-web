@@ -1,0 +1,55 @@
+<app-symbol-icon [icon]="category().icon" [color]="category().color" [size]="nested() ? 32 : 40" />
+
+@if (category().isSystem || category().archived) {
+  <div class="category-row__text">
+    <span class="category-row__name text-ellipsis">{{ category().name }}</span>
+    @if (caption()) {
+      <span class="category-row__caption">{{ caption() }}</span>
+    }
+  </div>
+} @else {
+  <button type="button" class="category-row__text category-row__edit" (click)="edit.emit()">
+    <span class="category-row__name text-ellipsis">
+      <span class="visually-hidden">Edit </span>{{ category().name }}
+    </span>
+    @if (caption()) {
+      <span class="category-row__caption">{{ caption() }}</span>
+    }
+  </button>
+}
+
+@if (category().isSystem) {
+  <span class="category-row__lock">
+    <l-icon name="lock" [size]="18" />
+    <span class="visually-hidden">Can't be changed</span>
+  </span>
+} @else {
+  <l-menu mode="right">
+    <l-button dropdown-display variant="ghost" size="lg" [rounded]="true">
+      <l-icon name="more_vert" color="inherit" />
+      <span class="visually-hidden">Actions for {{ category().name }}</span>
+    </l-button>
+    @if (category().archived) {
+      <button type="button" dropdown-item (click)="restore.emit()">
+        <l-icon name="unarchive" [size]="18" />Restore
+      </button>
+    } @else {
+      <ng-container ngProjectAs="[dropdown-item]">
+        <button type="button" dropdown-item (click)="edit.emit()">
+          <l-icon name="edit" [size]="18" />Edit
+        </button>
+        @if (canAddSubcategory()) {
+          <button type="button" dropdown-item (click)="addSubcategory.emit()">
+            <l-icon name="add" [size]="18" />Add subcategory
+          </button>
+        }
+        <button type="button" dropdown-item (click)="archive.emit()">
+          <l-icon name="archive" [size]="18" />Archive
+        </button>
+      </ng-container>
+    }
+    <button type="button" dropdown-item class="danger" (click)="delete.emit()">
+      <l-icon name="delete" [size]="18" color="inherit" />Delete
+    </button>
+  </l-menu>
+}
