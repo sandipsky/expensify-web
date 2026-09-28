@@ -1,7 +1,24 @@
+// Design tokens. Light is the default; dark (SET-06) redefines the same variables,
+// so components only ever use var(--…) and never need a dark override.
+//
+// The theme switch sets data-theme="light" | "dark" on <html>, or removes it to
+// follow the system. So dark applies for data-theme="dark", and for no attribute
+// when the OS prefers dark; data-theme="light" stays light either way. Both dark
+// blocks at the end include the same mixin, so the values are written once.
+
 :root {
+  color-scheme: light;
+
+  // --accent is the fill (under --text-white), borders, focus rings and icons;
+  // --accent-text is accent-colored text. One blue does both here; dark mode
+  // needs two, since no blue passes 4.5:1 both as text and under white text.
   --accent: #2456e6;
+  --accent-text: #2456e6;
   --accent-bg: #ecf1fe;
   --accent-dark: #1a41b8;
+  // Hover/pressed fill under --text-white (primary button, FAB, selected day).
+  // Same as --accent-dark here; in dark mode --accent-dark is a light text blue.
+  --accent-hover: #1a41b8;
 
   --success: #36b37e;
   --success-bg: #ebf7f2;
@@ -35,4 +52,79 @@
   --bg-light: #f7f7f7;
   --bg-semi-light: #f6f7f5;
   --bg-dark: #ebedeb;
+  // A surface lifted above its container: the selected segment's thumb. White
+  // here like --bg-lightest; lighter than the surfaces in dark mode.
+  --bg-raised: #fefefe;
+
+  /* ================= Data colors ================= */
+  // How far user-picked colors (category and account icons) mix toward white.
+  // None here; dark mode lifts them so dark hues stay visible on dark surfaces.
+  --data-color-lift: 0%;
+}
+
+// Neutral dark grays, never pure black. Surfaces (--bg-lightest: cards, sidebar,
+// dialogs) sit a step above the page (--bg-light), as in light mode.
+// --accent is a fill that keeps --text-white at 4.5:1 (and 3:1 as a border or
+// icon on the surfaces); --accent-text is the lighter blue for text. --accent-dark
+// is the strongest accent text (selected items, today).
+@mixin dark-tokens {
+  color-scheme: dark;
+
+  --accent: #3a68e9;
+  --accent-text: #7898f0;
+  --accent-bg: #1a2340;
+  --accent-dark: #93adf5;
+  --accent-hover: #2a58dc;
+
+  --success: #3fbf87;
+  --success-bg: #13291f;
+
+  --error: #ff6b5c;
+  --error-bg: #3a1c19;
+
+  --warn: #f5b53d;
+  --warn-bg: #2e2513;
+
+  --info: #2ec4df;
+  --info-bg: #11282d;
+
+  --premium: #dd70db;
+  --premium-bg: #361a36;
+
+  /* ================= Text Colors ================= */
+  --text-primary: #e9ebee;
+  --text-secondary: #b6b9be;
+  --text-tertiary: #9b9ea4;
+  --text-quaternary: #75787e;
+  // Text and icons on accent/success/error fills: stays light.
+  --text-white: #f9fafb;
+
+  /* ================= Separators ================= */
+  --separator: #2f3135;
+  --separator-light: #26282b;
+  --separator-dark: #3c3f44;
+
+  /* ================= Backgrounds ================= */
+  --bg-lightest: #1b1c1f;
+  --bg-light: #131416;
+  --bg-semi-light: #17181b;
+  --bg-dark: #2a2c30;
+  --bg-raised: #303237;
+
+  /* ================= Data colors ================= */
+  --data-color-lift: 35%;
+}
+
+// Screen only: printing (the monthly report saved as PDF, DAT-05) always uses
+// the light palette, so a dark theme never prints light text on white paper.
+@media screen {
+  :root[data-theme='dark'] {
+    @include dark-tokens;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    @include dark-tokens;
+  }
 }

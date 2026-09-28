@@ -22,7 +22,7 @@
       border-right: 5px solid transparent;
       border-bottom: 5px solid;
       position: absolute;
-      color: #bcbdbe;
+      color: var(--text-quaternary);
       right: 4px;
     }
 
@@ -38,17 +38,17 @@
 
   &.asc .th-label:before,
   &.desc .th-label:after {
-    color: black;
+    color: var(--text-primary);
   }
 
   &.asc .th-label:after,
   &.desc .th-label:before {
-    color: #bcbdbe;
+    color: var(--text-quaternary);
   }
 
   &.none .th-label:before,
   &.none .th-label:after {
-    color: #bcbdbe;
+    color: var(--text-quaternary);
   }
 }
 
@@ -166,7 +166,7 @@
 
   &.primary {
     background: var(--accent-bg);
-    color: var(--accent);
+    color: var(--accent-text);
 
     .circle {
       background: var(--accent);
@@ -190,7 +190,7 @@
   height: 100%;
 
   p {
-    color: rgba(51, 51, 51, 0.5);
+    color: var(--text-quaternary);
     font-size: 14px;
     line-height: 21px;
   }

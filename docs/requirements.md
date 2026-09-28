@@ -472,7 +472,7 @@ users/{uid}                        profile and preferences
 | weekStartDay | int | ISO 1 = Monday … 7 = Sunday (matches Kotlin `DayOfWeek`) |
 | theme | string | light · dark · system |
 | onboardingCompleted | bool | true after onboarding (ONB-04) |
-| notificationPrefs | map | dailyReminder, reminderTime ("20:00"), budgetAlerts, billReminders |
+| notificationPrefs | map | dailyReminder (bool, default false: opt-in, NTF-01), reminderTime ("HH:mm", default "20:00"), budgetAlerts (bool, default true), billReminders (bool, default true). A missing or unreadable value reads as its default |
 | schemaVersion | int | bumped on breaking changes; older apps ask the user to update |
 | createdAt, updatedAt | timestamp | `serverTimestamp()` on every write |
 
@@ -1038,6 +1038,8 @@ In the MVP, account deletion runs on the client: it deletes the user's documents
 | Recurring and bill reminders | FCM push from generateRecurring | FCM push |
 
 Web push needs the user's permission, and on iPhones it works only after the PWA is added to the Home Screen (iOS 16.4 and later).
+
+Until these Functions and FCM exist, the web app raises all three itself while it is open: a toast, or a system notification (the Notifications API, once the user allows it in Settings) while the app is in a background tab. The daily reminder comes at the reminder time, or when the app is opened later that day, if nothing but recurring entries is dated today. Recurring reminders are for ask-first rules only: once the day before the next date, and once when entries are due, one reminder for a catch-up of several. Each device keeps the alerts of the last 30 days in the in-app list behind the header's bell (NTF-05, at most 50) and remembers which reminders it showed; neither is synced, as each phone keeps its own notification history.
 
 ### Plan and cost
 

@@ -1,0 +1,78 @@
+<section class="settings-section" aria-labelledby="preferences-heading">
+  <h2 class="settings-section__title" id="preferences-heading">Preferences</h2>
+
+  <l-card title="Currency and format" padding="lg">
+    <div class="settings-card">
+      <div class="settings-card__fields">
+        <l-select
+          label="Currency"
+          bindValue="value"
+          bindLabel="label"
+          [items]="currencyOptions()"
+          [searchable]="true"
+          [virtualScroll]="true"
+          [useValidation]="false"
+          [ngModel]="currency()"
+          (ngModelChange)="setCurrency($event)"
+        />
+        <l-select
+          label="Number and date format"
+          bindValue="value"
+          bindLabel="label"
+          [items]="localeOptions()"
+          [searchable]="true"
+          [useValidation]="false"
+          [ngModel]="prefs.locale()"
+          (ngModelChange)="setLocale($event)"
+        />
+      </div>
+      <p class="settings-card__hint" aria-live="polite">Looks like {{ sample() }}</p>
+    </div>
+  </l-card>
+
+  <l-card title="Periods" padding="lg">
+    <div class="settings-card">
+      <p class="settings-card__text">
+        Budgets, reports and the transaction list count months and weeks from these days. A month
+        can follow your pay cycle, such as the 25th to the 24th.
+      </p>
+      <div class="settings-card__fields">
+        <l-select
+          label="Months start on the"
+          bindValue="value"
+          bindLabel="label"
+          [items]="monthStartOptions"
+          [useValidation]="false"
+          [ngModel]="prefs.monthStartDay()"
+          (ngModelChange)="setMonthStart($event)"
+        />
+        <l-select
+          label="Weeks start on"
+          bindValue="value"
+          bindLabel="label"
+          [items]="weekStartOptions()"
+          [useValidation]="false"
+          [ngModel]="prefs.weekStartDay()"
+          (ngModelChange)="setWeekStart($event)"
+        />
+      </div>
+      <p class="settings-card__hint" aria-live="polite">This month: {{ period() }}</p>
+    </div>
+  </l-card>
+
+  <l-card title="Appearance" padding="lg">
+    <div class="settings-card">
+      <div class="settings-card__format">
+        <span class="settings-card__label" id="theme-label">Theme</span>
+        <l-segmented-control
+          aria-labelledby="theme-label"
+          size="lg"
+          [options]="themeOptions"
+          [ngModel]="prefs.theme()"
+          (ngModelChange)="setTheme($event)"
+        />
+      </div>
+      <p class="settings-card__hint">System follows your device’s light or dark setting.</p>
+    </div>
+  </l-card>
+</section>

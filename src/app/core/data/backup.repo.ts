@@ -10,6 +10,7 @@ import {
 import { accountIdsOf } from '../domain/transactions';
 import { TimestampLike } from '../models/timestamp';
 import { Transaction } from '../models/transaction';
+import { ChunkedWriter, MAX_BATCH_WRITES } from './chunked-writer';
 import {
   DocData,
   LocalBatch,
@@ -19,9 +20,6 @@ import {
   timestampFromMillis,
 } from './local-db';
 import { WriteErrors } from './write-errors';
-
-/** Firestore caps a batch at 500 writes. */
-const MAX_BATCH_WRITES = 450;
 
 /** What a restore leaves out of a transaction: receipt files aren't in a backup. */
 const NOT_RESTORED = ['attachments', 'pending'];
@@ -135,36 +133,6 @@ export class BackupRepo {
         return false;
       },
     );
-  }
-}
-
-/** Collects plain writes and commits them in batches under Firestore's cap. */
-class ChunkedWriter {
-  private batch: LocalBatch;
-  private count = 0;
-
-  constructor(
-    private readonly db: LocalDb,
-    private readonly commit: (batch: LocalBatch) => void,
-  ) {
-    this.batch = db.batch();
-  }
-
-  set(path: string, data: DocData): void {
-    this.add((b) => b.set(path, data));
-  }
-
-  add(write: (batch: LocalBatch) => void): void {
-    if (this.count >= MAX_BATCH_WRITES) this.flush();
-    write(this.batch);
-    this.count++;
-  }
-
-  flush(): void {
-    if (!this.count) return;
-    this.commit(this.batch);
-    this.batch = this.db.batch();
-    this.count = 0;
   }
 }
 

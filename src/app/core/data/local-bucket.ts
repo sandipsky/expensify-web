@@ -46,6 +46,19 @@ export class LocalBucket {
       : new Blob([file.blob], { type: file.contentType });
   }
 
+  /**
+   * Like `listAll(ref(storage, folder))`, flattened: the paths of every file
+   * under the folder, in its subfolders too, as deleting a user's receipts needs.
+   */
+  async list(folder: string): Promise<string[]> {
+    const prefix = `${folder}/`;
+    const db = await this.open();
+    const keys = db
+      ? await request<IDBValidKey[]>(db, 'readonly', (store) => store.getAllKeys())
+      : [...this.memory.keys()];
+    return keys.filter((key): key is string => typeof key === 'string' && key.startsWith(prefix));
+  }
+
   /** Like `deleteObject(ref(storage, path))`, except a missing file isn't an error. */
   async delete(path: string): Promise<void> {
     const db = await this.open();

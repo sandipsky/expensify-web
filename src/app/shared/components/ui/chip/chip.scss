@@ -18,7 +18,7 @@
 // ── Variants ───────────────────────────────────────────────────
 :host.l-chip--primary {
   --l-chip-bg: var(--accent-bg);
-  --l-chip-color: var(--accent);
+  --l-chip-color: var(--accent-text);
 }
 
 :host.l-chip--success {

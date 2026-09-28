@@ -88,7 +88,7 @@ export interface ChartTableRow {
       padding: 0;
       border: 0;
       background: none;
-      color: var(--accent);
+      color: var(--accent-text);
       font: inherit;
       text-align: left;
       cursor: pointer;

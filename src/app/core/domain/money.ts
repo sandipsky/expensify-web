@@ -16,6 +16,23 @@ export function fractionDigits(currency: string): number {
   return digits;
 }
 
+/** A three-letter ISO 4217 code such as "EUR", as §8 `baseCurrency` holds. */
+export function isCurrencyCode(value: unknown): value is string {
+  return typeof value === 'string' && /^[A-Z]{3}$/.test(value);
+}
+
+/** Codes offered where Intl can't list them (older browsers). */
+const COMMON_CURRENCIES = ['AUD', 'CAD', 'CHF', 'CNY', 'EUR', 'GBP', 'INR', 'JPY', 'NPR', 'USD'];
+
+/** The ISO 4217 currencies this browser can format, A to Z (SET-01). */
+export function currencyCodes(): string[] {
+  try {
+    return Intl.supportedValuesOf('currency');
+  } catch {
+    return [...COMMON_CURRENCIES];
+  }
+}
+
 function formatter(locale: string, options: Intl.NumberFormatOptions): Intl.NumberFormat {
   const key = `${locale}|${JSON.stringify(options)}`;
   let result = formatters.get(key);

@@ -1,0 +1,60 @@
+<div class="alerts-panel">
+  <div class="alerts-panel__header">
+    <h2 class="alerts-panel__title" id="alerts-title">Alerts</h2>
+    @if (alerts().length) {
+      <l-button variant="ghost" size="sm" (click)="clear()">Clear all</l-button>
+    }
+    <button type="button" class="alerts-panel__close" aria-label="Close" (click)="close()">
+      <l-icon name="close" color="inherit" [size]="20" />
+    </button>
+  </div>
+
+  @if (alerts().length) {
+    <ul class="alerts-panel__list" aria-labelledby="alerts-title">
+      @for (alert of alerts(); track alert.id) {
+        <li class="alert-row" [class.is-fresh]="fresh.has(alert.id)">
+          <button type="button" class="alert-row__main" (click)="open(alert)">
+            <span class="alert-row__icon" [class]="'is-' + alert.tone">
+              <l-icon [name]="icons[alert.kind]" color="inherit" [size]="20" />
+            </span>
+            <span class="alert-row__text">
+              <span class="alert-row__title">
+                @if (fresh.has(alert.id)) {
+                  <span class="alert-row__dot" aria-hidden="true"></span>
+                  <span class="visually-hidden">New: </span>
+                }
+                {{ alert.title }}
+              </span>
+              <span class="alert-row__message">{{ alert.message }}</span>
+              <span class="alert-row__time">{{ when(alert) }}</span>
+            </span>
+          </button>
+          <button
+            type="button"
+            class="alert-row__remove"
+            [attr.aria-label]="'Remove ' + alert.title"
+            (click)="remove(alert)"
+          >
+            <l-icon name="close" color="inherit" [size]="16" />
+          </button>
+        </li>
+      }
+    </ul>
+    <div class="alerts-panel__footer">
+      <l-button variant="ghost" (click)="settings()">
+        <l-icon name="tune" color="inherit" [size]="18" />
+        Notification settings
+      </l-button>
+    </div>
+  } @else {
+    <app-empty-state
+      icon="notifications"
+      title="No alerts yet"
+      message="Budget alerts and reminders show up here, so you can catch up on anything you missed."
+    >
+      <l-button variant="outlined-primary" size="lg" (click)="settings()">
+        Notification settings
+      </l-button>
+    </app-empty-state>
+  }
+</div>

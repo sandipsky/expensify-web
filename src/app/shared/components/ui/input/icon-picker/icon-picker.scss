@@ -1,3 +1,9 @@
+// Picked colors (often a category's stored hex) mix toward white by
+// --data-color-lift: 0% in light mode, more in dark so dark hues stay visible.
+:host {
+  --_pick: color-mix(in srgb, var(--pick-color), var(--text-white) var(--data-color-lift, 0%));
+}
+
 // Grows with its options; put it in a scrolling container rather than scrolling it too.
 // Stretched, since `.form-group` aligns its children to the start and a shrink-to-fit
 // grid would `auto-fill` a single column.
@@ -28,9 +34,9 @@
   }
 
   &.is-checked {
-    border-color: var(--pick-color);
-    background: color-mix(in srgb, var(--pick-color) 12%, transparent);
-    color: var(--pick-color);
+    border-color: var(--_pick);
+    background: color-mix(in srgb, var(--_pick) 12%, transparent);
+    color: var(--_pick);
   }
 
   &:has(.l-icon-tile__input:focus-visible) {
@@ -68,7 +74,11 @@
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
 
   .l-icon-tile {
-    --tile: var(--tile-color, var(--pick-color));
+    --tile: color-mix(
+      in srgb,
+      var(--tile-color, var(--pick-color)),
+      var(--text-white) var(--data-color-lift, 0%)
+    );
 
     flex-direction: column;
     justify-content: flex-start;

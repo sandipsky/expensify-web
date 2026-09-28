@@ -18,7 +18,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: #ccc;
+  // Off track: a mid gray between the text and surface grays, in both themes.
+  background: color-mix(in srgb, var(--text-quaternary) 50%, var(--bg-lightest));
   transition: 0.4s;
 }
 
@@ -29,7 +30,7 @@
   width: 16px;
   left: 2px;
   bottom: 2px;
-  background: white;
+  background: var(--text-white);
   transition: 0.4s;
 }
 

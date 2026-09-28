@@ -17,6 +17,9 @@ import { provideInputValueAccessor } from '../input';
 import NepaliDate from './lib/nepali-date-converter';
 import { dateConfigMap } from './lib/date-config';
 import { format as formatBs, formatObj, parse as parseDateString } from './lib/nepali-date-helper';
+import { L_WEEK_START } from './week-start';
+
+export { L_WEEK_START } from './week-start';
 
 let _uid = 0;
 
@@ -181,6 +184,8 @@ export class DateInput implements ControlValueAccessor {
   readonly min = input<Date | string | null>(null);
   /** Latest selectable date (inclusive). */
   readonly max = input<Date | string | null>(null);
+  /** First day of the calendar's weeks, ISO 1 = Monday … 7 = Sunday; defaults to `L_WEEK_START`. */
+  readonly weekStart = input<number | null>(null);
 
   /** Render the formatted date as plain text instead of the picker. */
   readonly viewMode = input(false);
@@ -211,6 +216,13 @@ export class DateInput implements ControlValueAccessor {
   protected readonly _typedText = signal<string | null>(null);
 
   private readonly _todayTime = signal(startOfDay(new Date()).getTime());
+  private readonly _defaultWeekStart = inject(L_WEEK_START, { optional: true });
+
+  /** The first weekday as a JS day index, 0 = Sunday … 6 = Saturday. */
+  private readonly _firstDay = computed(() => {
+    const iso = Math.trunc(this.weekStart() ?? this._defaultWeekStart?.() ?? 7);
+    return iso >= 1 && iso <= 7 ? iso % 7 : 0;
+  });
 
   protected readonly _isDisabled = computed(() => this.disabled() || this._disabledByForm());
 
@@ -269,9 +281,11 @@ export class DateInput implements ControlValueAccessor {
     return formatAd(value, this.format());
   });
 
-  protected readonly _weekdays = computed(() =>
-    this._mode() === 'bs' && this.lang() === 'np' ? formatObj.np.day.short : WEEKDAYS,
-  );
+  protected readonly _weekdays = computed(() => {
+    const names = this._mode() === 'bs' && this.lang() === 'np' ? formatObj.np.day.short : WEEKDAYS;
+    const first = this._firstDay();
+    return [...names.slice(first), ...names.slice(0, first)];
+  });
 
   protected readonly _headerMonthLabel = computed(() =>
     this._mode() === 'bs'
@@ -295,7 +309,7 @@ export class DateInput implements ControlValueAccessor {
     const first = mode === 'bs' ? this._bsToJs(year, month, 1) : new Date(year, month, 1);
     if (!first) return [];
 
-    const startOffset = first.getDay();
+    const startOffset = (first.getDay() - this._firstDay() + 7) % 7;
     const selectedTime = this._value()?.getTime() ?? null;
     const activeTime = this._activeDate()?.getTime() ?? null;
     const todayTime = this._todayTime();

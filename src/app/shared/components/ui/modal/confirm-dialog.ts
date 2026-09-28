@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Button } from '../button/button';
 import { MODAL_DATA } from './modal.config';
 import { ModalRef } from './modal-ref';
+
+let _uid = 0;
 
 export interface ConfirmDialogData {
   title?: string;
@@ -11,6 +13,11 @@ export interface ConfirmDialogData {
   cancelText?: string;
   /** Variant of the confirm button — `danger` for destructive actions. */
   confirmVariant?: 'primary' | 'danger';
+  /**
+   * A word the user must type before the confirm button works, e.g. `DELETE`,
+   * for actions that can't be undone. Matched ignoring case and outer spaces.
+   */
+  confirmPhrase?: string;
   /**
    * Optional async action run when the user confirms. The dialog shows a
    * loading state while it runs and only closes (with `true`) when it
@@ -34,13 +41,29 @@ export interface ConfirmDialogData {
       <h2 class="confirm-dialog__title">{{ data.title || 'Confirm' }}</h2>
       <p class="confirm-dialog__message">{{ data.message || 'Are you sure?' }}</p>
 
+      @if (data.confirmPhrase) {
+        <div class="form-group confirm-dialog__phrase">
+          <label [for]="_phraseId">Type {{ data.confirmPhrase }} to confirm</label>
+          <input
+            class="form-control"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            [id]="_phraseId"
+            [disabled]="_loading()"
+            (input)="_typed.set($any($event.target).value)"
+            (keydown.enter)="confirm()"
+          />
+        </div>
+      }
+
       <div class="confirm-dialog__actions">
         <l-button variant="outlined" [disabled]="_loading()" (click)="ref.close(false)">
           {{ data.cancelText || 'Cancel' }}
         </l-button>
         <l-button
           [variant]="data.confirmVariant || 'danger'"
-          [disabled]="_loading()"
+          [disabled]="_loading() || !_phraseMatches()"
           (click)="confirm()"
         >
           {{ _loading() ? 'Working…' : data.confirmText || 'Delete' }}
@@ -55,9 +78,17 @@ export class ConfirmDialog {
   readonly data = inject<ConfirmDialogData>(MODAL_DATA) ?? {};
 
   protected readonly _loading = signal(false);
+  protected readonly _typed = signal('');
+  protected readonly _phraseId = `l-confirm-phrase-${_uid++}`;
+  /** True when no phrase is asked for, or the typed text matches it. */
+  protected readonly _phraseMatches = computed(
+    () =>
+      !this.data.confirmPhrase ||
+      this._typed().trim().toLowerCase() === this.data.confirmPhrase.trim().toLowerCase(),
+  );
 
   confirm(): void {
-    if (this._loading()) {
+    if (this._loading() || !this._phraseMatches()) {
       return;
     }
 

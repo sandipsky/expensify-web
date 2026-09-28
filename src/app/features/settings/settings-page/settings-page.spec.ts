@@ -1,4 +1,3 @@
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { Preferences } from '../../../core/preferences';
@@ -7,7 +6,7 @@ import { AccountsStore } from '../../accounts/accounts.store';
 import { TransactionExport } from '../../transactions/transaction-export';
 import { SettingsPage } from './settings-page';
 
-describe('SettingsPage (SET-04, §3.11)', () => {
+describe('SettingsPage (§3.11, §3.14)', () => {
   const originalMatchMedia = window.matchMedia;
   const exportSpy = vi.fn(async () => 3);
 
@@ -25,19 +24,11 @@ describe('SettingsPage (SET-04, §3.11)', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        {
-          provide: Preferences,
-          useValue: {
-            locale: signal('en-US'),
-            baseCurrency: signal('USD'),
-            monthStartDay: signal(1),
-            weekStartDay: signal(1),
-          },
-        },
         { provide: IconRegistry, useValue: { load: () => Promise.resolve('') } },
         { provide: TransactionExport, useValue: { export: exportSpy } },
       ],
     });
+    TestBed.inject(Preferences).save({ baseCurrency: 'USD', locale: 'en-US' });
   });
 
   afterEach(() => {
@@ -87,6 +78,19 @@ describe('SettingsPage (SET-04, §3.11)', () => {
     const used = await setup();
     expect(used.el.textContent).not.toContain('Choose backup file');
     expect(used.el.textContent).toContain('only be restored into an empty account');
+  });
+
+  it('holds preferences, notifications, manage links and data and privacy (SET-01 to SET-07)', async () => {
+    const { el, button } = await setup();
+    const headings = [...el.querySelectorAll('h2')].map((h) => h.textContent?.trim());
+    expect(headings).toEqual(['Preferences', 'Notifications', 'Manage', 'Data and privacy']);
+    expect(
+      [...el.querySelectorAll<HTMLAnchorElement>('.manage-link')].map((a) =>
+        a.getAttribute('href'),
+      ),
+    ).toEqual(['/accounts', '/categories', '/budgets', '/recurring']);
+    expect(button('Delete all transactions')).toBeTruthy();
+    expect(button('Delete account')).toBeTruthy();
   });
 
   it('opens the import and the monthly report', async () => {

@@ -47,6 +47,30 @@ describe('LocalDb', () => {
     expect((await db.get('c'))[0].data).toEqual({ n: 7, m: 4 });
   });
 
+  it('merges a set into the stored fields and maps, or creates the document', async () => {
+    await db
+      .batch()
+      .set('c/a', { n: 1, prefs: { a: true, b: 'x' }, list: [1, 2] })
+      .commit();
+    await db
+      .batch()
+      .set('c/a', { prefs: { b: 'y' }, list: [3] }, { merge: true })
+      .set('c/new', { n: increment(2) }, { merge: true })
+      .commit();
+
+    const docs = await db.get('c');
+    expect(docs.map((d) => [d.id, d.data])).toEqual([
+      ['a', { n: 1, prefs: { a: true, b: 'y' }, list: [3] }],
+      ['new', { n: 2 }],
+    ]);
+    // Without merge, a set still replaces the whole document.
+    await db
+      .batch()
+      .set('c/a', { prefs: { b: 'z' } })
+      .commit();
+    expect((await db.get('c'))[0].data).toEqual({ prefs: { b: 'z' } });
+  });
+
   it('stamps serverTimestamp() with the commit time and drops undefined fields', async () => {
     const before = Date.now();
     await db.batch().set('c/a', { at: serverTimestamp(), skip: undefined }).commit();

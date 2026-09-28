@@ -23,6 +23,10 @@ import { SegmentedControl } from '../../../shared/components/ui/segmented-contro
 import { ExportFormat, TransactionExport } from '../../transactions/transaction-export';
 import { entries } from '../../transactions/transaction-labels';
 import { BackupActions } from '../backup-actions';
+import { DataActions } from '../data-actions';
+import { ManageSettings } from '../manage-settings/manage-settings';
+import { NotificationSettings } from '../notification-settings/notification-settings';
+import { PreferenceSettings } from '../preference-settings/preference-settings';
 
 /** What the export can cover (DAT-01): the list's periods, last year, or everything. */
 type ExportPeriod = 'this_month' | 'last_month' | 'this_year' | 'last_year' | 'all' | 'custom';
@@ -42,10 +46,12 @@ const FORMAT_OPTIONS: readonly { value: ExportFormat; label: string }[] = [
 ];
 
 /**
- * `/settings`: for now its Data and privacy part (SET-04, §3.11): export
- * transactions as CSV or Excel for a chosen period (DAT-01, DAT-05), import a
- * CSV (DAT-02), the monthly PDF report (DAT-05), and a JSON backup with
- * restore (DAT-03, DAT-04). Profile and preferences join it in M2.
+ * `/settings` (§3.14): preferences (SET-01, SET-02, SET-05, SET-06),
+ * notifications (SET-07), links to manage accounts, categories, budgets and
+ * rules (SET-03), and Data and privacy (SET-04, §3.11): export transactions as
+ * CSV or Excel for a chosen period (DAT-01, DAT-05), import a CSV (DAT-02), the
+ * monthly PDF report (DAT-05), a JSON backup with restore (DAT-03, DAT-04),
+ * and deleting every transaction or the whole account.
  */
 @Component({
   selector: 'app-settings-page',
@@ -58,6 +64,9 @@ const FORMAT_OPTIONS: readonly { value: ExportFormat; label: string }[] = [
     DateInput,
     FileUpload,
     Icon,
+    ManageSettings,
+    NotificationSettings,
+    PreferenceSettings,
     SegmentedControl,
     Select,
   ],
@@ -67,6 +76,7 @@ const FORMAT_OPTIONS: readonly { value: ExportFormat; label: string }[] = [
 export class SettingsPage {
   private readonly exporter = inject(TransactionExport);
   private readonly backups = inject(BackupActions);
+  private readonly data = inject(DataActions);
   private readonly notify = inject(NotificationService);
   private readonly prefs = inject(Preferences);
   private readonly today = inject(Today).date;
@@ -155,6 +165,16 @@ export class SettingsPage {
       console.error('[backup failed]', error);
       this.notify.error("Couldn't make the backup", 'Please try again.');
     }
+  }
+
+  /** Deletes every transaction once confirmed (SET-04); a restore is possible again if nothing else is left. */
+  protected async deleteTransactions(): Promise<void> {
+    if (await this.data.deleteAllTransactions()) void this.checkData();
+  }
+
+  /** Deletes the account once confirmed (SET-04). */
+  protected async deleteAccount(): Promise<void> {
+    if (await this.data.deleteAccount()) this.hasData.set(false);
   }
 
   protected async restore(files: UploadFile[]): Promise<void> {

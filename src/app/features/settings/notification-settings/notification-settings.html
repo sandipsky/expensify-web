@@ -1,0 +1,92 @@
+<section class="settings-section" id="notifications" aria-labelledby="notifications-heading">
+  <h2 class="settings-section__title" id="notifications-heading">Notifications</h2>
+
+  <l-card padding="lg">
+    <div class="settings-card">
+      <div class="notification-option">
+        <l-toggle
+          label="Daily reminder to log expenses"
+          [useValidation]="false"
+          [ngModel]="current().dailyReminder"
+          (ngModelChange)="setFlag('dailyReminder', $event)"
+        />
+        <p class="notification-option__hint">
+          Once a day at the time you choose, if nothing is logged for that day yet.
+        </p>
+        @if (current().dailyReminder) {
+          <l-time-input
+            class="notification-option__time"
+            label="Reminder time"
+            [useValidation]="false"
+            [ngModel]="current().reminderTime"
+            (ngModelChange)="setTime($event)"
+          />
+        }
+      </div>
+
+      <div class="notification-option">
+        <l-toggle
+          label="Budget alerts"
+          [useValidation]="false"
+          [ngModel]="current().budgetAlerts"
+          (ngModelChange)="setFlag('budgetAlerts', $event)"
+        />
+        <p class="notification-option__hint">
+          When a budget reaches 80% and 100% of its limit. Each budget can also turn its own alerts
+          off.
+        </p>
+      </div>
+
+      <div class="notification-option">
+        <l-toggle
+          label="Recurring reminders"
+          [useValidation]="false"
+          [ngModel]="current().billReminders"
+          (ngModelChange)="setFlag('billReminders', $event)"
+        />
+        <p class="notification-option__hint">
+          The day before and on the day an ask-first recurring entry is due, so you can confirm or
+          skip it.
+        </p>
+      </div>
+
+      <div class="settings-card__divider"></div>
+
+      <h3 class="settings-card__subtitle">In other tabs</h3>
+      @switch (permission()) {
+        @case ('granted') {
+          <p class="settings-card__text">
+            <l-icon name="check_circle" color="var(--success)" [size]="18" />
+            Allowed. Alerts show as notifications while the app is open in another tab.
+          </p>
+        }
+        @case ('denied') {
+          <p class="settings-card__text">
+            Blocked in your browser’s settings for this site. Alerts still show inside the app.
+          </p>
+        }
+        @case ('unsupported') {
+          <p class="settings-card__text">
+            This browser can’t show notifications, so alerts show inside the app.
+          </p>
+        }
+        @default {
+          <p class="settings-card__text">
+            Allow notifications to see alerts while the app is open in another tab. Without them,
+            alerts show inside the app.
+          </p>
+          <div class="settings-card__actions">
+            <l-button variant="outlined-primary" size="lg" [disabled]="!anyOn()" (click)="allow()">
+              <l-icon name="notifications" color="inherit" />
+              Allow notifications
+            </l-button>
+          </div>
+        }
+      }
+      <p class="settings-card__hint">
+        Alerts and reminders reach you while the app is open. Recent ones stay under the bell at the
+        top.
+      </p>
+    </div>
+  </l-card>
+</section>

@@ -1,0 +1,25 @@
+@use '../settings';
+
+.notification-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// Lines up under the toggle's label: the 36px switch plus its 8px gap.
+.notification-option__hint {
+  padding-left: 44px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.notification-option__time {
+  display: block;
+  max-width: 200px;
+  margin: 8px 0 0 44px;
+}
+
+.settings-card__text l-icon {
+  vertical-align: -4px;
+}

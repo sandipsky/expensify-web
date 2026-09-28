@@ -1,6 +1,10 @@
 <div class="settings-page">
   <l-breadcrumb title="Settings" />
 
+  <app-preference-settings />
+  <app-notification-settings />
+  <app-manage-settings />
+
   <section class="settings-section" aria-labelledby="data-heading">
     <h2 class="settings-section__title" id="data-heading">Data and privacy</h2>
 
@@ -127,6 +131,36 @@
             overwritten. Delete your accounts, budgets and recurring rules first.
           </p>
         }
+      </div>
+    </l-card>
+
+    <l-card title="Delete all transactions" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          Start the history over: every transaction and its receipts go, and each account goes back
+          to its opening balance. Accounts, categories, budgets and recurring rules stay.
+        </p>
+        <div class="settings-card__actions">
+          <l-button variant="danger" size="lg" (click)="deleteTransactions()">
+            <l-icon name="delete" color="inherit" />
+            Delete all transactions
+          </l-button>
+        </div>
+      </div>
+    </l-card>
+
+    <l-card title="Delete account" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          Deletes everything you entered on every device, receipts included, then your profile. This
+          can’t be undone, so download a backup first if you might want it back.
+        </p>
+        <div class="settings-card__actions">
+          <l-button variant="danger" size="lg" (click)="deleteAccount()">
+            <l-icon name="delete_forever" color="inherit" />
+            Delete account
+          </l-button>
+        </div>
       </div>
     </l-card>
   </section>

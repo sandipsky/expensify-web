@@ -29,6 +29,9 @@
 // Runs edge to edge with the padding inside, so the scrollbar sits at the edge and
 // focus rings aren't clipped; the negative margins keep the layout as it was.
 .sheet-form__fields {
+  // Positioned, so anything absolutely placed inside scrolls with the fields
+  // instead of stretching the dialog around them.
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;

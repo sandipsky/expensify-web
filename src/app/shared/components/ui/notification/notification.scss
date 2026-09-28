@@ -8,7 +8,11 @@
   padding: 14px 14px 14px 16px;
   border-radius: 10px;
   background: var(--bg-lightest);
-  box-shadow: 0 8px 28px rgba(13, 13, 18, 0.16);
+  // The hairline keeps the toast apart from same-colored cards once the shadow
+  // stops showing (dark theme).
+  box-shadow:
+    0 0 0 1px var(--separator),
+    0 8px 28px rgba(13, 13, 18, 0.16);
   overflow: hidden;
   pointer-events: auto;
 
@@ -72,7 +76,7 @@
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 14px;
   font-weight: 600;
   line-height: 20px;

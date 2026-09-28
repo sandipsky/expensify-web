@@ -1,0 +1,6 @@
+@use '../settings';
+
+// The theme switch keeps its own width instead of stretching across the card.
+.settings-card__format {
+  align-items: flex-start;
+}

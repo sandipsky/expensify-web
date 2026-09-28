@@ -88,6 +88,36 @@
   min-width: 0;
 }
 
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// The alerts bell (NTF-05): 44px, the header's own tap target.
+.app-header__bell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
 .app-header__key {
   min-width: 18px;
   padding: 0 4px;
@@ -114,11 +144,11 @@
   border-radius: 50%;
   background: var(--accent);
   color: var(--text-white);
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-dark) 35%, transparent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-hover) 35%, transparent);
   cursor: pointer;
 
   &:hover {
-    background: var(--accent-dark);
+    background: var(--accent-hover);
   }
 
   &:focus-visible {

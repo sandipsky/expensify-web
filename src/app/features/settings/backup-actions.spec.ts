@@ -42,6 +42,7 @@ describe('BackupActions (DAT-03, DAT-04)', () => {
     baseCurrency: signal('USD'),
     monthStartDay: signal(1),
     weekStartDay: signal(1),
+    save: vi.fn(),
   });
 
   const setUp = (preferences = prefs()) => {
@@ -135,7 +136,11 @@ describe('BackupActions (DAT-03, DAT-04)', () => {
     await vi.waitFor(() =>
       expect(TestBed.inject(AccountsStore).byId(cash)?.currentBalance).toBe(3750),
     );
-    expect(preferences.baseCurrency()).toBe('USD');
+    expect(preferences.save).toHaveBeenCalledWith({
+      baseCurrency: 'USD',
+      monthStartDay: 1,
+      weekStartDay: 1,
+    });
     expect(await actions.hasData()).toBe(true);
   });
 

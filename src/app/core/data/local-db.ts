@@ -59,8 +59,13 @@ export function serverTimestamp(): unknown {
   return SERVER_TIMESTAMP;
 }
 
+/** Like Firestore's `SetOptions`: `merge` keeps the fields the write doesn't name. */
+export interface SetOptions {
+  merge?: boolean;
+}
+
 type Write =
-  | { kind: 'set'; path: string; data: DocData }
+  | { kind: 'set'; path: string; data: DocData; merge?: boolean }
   | { kind: 'update'; path: string; data: DocData }
   | { kind: 'delete'; path: string };
 
@@ -71,8 +76,8 @@ export class LocalBatch {
 
   constructor(private readonly apply: (writes: readonly Write[]) => void) {}
 
-  set(path: string, data: DocData): this {
-    this.writes.push({ kind: 'set', path, data });
+  set(path: string, data: DocData, options: SetOptions = {}): this {
+    this.writes.push({ kind: 'set', path, data, merge: options.merge });
     return this;
   }
 
@@ -118,8 +123,8 @@ export class LocalTransaction {
     return Promise.resolve(doc);
   }
 
-  set(path: string, data: DocData): this {
-    this.writes.push({ kind: 'set', path, data });
+  set(path: string, data: DocData, options: SetOptions = {}): this {
+    this.writes.push({ kind: 'set', path, data, merge: options.merge });
     return this;
   }
 
@@ -219,11 +224,9 @@ export class LocalDb {
       if (write.kind === 'update' && !existing) {
         throw new Error(`No document to update: ${write.path}`);
       }
-      const data: DocData = write.kind === 'update' ? { ...existing } : {};
-      for (const [field, value] of Object.entries(write.data)) {
-        if (value === undefined) continue;
-        // An update's `a.b` names a nested field, as in Firestore; a set's keys are plain names.
-        const path = write.kind === 'update' ? field.split('.') : [field];
+      const merge = write.kind === 'set' && write.merge === true;
+      const data: DocData = write.kind === 'update' || merge ? { ...existing } : {};
+      for (const [path, value] of fieldsOf(write.data, write.kind === 'update', merge)) {
         if (value instanceof Increment) {
           const previous = valueAt(existing, path);
           setAt(data, path, (typeof previous === 'number' ? previous : 0) + value.by);
@@ -236,6 +239,36 @@ export class LocalDb {
     save(next);
     this.docs$.next(next);
   }
+}
+
+/**
+ * The field paths a write sets. An update's `a.b` names a nested field, as in
+ * Firestore; a set's keys are plain names, and a merging set reaches into maps,
+ * so `{ prefs: { a: 1 } }` changes `prefs.a` and keeps the rest of `prefs`.
+ */
+function fieldsOf(data: DocData, dotted: boolean, merge: boolean): [string[], unknown][] {
+  const fields: [string[], unknown][] = [];
+  const visit = (map: DocData, prefix: string[]) => {
+    for (const [key, value] of Object.entries(map)) {
+      if (value === undefined) continue;
+      const path = prefix.length ? [...prefix, key] : dotted ? key.split('.') : [key];
+      if (merge && isMap(value) && Object.keys(value).length) visit(value, path);
+      else fields.push([path, value]);
+    }
+  };
+  visit(data, []);
+  return fields;
+}
+
+/** A nested map, as opposed to a value such as a timestamp, an increment or an array. */
+function isMap(value: unknown): value is DocData {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !(value instanceof Increment) &&
+    !(value instanceof LocalTimestamp)
+  );
 }
 
 function idOf(path: string): string {

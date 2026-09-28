@@ -1,0 +1,21 @@
+<section class="settings-section" aria-labelledby="manage-heading">
+  <h2 class="settings-section__title" id="manage-heading">Manage</h2>
+  <l-card padding="none">
+    <ul class="manage-list">
+      @for (link of links(); track link.path) {
+        <li>
+          <a class="manage-link" [routerLink]="link.path">
+            <span class="manage-link__icon">
+              <l-icon [name]="link.icon" color="inherit" [size]="20" />
+            </span>
+            <span class="manage-link__text">
+              <span class="manage-link__label">{{ link.label }}</span>
+              <span class="manage-link__summary">{{ link.summary }}</span>
+            </span>
+            <l-icon name="chevron_right" color="var(--text-quaternary)" [size]="20" />
+          </a>
+        </li>
+      }
+    </ul>
+  </l-card>
+</section>

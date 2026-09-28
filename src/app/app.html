@@ -72,14 +72,28 @@
 
   <div layout-header class="app-header">
     <span class="app-brand">Expensify</span>
-    @if (!breakpoints.phone()) {
-      <l-button class="app-header__add" (click)="quickAdd()">
-        <l-icon name="add" color="inherit" [size]="18" />
-        Add transaction
-        <kbd class="app-header__key" aria-hidden="true">N</kbd>
-        <span class="visually-hidden">(shortcut: N)</span>
-      </l-button>
-    }
+    <div class="app-header__actions">
+      <button
+        type="button"
+        class="app-header__bell"
+        [attr.aria-label]="alertsLabel(inbox.unread())"
+        [lBadge]="inbox.unread()"
+        lBadgeColor="var(--accent)"
+        lBadgeSize="sm"
+        [lBadgeOverflowCount]="9"
+        (click)="openAlerts()"
+      >
+        <l-icon name="notifications" color="inherit" [size]="22" />
+      </button>
+      @if (!breakpoints.phone()) {
+        <l-button class="app-header__add" (click)="quickAdd()">
+          <l-icon name="add" color="inherit" [size]="18" />
+          Add transaction
+          <kbd class="app-header__key" aria-hidden="true">N</kbd>
+          <span class="visually-hidden">(shortcut: N)</span>
+        </l-button>
+      }
+    </div>
   </div>
 
   <router-outlet />
@@ -89,6 +103,9 @@
     <div class="app-fab-space" aria-hidden="true"></div>
   }
 </l-layout>
+
+<!-- The one blocking wait, for work such as deleting the account (SpinnerService). -->
+<l-loading-spinner />
 
 @if (breakpoints.phone()) {
   <button type="button" class="app-fab" (click)="quickAdd()">

@@ -1,12 +1,13 @@
 :host {
-  // Ant Design Segmented color scheme (overridable per instance).
-  --l-seg-track-bg: rgba(0, 0, 0, 0.04);
-  --l-seg-item-color: rgba(0, 0, 0, 0.65);
-  --l-seg-item-hover-color: rgba(0, 0, 0, 0.88);
-  --l-seg-item-hover-bg: rgba(0, 0, 0, 0.06);
-  --l-seg-selected-color: rgba(0, 0, 0, 0.88);
-  --l-seg-thumb-bg: #fff;
-  --l-seg-disabled-color: rgba(0, 0, 0, 0.25);
+  // Ant Design Segmented look, from tokens so it follows the theme (overridable
+  // per instance). The track tints whatever it sits on, page or card.
+  --l-seg-track-bg: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  --l-seg-item-color: var(--text-secondary);
+  --l-seg-item-hover-color: var(--text-primary);
+  --l-seg-item-hover-bg: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  --l-seg-selected-color: var(--text-primary);
+  --l-seg-thumb-bg: var(--bg-raised);
+  --l-seg-disabled-color: var(--text-quaternary);
 
   position: relative;
   display: inline-flex;
@@ -38,7 +39,7 @@
   opacity: 0.65;
 }
 
-// ── Sliding thumb (the white selected surface) ─────────────────
+// ── Sliding thumb (the raised selected surface) ────────────────
 .l-segmented__thumb {
   position: absolute;
   top: 0;

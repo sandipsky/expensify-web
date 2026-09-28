@@ -4,10 +4,12 @@ import { Router, provideRouter } from '@angular/router';
 import { BudgetsRepo } from '../../core/data/budgets.repo';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import { BudgetInput } from '../../core/models/budget';
+import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs } from '../../core/models/user';
 import { Preferences } from '../../core/preferences';
 import { NotificationService } from '../../shared/components/ui/notification';
 import { AccountsStore } from '../accounts/accounts.store';
 import { CategoriesStore } from '../categories/categories.store';
+import { AlertInbox } from '../notifications/alert-inbox';
 import { BudgetAlerts } from './budget-alerts';
 import { BudgetsStore } from './budgets.store';
 
@@ -21,8 +23,9 @@ const input = (overrides: Partial<BudgetInput> = {}): BudgetInput => ({
   ...overrides,
 });
 
-describe('BudgetAlerts (BUD-06)', () => {
+describe('BudgetAlerts (BUD-06, NTF-02)', () => {
   const notify = { warn: vi.fn(), error: vi.fn(), success: vi.fn(), info: vi.fn() };
+  const notifications = signal<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
   let cash: string;
   let store: BudgetsStore;
 
@@ -42,6 +45,7 @@ describe('BudgetAlerts (BUD-06)', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    notifications.set(DEFAULT_NOTIFICATION_PREFS);
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(2026, 8, 26, 10));
     TestBed.configureTestingModule({
@@ -54,6 +58,7 @@ describe('BudgetAlerts (BUD-06)', () => {
             baseCurrency: signal('USD'),
             monthStartDay: signal(1),
             weekStartDay: signal(1),
+            notifications,
           },
         },
         { provide: NotificationService, useValue: notify },
@@ -132,6 +137,32 @@ describe('BudgetAlerts (BUD-06)', () => {
     spend(60000);
     expect(notify.warn).not.toHaveBeenCalled();
     expect(notify.error).not.toHaveBeenCalled();
+  });
+
+  it('stays quiet while budget alerts are off, and alerts once they are on (NTF-04)', () => {
+    store.create(input());
+    notifications.set({ ...DEFAULT_NOTIFICATION_PREFS, budgetAlerts: false });
+    TestBed.tick();
+    spend(45000);
+    expect(notify.warn).not.toHaveBeenCalled();
+
+    notifications.set(DEFAULT_NOTIFICATION_PREFS);
+    TestBed.tick();
+    expect(notify.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the alert in the in-app list (NTF-05)', () => {
+    const id = store.create(input());
+    spend(45000);
+    expect(TestBed.inject(AlertInbox).alerts()).toEqual([
+      expect.objectContaining({
+        kind: 'budget',
+        tone: 'warn',
+        title: 'Food: 90% used',
+        link: `/budgets/${id}`,
+        read: false,
+      }),
+    ]);
   });
 
   it('opens the budget from the alert', () => {

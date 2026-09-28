@@ -19,6 +19,10 @@
   color: var(--text-secondary);
 }
 
+.confirm-dialog__phrase {
+  margin: -8px 0 20px;
+}
+
 .confirm-dialog__actions {
   display: flex;
   align-items: center;

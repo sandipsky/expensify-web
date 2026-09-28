@@ -1,6 +1,7 @@
 :host {
   --l-progress-height: 6px;
-  --_color: var(--accent);
+  // --accent-text, not --accent: the bar needs 3:1 on the --bg-dark track in dark mode.
+  --_color: var(--accent-text);
 
   display: block;
   height: var(--l-progress-height);

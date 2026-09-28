@@ -25,7 +25,7 @@ describe('ImportStore (DAT-02)', () => {
   beforeEach(() => {
     localStorage.clear();
     TestBed.configureTestingModule({ providers: [ImportStore] });
-    TestBed.inject(Preferences).baseCurrency.set('USD');
+    TestBed.inject(Preferences).save({ baseCurrency: 'USD' });
     const accounts = TestBed.inject(AccountsStore);
     const base = { openingBalance: 0, creditLimit: null, includeInTotal: true };
     cash = accounts.create({ ...base, name: 'Cash', type: 'cash' });

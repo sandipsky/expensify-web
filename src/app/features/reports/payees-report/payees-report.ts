@@ -108,7 +108,7 @@ export class PayeesReport {
     return payees.map((p) => ({
       ...p,
       share: shareOf(p.amount, this.spent()),
-      bars: [{ pct: max ? (p.amount / max) * 100 : 0, color: 'var(--accent)' }],
+      bars: [{ pct: max ? (p.amount / max) * 100 : 0, color: 'var(--accent-text)' }],
     }));
   });
 

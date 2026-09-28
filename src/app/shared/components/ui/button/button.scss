@@ -73,12 +73,12 @@
 .btn-primary {
   background: var(--accent);
   color: var(--text-white);
-  border-bottom: 2px solid var(--accent-dark);
+  border-bottom: 2px solid var(--accent-hover);
   box-shadow: 0 1px 2px 0 rgba(13, 13, 18, 0.06);
 
   &:hover {
-    background: var(--accent-dark);
-    border-bottom: 2px solid var(--accent-dark);
+    background: var(--accent-hover);
+    border-bottom: 2px solid var(--accent-hover);
   }
 }
 
@@ -96,13 +96,13 @@
 
 .btn-outlined-primary {
   background: var(--bg-lightest);
-  color: var(--accent);
+  color: var(--accent-text);
   border: 1px solid var(--accent);
 
   &:hover,
   &.active {
     background: var(--accent);
-    color: var(--bg-lightest);
+    color: var(--text-white);
   }
 }
 

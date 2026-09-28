@@ -3,7 +3,9 @@ import { Icon } from '../ui/icon/icon';
 
 /**
  * An account's or category's Material Symbols icon in its color, on a light
- * tint of that color. Both store the pair as `icon` and `color` (§8).
+ * tint of that color. Both store the pair as `icon` and `color` (§8). Dark
+ * mode mixes the color toward white by `--data-color-lift`, so dark hues such
+ * as indigo stay visible on dark surfaces; light mode draws it unchanged.
  *
  * ```html
  * <app-symbol-icon [icon]="category.icon" [color]="category.color" [size]="32" />
@@ -13,15 +15,21 @@ import { Icon } from '../ui/icon/icon';
   selector: 'app-symbol-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [Icon],
-  template: '<l-icon [name]="icon()" [size]="_glyph()" color="var(--symbol-color)" />',
+  template: '<l-icon [name]="icon()" [size]="_glyph()" color="var(--symbol-glyph)" />',
   styles: `
     :host {
+      --symbol-glyph: color-mix(
+        in srgb,
+        var(--symbol-color),
+        var(--text-white) var(--data-color-lift, 0%)
+      );
+
       display: inline-flex;
       flex-shrink: 0;
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--symbol-color) 12%, transparent);
+      background: color-mix(in srgb, var(--symbol-glyph) 12%, transparent);
     }
   `,
   host: {

@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(254, 254, 254, 0.6);
+  background: color-mix(in srgb, var(--bg-lightest) 60%, transparent);
 }
 
 .l-spinner-wheel {

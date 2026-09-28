@@ -12,6 +12,7 @@ import {
   backupFileName,
   parseBackup,
 } from '../../core/domain/backup';
+import { isCurrencyCode } from '../../core/domain/money';
 import { clampStartDay, clampWeekday } from '../../core/domain/period';
 import { Preferences } from '../../core/preferences';
 import { Today } from '../../core/today';
@@ -102,11 +103,13 @@ export class BackupActions {
     );
     if (!confirmed) return false;
 
-    // Stand-ins until the profile document exists (M1): this session follows the backup.
+    // The backup's currency, month and week start apply; the locale stays the device's (Appendix C).
     const { profile } = backup;
-    if (profile.baseCurrency) this.prefs.baseCurrency.set(profile.baseCurrency);
-    this.prefs.monthStartDay.set(clampStartDay(profile.monthStartDay));
-    this.prefs.weekStartDay.set(clampWeekday(profile.weekStartDay));
+    this.prefs.save({
+      ...(isCurrencyCode(profile.baseCurrency) ? { baseCurrency: profile.baseCurrency } : {}),
+      monthStartDay: clampStartDay(profile.monthStartDay),
+      weekStartDay: clampWeekday(profile.weekStartDay),
+    });
 
     // Not awaited: the writes land in the local cache at once (NFR-03).
     void this.repo.restore(backup);
