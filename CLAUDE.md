@@ -23,6 +23,10 @@ npx prettier --check .                      # format check (printWidth 100, sing
 
 Build budgets (`angular.json`): initial bundle warns at 500 kB (NFR-02) and errors at 1 MB. Component styles warn at 4 kB and error at 8 kB.
 
+## Git
+
+Work on `main` only. Commit to `main` and push `origin main`; don't create feature branches or pull requests unless asked for one.
+
 ## Non-negotiable business rules (§4, §8)
 
 Getting these wrong corrupts balances or breaks Android parity.
