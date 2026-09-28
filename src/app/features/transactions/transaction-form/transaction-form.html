@@ -170,10 +170,13 @@
         [maxCount]="maxTags"
       />
       <l-textarea label="Note" formControlName="note" [rows]="3" />
+      @if (!draft) {
+        <app-receipt-list />
+      }
     } @else {
       <l-button class="tx-form__more" variant="ghost" size="lg" (click)="showMore.set(true)">
         <l-icon name="add" color="inherit" />
-        Payee, time, tags and note
+        {{ draft ? 'Payee, time, tags and note' : 'Payee, time, tags, note and receipts' }}
       </l-button>
     }
   </div>

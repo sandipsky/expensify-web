@@ -231,6 +231,35 @@ describe('transactions', () => {
       });
     });
 
+    it('writes attachments when receipts are added or removed, by path (ATT-04)', () => {
+      const receipt = {
+        path: 'users/u/receipts/t/a.jpg',
+        name: 'a.jpg',
+        contentType: 'image/jpeg',
+        size: 9,
+      };
+      const before = tx();
+      expect(transactionChanges(before, { ...toNewTransaction(before), attachments: [] })).toEqual(
+        {},
+      );
+      expect(
+        transactionChanges(before, { ...toNewTransaction(before), attachments: [receipt] }),
+      ).toEqual({
+        attachments: [receipt],
+      });
+      const withReceipt = tx({ attachments: [receipt] });
+      expect(
+        transactionChanges(withReceipt, { ...toNewTransaction(withReceipt), amount: 1 }),
+      ).toEqual({
+        amount: 1,
+      });
+      expect(
+        transactionChanges(withReceipt, { ...toNewTransaction(withReceipt), attachments: [] }),
+      ).toEqual({
+        attachments: [],
+      });
+    });
+
     it('rewrites accountIds when either account changes', () => {
       const before = tx();
       const after = { ...toNewTransaction(before), type: 'transfer' as const, toAccountId: 'bank' };

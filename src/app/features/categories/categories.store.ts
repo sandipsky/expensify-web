@@ -6,14 +6,17 @@ import { RecurringRepo } from '../../core/data/recurring.repo';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import {
   CategoryNode,
+  DEFAULT_CATEGORY_ICON,
   categoryPath,
   categoryTree,
   compareCategories,
   isNameTaken,
   parentCandidates,
   pickableCategories,
+  suggestColor,
 } from '../../core/domain/category';
-import { DEFAULT_CATEGORIES } from '../../core/domain/default-categories';
+import { PlannedCategory } from '../../core/domain/csv-import';
+import { DEFAULT_CATEGORIES, SeedCategory } from '../../core/domain/default-categories';
 import { Budget } from '../../core/models/budget';
 import { Category, CategoryInput, CategoryType } from '../../core/models/category';
 import { RecurringRule } from '../../core/models/recurring';
@@ -139,6 +142,40 @@ export class CategoriesStore {
       archived: false,
       sortOrder: Math.max(-1, ...sameType.map((c) => c.sortOrder)) + 1,
     });
+  }
+
+  /**
+   * Adds, in one write, the categories an import names but the user doesn't
+   * have (DAT-02), each at the end of its type's list, and returns the ID each
+   * planned key got. Subcategories take their parent's icon and color; the
+   * system categories come along if missing, as with `create`.
+   */
+  createPlanned(planned: readonly PlannedCategory[]): Map<string, string> {
+    const ids = new Map<string, string>();
+    if (!planned.length) return ids;
+    const seeds: SeedCategory[] = DEFAULT_CATEGORIES.filter((c) => c.isSystem && !this.byId(c.id));
+    const known = () => [...this.all(), ...seeds];
+    for (const category of planned) {
+      const id = this.repo.newId();
+      ids.set(category.key, id);
+      const parentId =
+        category.parentId ?? (category.parentKey ? (ids.get(category.parentKey) ?? null) : null);
+      const parent = known().find((c) => c.id === parentId);
+      const sameType = known().filter((c) => c.type === category.type);
+      seeds.push({
+        id,
+        name: category.name,
+        type: category.type,
+        parentId,
+        icon: parent?.icon ?? DEFAULT_CATEGORY_ICON,
+        color: parent?.color ?? suggestColor(known(), category.type),
+        isSystem: false,
+        archived: false,
+        sortOrder: Math.max(-1, ...sameType.map((c) => c.sortOrder)) + 1,
+      });
+    }
+    this.repo.createMany(seeds);
+    return ids;
   }
 
   /** Saves the fields that changed (CAT-02). System categories are fixed (CAT-05). */

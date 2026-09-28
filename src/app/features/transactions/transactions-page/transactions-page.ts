@@ -28,6 +28,7 @@ import { Checkbox } from '../../../shared/components/ui/input/checkbox/checkbox'
 import { DateInput } from '../../../shared/components/ui/input/date-input/date-input';
 import { Select } from '../../../shared/components/ui/input/select/select';
 import { TextInput } from '../../../shared/components/ui/input/text-input/text-input';
+import { Menu } from '../../../shared/components/ui/menu';
 import { NotificationService } from '../../../shared/components/ui/notification';
 import { SegmentedControl } from '../../../shared/components/ui/segmented-control';
 import { Skeleton } from '../../../shared/components/ui/skeleton';
@@ -48,8 +49,10 @@ import {
   TransactionFilters,
   TransactionFiltersData,
 } from '../transaction-filters/transaction-filters';
-import { PERIOD_OPTIONS, TX_TYPE_LABELS } from '../transaction-labels';
+import { ExportFormat, TransactionExport } from '../transaction-export';
+import { PERIOD_OPTIONS, TX_TYPE_LABELS, entries } from '../transaction-labels';
 import { TransactionListStore, TxDay } from '../transaction-list.store';
+import { receipts } from '../receipts/receipt-labels';
 import { TransactionRow } from '../transaction-row/transaction-row';
 import { TxRow } from '../transaction-rows';
 import { TransactionsStore } from '../transactions.store';
@@ -89,6 +92,7 @@ interface FilterChip {
     DateInput,
     EmptyState,
     Icon,
+    Menu,
     MoneyPipe,
     SegmentedControl,
     Select,
@@ -132,11 +136,13 @@ export class TransactionsPage {
   private readonly categories = inject(CategoriesStore);
   private readonly sheets = inject(SheetService);
   private readonly notify = inject(NotificationService);
+  private readonly exporter = inject(TransactionExport);
   private readonly router = inject(Router);
   private readonly locale = inject(Preferences).locale;
 
   protected readonly currency = this.store.currency;
   protected readonly periodOptions = PERIOD_OPTIONS;
+  protected readonly receiptsLabel = receipts;
 
   protected readonly periodLabel = computed(() => formatPeriod(this.list.range(), this.locale()));
   protected readonly customStart = computed(() => parseISO(this.list.custom().start));
@@ -268,6 +274,13 @@ export class TransactionsPage {
 
   protected add(): void {
     this.actions.create().subscribe();
+  }
+
+  /** Saves what the list shows, the whole period with its filters, as a file (DAT-01, DAT-05). */
+  protected async export(format: ExportFormat): Promise<void> {
+    const count = await this.exporter.export(this.list.range(), format, this.list.filter());
+    if (count) this.notify.success(`Exported ${entries(count)}`, this.periodLabel());
+    else this.notify.info('Nothing to export', 'No transactions match in this period.');
   }
 
   /** A tap opens the entry, or selects it while selecting. */

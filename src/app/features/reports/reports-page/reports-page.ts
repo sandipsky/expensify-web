@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { format, parseISO } from 'date-fns';
 import { PeriodPreset, formatPeriod, orderedRange, spanOf } from '../../../core/domain/period';
 import { BreakpointService } from '../../../layout/breakpoint.service';
@@ -54,6 +55,7 @@ import { YearReport } from '../year-report/year-report';
 export class ReportsPage {
   protected readonly store = inject(ReportsStore);
   protected readonly breakpoints = inject(BreakpointService);
+  private readonly router = inject(Router);
 
   protected readonly viewOptions = REPORT_VIEW_OPTIONS;
   protected readonly periodOptions = PERIOD_OPTIONS;
@@ -101,6 +103,12 @@ export class ReportsPage {
 
   protected setCompare(edge: 'a' | 'b', value: unknown): void {
     if (typeof value === 'string') this.store.set({ [edge]: value });
+  }
+
+  /** The printable month (DAT-05), for the month the report shows when it shows one. */
+  protected openMonthly(): void {
+    const offset = this.store.preset() === 'last_month' ? -1 : null;
+    void this.router.navigate(['/reports/monthly'], { queryParams: { offset } });
   }
 
   protected moveYear(by: number): void {

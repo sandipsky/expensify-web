@@ -1,0 +1,42 @@
+// Printing, as the monthly report is saved as PDF (DAT-05): only the page's own
+// content, flowing across sheets instead of scrolling inside the shell.
+// Mark anything else a page shows on screen only with `.no-print`.
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    background: var(--bg-lightest);
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  l-sidebar,
+  l-header,
+  l-notification-container,
+  l-loading-spinner,
+  l-modal-container,
+  l-drawer-container,
+  .app-fab,
+  .app-fab-space,
+  .no-print {
+    display: none !important;
+  }
+
+  l-layout,
+  .l-layout__main,
+  .l-layout__content {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+}

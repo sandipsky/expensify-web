@@ -60,6 +60,7 @@ describe('App', () => {
       ['/reports', 'Reports'],
       ['/recurring', 'Recurring'],
       ['/categories', 'Categories'],
+      ['/settings', 'Settings'],
     ]);
   });
 

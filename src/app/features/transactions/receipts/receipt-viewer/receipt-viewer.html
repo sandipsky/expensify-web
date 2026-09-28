@@ -1,0 +1,76 @@
+<div class="viewer" role="document" [attr.aria-label]="'Receipt ' + item().name">
+  <header class="viewer__bar">
+    <div class="viewer__title">
+      <h2 class="viewer__name text-ellipsis">{{ item().name }}</h2>
+      @if (count > 1) {
+        <span class="viewer__position" aria-live="polite">{{ index() + 1 }} of {{ count }}</span>
+      }
+    </div>
+    <div class="viewer__actions">
+      <l-button variant="ghost" size="lg" [disabled]="failed()" (click)="download()">
+        <l-icon name="download" color="inherit" />
+        <span class="viewer__label">Download</span>
+      </l-button>
+      @if (data.removable) {
+        <l-button variant="ghost" size="lg" (click)="remove()">
+          <l-icon name="delete" color="inherit" />
+          <span class="viewer__label">Remove</span>
+        </l-button>
+      }
+      <l-button class="viewer__close" variant="ghost" size="lg" [rounded]="true" (click)="close()">
+        <l-icon name="close" color="inherit" />
+        <span class="visually-hidden">Close</span>
+      </l-button>
+    </div>
+  </header>
+
+  <div class="viewer__stage">
+    @if (failed()) {
+      <div class="viewer__message">
+        <l-icon name="error" [size]="32" color="var(--text-tertiary)" />
+        <p>This receipt can't be shown here.</p>
+        @if (url()) {
+          <l-button variant="outlined" size="lg" (click)="download()">Download it instead</l-button>
+        }
+      </div>
+    } @else if (!url()) {
+      <l-skeleton class="viewer__loading" height="60%" width="min(480px, 80%)" />
+    } @else if (item().kind === 'pdf') {
+      <object class="viewer__pdf" type="application/pdf" [data]="pdfUrl()">
+        <div class="viewer__message">
+          <l-icon name="picture_as_pdf" [size]="32" color="var(--error)" />
+          <p>This browser can't show the PDF here.</p>
+          <l-button variant="outlined" size="lg" (click)="openPdf()">
+            <l-icon name="open_in_new" color="inherit" />
+            Open PDF
+          </l-button>
+        </div>
+      </object>
+    } @else {
+      <img class="viewer__image" [src]="url()" [alt]="item().name" (error)="failed.set(true)" />
+    }
+
+    @if (count > 1) {
+      <l-button
+        class="viewer__nav viewer__nav--prev"
+        variant="secondary"
+        size="lg"
+        [rounded]="true"
+        (click)="step(-1)"
+      >
+        <l-icon name="chevron_left" color="inherit" />
+        <span class="visually-hidden">Previous receipt</span>
+      </l-button>
+      <l-button
+        class="viewer__nav viewer__nav--next"
+        variant="secondary"
+        size="lg"
+        [rounded]="true"
+        (click)="step(1)"
+      >
+        <l-icon name="chevron_right" color="inherit" />
+        <span class="visually-hidden">Next receipt</span>
+      </l-button>
+    }
+  </div>
+</div>

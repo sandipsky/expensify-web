@@ -24,6 +24,12 @@ export interface ModalConfig<D = any> {
    */
   maxHeight?: string;
 
+  /**
+   * Cover the whole viewport, edge to edge and without rounded corners, as a
+   * photo or document viewer does. `width`, `height` and the max sizes are ignored.
+   */
+  fullscreen?: boolean;
+
   /** Extra class(es) applied to the panel element. */
   panelClass?: string | string[];
 
@@ -44,6 +50,7 @@ export const MODAL_DEFAULTS: Required<
   Omit<ModalConfig, 'data' | 'width' | 'height' | 'maxHeight' | 'panelClass'>
 > = {
   maxWidth: '90vw',
+  fullscreen: false,
   backdrop: true,
   disableClose: false,
   animation: 'slideUp',

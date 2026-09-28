@@ -41,6 +41,62 @@ export function toMinorUnits(major: number, currency: string): number {
   return major < 0 ? -minor || 0 : minor;
 }
 
+/**
+ * Minor units as a plain decimal in major units: a dot, the currency's places,
+ * no grouping (1250 → "12.50", JPY 500 → "500"), as CSV exports write amounts
+ * (Appendix B). Built from the integer's digits, so no float is involved.
+ */
+export function toDecimalString(minor: number, currency: string): string {
+  const digits = fractionDigits(currency);
+  const sign = minor < 0 ? '-' : '';
+  const text = String(Math.abs(minor)).padStart(digits + 1, '0');
+  if (!digits) return sign + text;
+  return `${sign}${text.slice(0, -digits)}.${text.slice(-digits)}`;
+}
+
+/** Unicode minus and the spaces locales group digits with. */
+const MINUS = /[−‒–]/g;
+const GROUPING = /[\s  '’]/g;
+
+/**
+ * Parses an amount in major units as people and banks write it ("1,234.50",
+ * "Rs 12.5", "(40.00)", "12,5" with a comma decimal) to integer minor units,
+ * by splitting on the decimal separator, never multiplying floats (BR-01).
+ * Parentheses, a leading or trailing minus make it negative. Returns null
+ * when it isn't an amount, or has more places than the currency (trailing
+ * zeros aside).
+ */
+export function parseDecimal(
+  text: string,
+  currency: string,
+  decimalSeparator: '.' | ',' = '.',
+): number | null {
+  let s = text.trim().replace(MINUS, '-');
+  let negative = false;
+  if (/^\(.*\)$/.test(s)) {
+    negative = true;
+    s = s.slice(1, -1).trim();
+  }
+  // A currency code or symbol before or after the number, with its sign.
+  s = s.replace(/^[^\d.,+-]+/, '').replace(/[^\d.,+-]+$/, '');
+  if (s.startsWith('-') || s.endsWith('-')) negative = !negative;
+  s = s.replace(/^[+-]|[+-]$/g, '').replace(/^[^\d.,]+/, '');
+  const grouping = decimalSeparator === '.' ? ',' : '.';
+  s = s.replace(GROUPING, '').split(grouping).join('');
+  if (decimalSeparator === ',') s = s.replace(',', '.');
+  if (!/^(\d+(\.\d*)?|\.\d+)$/.test(s)) return null;
+
+  const digits = fractionDigits(currency);
+  const [whole, fraction = ''] = s.split('.');
+  const extra = fraction.slice(digits);
+  if (/[^0]/.test(extra)) return null;
+  const minor =
+    Number(whole || '0') * 10 ** digits +
+    Number(fraction.slice(0, digits).padEnd(digits, '0') || '0');
+  if (!Number.isSafeInteger(minor)) return null;
+  return negative ? -minor || 0 : minor;
+}
+
 /** Minor units as the major-unit number `l-number-input` edits (1250 → 12.5). */
 export function toMajorUnits(minor: number, currency: string): number {
   return minor / 10 ** fractionDigits(currency);

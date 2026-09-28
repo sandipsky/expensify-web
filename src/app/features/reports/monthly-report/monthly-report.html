@@ -1,0 +1,184 @@
+<div class="monthly">
+  <div class="monthly__toolbar no-print">
+    <l-breadcrumb [items]="[{ label: 'Reports', link: '/reports' }, { label: 'Monthly report' }]" />
+    <div class="monthly__controls">
+      <div class="monthly__period" role="group" aria-label="Month">
+        <l-button variant="outlined" size="lg" [rounded]="true" (click)="step(-1)">
+          <l-icon name="chevron_left" color="inherit" />
+          <span class="visually-hidden">Previous month</span>
+        </l-button>
+        <span class="monthly__period-label" aria-live="polite">{{ label() }}</span>
+        <l-button variant="outlined" size="lg" [rounded]="true" (click)="step(1)">
+          <l-icon name="chevron_right" color="inherit" />
+          <span class="visually-hidden">Next month</span>
+        </l-button>
+      </div>
+      <l-toggle
+        label="List every entry"
+        [useValidation]="false"
+        [ngModel]="withEntries()"
+        (ngModelChange)="withEntries.set($event)"
+      />
+      <l-button size="lg" (click)="print()">
+        <l-icon name="print" color="inherit" />
+        Save as PDF
+      </l-button>
+    </div>
+    <p class="monthly__tip">In the print dialog, choose “Save as PDF” as the printer.</p>
+  </div>
+
+  @if (loading()) {
+    <l-skeleton height="640px" />
+  } @else {
+    <article class="sheet" aria-labelledby="report-title">
+      <header class="sheet__header">
+        <div>
+          <h1 class="sheet__title" id="report-title">Monthly report</h1>
+          <p class="sheet__period">{{ label() }}</p>
+        </div>
+        <p class="sheet__meta">
+          {{ currency() }} · made {{ madeOn() }}<br />
+          Compared with {{ changes().previous }}
+        </p>
+      </header>
+
+      <app-summary-tiles [summary]="summary()" [signedMoney]="signedMoney" />
+      <p class="sheet__changes">
+        Change from the month before: income {{ changes().income }}, expense
+        {{ changes().expense }}, net {{ changes().net }}.
+      </p>
+
+      @for (block of breakdowns(); track block.title) {
+        <section class="sheet__section">
+          <h2 class="sheet__heading">{{ block.title }}</h2>
+          @if (block.lines.length) {
+            <table class="sheet__table">
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col" class="is-num">Entries</th>
+                  <th scope="col" class="is-num">Share</th>
+                  <th scope="col" class="is-num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of block.lines; track line.id) {
+                  <tr>
+                    <td>
+                      <span class="sheet__name">{{ line.name }}</span>
+                      <span class="sheet__bar" aria-hidden="true">
+                        <span [style.width.%]="line.pct" [style.background]="line.color"></span>
+                      </span>
+                    </td>
+                    <td class="is-num">{{ line.count }}</td>
+                    <td class="is-num">{{ line.share }}</td>
+                    <td class="is-num">{{ money(line.amount) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="sheet__empty">Nothing this month.</p>
+          }
+        </section>
+      }
+
+      @if (budgetLines().length) {
+        <section class="sheet__section">
+          <h2 class="sheet__heading">Budgets</h2>
+          <table class="sheet__table">
+            <thead>
+              <tr>
+                <th scope="col">Budget</th>
+                <th scope="col" class="is-num">Limit</th>
+                <th scope="col" class="is-num">Spent</th>
+                <th scope="col" class="is-num">Left</th>
+                <th scope="col" class="is-num">Used</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of budgetLines(); track line.id) {
+                <tr>
+                  <td>
+                    <span class="sheet__name">{{ line.name }}</span>
+                    <span class="sheet__state" [style.color]="'var(--' + line.view.chip + ')'">
+                      <l-icon [name]="line.view.icon" [size]="14" color="inherit" />
+                      {{ line.view.label }}
+                    </span>
+                  </td>
+                  <td class="is-num">{{ money(line.limit) }}</td>
+                  <td class="is-num">{{ money(line.spent) }}</td>
+                  <td class="is-num">{{ money(line.remaining) }}</td>
+                  <td class="is-num">{{ percentUsed(line.percent) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+
+      @if (flows().length) {
+        <section class="sheet__section">
+          <h2 class="sheet__heading">Accounts</h2>
+          <table class="sheet__table">
+            <thead>
+              <tr>
+                <th scope="col">Account</th>
+                <th scope="col" class="is-num">Money in</th>
+                <th scope="col" class="is-num">Money out</th>
+                <th scope="col" class="is-num">Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (flow of flows(); track flow.accountId) {
+                <tr>
+                  <td>
+                    <span class="sheet__name">{{ flow.name }}</span>
+                  </td>
+                  <td class="is-num">{{ money(flow.moneyIn) }}</td>
+                  <td class="is-num">{{ money(flow.moneyOut) }}</td>
+                  <td class="is-num">{{ signedMoney(flow.net) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <p class="sheet__note">Transfers count as money in and out; balance adjustments don't.</p>
+        </section>
+      }
+
+      @if (withEntries()) {
+        <section class="sheet__section sheet__section--entries">
+          <h2 class="sheet__heading">Entries ({{ entries().length }})</h2>
+          @if (entries().length) {
+            <table class="sheet__table sheet__table--entries">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">Description</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Account</th>
+                  <th scope="col" class="is-num">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of entries(); track row.id) {
+                  <tr>
+                    <td class="is-date">{{ row.date }}</td>
+                    <td>{{ row.title }}</td>
+                    <td>{{ row.categoryLabel }}</td>
+                    <td>{{ row.accountLabel }}</td>
+                    <td class="is-num">
+                      {{ row.kind === 'transfer' ? money(row.amount) : signedMoney(row.amount) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <p class="sheet__empty">No entries this month.</p>
+          }
+        </section>
+      }
+    </article>
+  }
+</div>

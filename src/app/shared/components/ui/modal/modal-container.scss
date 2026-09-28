@@ -49,6 +49,17 @@
   animation-fill-mode: both;
 }
 
+// Edge to edge: no gutter, no corners, the full viewport height.
+.modal-scroll--fullscreen {
+  padding: 0;
+}
+
+.modal-panel--fullscreen {
+  max-height: 100dvh;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 // ── Backdrop fade ──────────────────────────────────────────────
 @keyframes modal-backdrop-in {
   from {

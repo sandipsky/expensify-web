@@ -19,6 +19,12 @@ export const routes: Routes = [
     loadChildren: () => import('./features/budgets/budgets.routes').then((m) => m.BUDGETS_ROUTES),
   },
   {
+    path: 'reports/monthly',
+    title: 'Monthly report',
+    loadComponent: () =>
+      import('./features/reports/monthly-report/monthly-report').then((m) => m.MonthlyReport),
+  },
+  {
     path: 'reports',
     title: 'Reports',
     loadComponent: () =>
@@ -34,6 +40,11 @@ export const routes: Routes = [
     title: 'Categories',
     loadComponent: () =>
       import('./features/categories/categories-page/categories-page').then((m) => m.CategoriesPage),
+  },
+  {
+    path: 'settings',
+    loadChildren: () =>
+      import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
   },
   { path: '**', redirectTo: 'accounts' },
 ];

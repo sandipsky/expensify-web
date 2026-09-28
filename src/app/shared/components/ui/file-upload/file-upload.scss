@@ -73,6 +73,7 @@
 .l-upload__trigger {
   display: inline-flex;
   align-items: center;
+  min-height: 36px;
   gap: 6px;
   padding: 8px 14px;
   border: 1px solid var(--separator-dark);
@@ -100,6 +101,11 @@
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+  }
+
+  // Touch targets on phones (NFR-05).
+  @media (max-width: 599px) {
+    min-height: 48px;
   }
 }
 

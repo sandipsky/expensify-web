@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   Injector,
   TemplateRef,
   Type,
@@ -12,6 +13,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { overlayStack } from '../overlay-stack';
 import { ModalRef } from './modal-ref';
 import { MODAL_DATA, ModalAnimation, ModalConfig } from './modal.config';
 
@@ -37,15 +39,19 @@ type ModalState = 'enter' | 'leave';
         <div class="modal-backdrop" (click)="_onBackdropClick()"></div>
       }
 
-      <div class="modal-scroll" (click)="_onBackdropClick()">
+      <div
+        class="modal-scroll"
+        [class.modal-scroll--fullscreen]="config.fullscreen"
+        (click)="_onBackdropClick()"
+      >
         <div
           #panel
           class="modal-panel"
           [class]="_panelClasses()"
-          [style.width]="config.width"
-          [style.height]="config.height"
-          [style.maxWidth]="config.maxWidth"
-          [style.--modal-max-height]="config.maxHeight"
+          [style.width]="config.fullscreen ? '100vw' : config.width"
+          [style.height]="config.fullscreen ? '100dvh' : config.height"
+          [style.maxWidth]="config.fullscreen ? '100vw' : config.maxWidth"
+          [style.--modal-max-height]="config.fullscreen ? '100dvh' : config.maxHeight"
           (click)="$event.stopPropagation()"
           (animationend)="_onAnimationEnd($event)"
         >
@@ -75,6 +81,7 @@ export class ModalContainer implements AfterViewInit {
   protected readonly _panelClasses = computed(() => {
     const anim = this.config.animation ?? 'slideUp';
     const classes = ['modal-panel', `modal-anim-${anim}`, `modal-anim--${this._state()}`];
+    if (this.config.fullscreen) classes.push('modal-panel--fullscreen');
     const extra = this.config.panelClass;
     if (extra) {
       classes.push(...(Array.isArray(extra) ? extra : [extra]));
@@ -82,7 +89,12 @@ export class ModalContainer implements AfterViewInit {
     return classes.join(' ');
   });
 
+  constructor() {
+    inject(DestroyRef).onDestroy(() => overlayStack.remove(this));
+  }
+
   ngAfterViewInit(): void {
+    overlayStack.push(this);
     // Let the container drive the leave animation when close() is called.
     this.modalRef._startClose = () => this._startLeave();
     this._renderContent();
@@ -102,8 +114,9 @@ export class ModalContainer implements AfterViewInit {
     }
   }
 
+  /** Only the overlay on top closes, so a dialog over a sheet doesn't take the sheet with it. */
   protected _onEscape(): void {
-    if (!this.config.disableClose) {
+    if (!this.config.disableClose && overlayStack.isTop(this)) {
       this.modalRef.close();
     }
   }

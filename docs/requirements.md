@@ -251,7 +251,7 @@ Reports follow the totals rules of the dashboard (DSH-12): no transfers or balan
 | --- | --- | --- |
 | DAT-01 | Export transactions for a chosen period to CSV (format in Appendix B). | Must |
 | DAT-02 | Import CSV with column mapping, preview, per-row errors and duplicate detection (same date, amount, account and payee). | Should |
-| DAT-03 | Export a full JSON backup of all data. | Should |
+| DAT-03 | Export a full JSON backup of all data (format in Appendix C). | Should |
 | DAT-04 | Restore a JSON backup into an empty account. | Could |
 | DAT-05 | Export to Excel and a PDF monthly report. | Could |
 
@@ -521,7 +521,7 @@ users/{uid}                        profile and preferences
 | payee | string? | up to 100 characters |
 | note | string? | up to 500 characters |
 | tags | string[] | up to 10, lowercase |
-| attachments | map[] | {path, name, contentType, size}, up to 3 (v1.1) |
+| attachments | map[] | {path, name, contentType, size}, up to 3 (v1.1). `path` is the Storage path `users/{uid}/receipts/{transactionId}/{fileId}.{ext}` with a random `fileId`; `name` is the file name to show and download; `contentType` is `image/*` or `application/pdf`; `size` is bytes as stored, under 5 MB. Photos are stored as JPEG, longest edge at most 1,600 px (ATT-02). Files go up before the entry is saved, so the entry is written once with its full list; files an edit drops, or that belong to a deleted entry, are deleted once the write (or the delete's Undo) has passed (ATT-05) |
 | recurringRuleId | string? | set on generated occurrences |
 | source | string | web · android · recurring · import |
 | createdAt, updatedAt | timestamp | |
@@ -791,8 +791,10 @@ web/src/app/
 | /categories | Categories |
 | /budgets, /budgets/:id | Budgets and budget detail |
 | /reports | Reports |
+| /reports/monthly | Printable monthly report, saved as PDF from the print dialog (DAT-05) |
 | /recurring | Recurring rules (v1.1) |
 | /settings | Profile, preferences, notifications, data and privacy |
+| /settings/import | CSV import: upload, map columns, review, import (DAT-02) |
 | /admin/users | Users: approve, disable, roles; invites in v1.1 (admins only) |
 
 Every route except sign-in and `/no-access` uses the functional `authGuard` (signed in and `status` active, otherwise redirect to `/no-access`); all of those except `/onboarding` add `onboardingGuard`, and `/admin/*` adds `adminGuard`. Each feature lazy-loads with `loadComponent` or `loadChildren`.
@@ -1249,6 +1251,41 @@ Date,Time,Type,Amount,Currency,Account,To account,Category,Subcategory,Payee,Not
 2026-09-25,13:10,expense,12.50,USD,Cash,,Food and dining,Lunch,Corner Cafe,,work
 2026-09-26,,transfer,200.00,USD,Bank,Cash,,,,ATM withdrawal,
 ```
+
+Rows run oldest first: by date, then time (untimed entries first), then `createdAt`. Lines end in CRLF. A cell that starts with `=`, `+`, `-` or `@` gets a leading `'`, so spreadsheets show it instead of running it as a formula; imports drop that `'` again. The Excel export (DAT-05) has the same columns in one sheet, with dates, times and amounts as typed cells.
+
+**Import (DAT-02).** Any CSV imports once its columns are mapped; a file with these headers maps itself, so an export from either app imports back unchanged.
+
+| Topic | Rule |
+| --- | --- |
+| Columns | Date, Amount and an account are required. Amounts come from one column, whose sign gives the type when no Type column is mapped (negative = expense), or from separate money-in and money-out columns. Rows without an Account cell use an account picked for the whole file |
+| Values | Dates are read year-, day- or month-first, detected from the file and changeable; a time in the date cell is kept. Amounts are split on the chosen decimal separator (dot or comma), never multiplied as floats (BR-01), and may carry a currency sign, parentheses or a trailing minus. Type accepts `income`, `expense`, `transfer` and common bank words (credit, debit, deposit, withdrawal) |
+| Matching | Accounts and categories match by name, trimmed and ignoring case. A Subcategory is looked up under its Category; a lone name that isn't a top-level category matches a subcategory if only one has it. Names not found become new categories; entries without a category go to Uncategorized. An unknown account is an error: accounts are never created by an import |
+| Errors | A row with a bad date, amount, type, account or currency is listed with its line number and not imported. Payees over 100 and notes over 500 characters are shortened, and tags past 10 dropped, with a warning |
+| Duplicates | A row is a duplicate of an existing entry with the same date, amount, account and payee (payee ignoring case). Each existing entry matches one row at most. Duplicates are skipped unless the user keeps them |
+| Writing | Entries are written with `source: import`, in batches that each hold whole entries with their balance increments (§4) |
+
+### Appendix C: JSON backup format
+
+A backup (DAT-03) is one UTF-8 JSON file, `expensify-backup-YYYY-MM-DD.json`. Each document keeps its ID and its §8 fields as stored; `createdAt` and `updatedAt` are ISO 8601 strings. Receipt files aren't included.
+
+```json
+{
+  "format": "expensify-backup",
+  "version": 1,
+  "schemaVersion": 1,
+  "exportedAt": "2026-09-28T10:00:00.000Z",
+  "source": "web",
+  "profile": { "baseCurrency": "USD", "locale": "en-US", "monthStartDay": 1, "weekStartDay": 1 },
+  "categories": [{ "id": "exp_food", "name": "Food and dining", "type": "expense", "...": "..." }],
+  "accounts": [],
+  "budgets": [],
+  "transactions": [],
+  "recurringRules": []
+}
+```
+
+Restoring (DAT-04) works only into an account with no accounts, transactions, budgets or recurring rules, and refuses a file from a newer `version`, a malformed document, or a transaction on an account the file doesn't include. A restore keeps every ID, so seeded categories and recurring occurrences keep theirs, and replaces the categories with the backup's. It writes categories, accounts and budgets first, then the transactions in batches with their balance increments, and the recurring rules last, so an automatic rule's catch-up (REC-06) finds the entries it already made. Each account starts at its opening balance, so balances come out as §4 defines them whatever `currentBalance` the file says. `createdAt` is kept, `updatedAt` becomes the restore time, and a transaction's `attachments` list is dropped with its files. The profile's currency, month start day and week start day are applied; the locale stays the device's.
 
 ## Sources
 

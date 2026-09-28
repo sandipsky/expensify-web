@@ -9,6 +9,8 @@ import { MODAL_DATA, ModalRef } from '../../../shared/components/ui/modal';
 import { NotificationService } from '../../../shared/components/ui/notification';
 import { AccountsStore } from '../../accounts/accounts.store';
 import { CategoriesStore } from '../../categories/categories.store';
+import { ReceiptsRepo } from '../../../core/data/receipts.repo';
+import { ReceiptDraft } from '../receipts/receipt-draft';
 import { TransactionsStore } from '../transactions.store';
 import { TransactionForm, TransactionFormData } from './transaction-form';
 
@@ -342,7 +344,7 @@ describe('TransactionForm', () => {
 
     it('offers past payees and tags (TXN-12)', async () => {
       const { el, click, fixture } = await setup();
-      click('Payee, time, tags and note');
+      click('Payee, time, tags, note and receipts');
       await fixture.whenStable();
       const options = [...el.querySelectorAll('datalist option')].map((o) =>
         o.getAttribute('value'),
@@ -353,7 +355,7 @@ describe('TransactionForm', () => {
 
     it("picks the payee's last category until the user picks one (TXN-15)", async () => {
       const { form, el, click, pick, fixture } = await setup();
-      click('Payee, time, tags and note');
+      click('Payee, time, tags, note and receipts');
       form.controls.payee.setValue('fresh mart');
       fixture.detectChanges();
       expect(form.controls.categoryId.value).toBe('exp_groceries');
@@ -362,6 +364,69 @@ describe('TransactionForm', () => {
       pick('Shopping');
       form.controls.payee.setValue('City bus');
       expect(form.controls.categoryId.value).toBe('exp_shopping');
+    });
+  });
+  describe('receipts (§3.12)', () => {
+    const bill = () => new File(['%PDF'], 'bill.pdf', { type: 'application/pdf' });
+
+    it('saves a new entry with the receipts stored under its ID (ATT-01)', async () => {
+      const { fixture, typeAmount, pick, click, el } = await setup();
+      typeAmount('12.5');
+      pick('Food and dining');
+      click('Payee, time, tags, note and receipts');
+      expect(el.querySelector('app-receipt-list')).not.toBeNull();
+      await fixture.debugElement.injector.get(ReceiptDraft).add([bill()]);
+      fixture.detectChanges();
+      expect(el.querySelector('.receipt__name')!.textContent).toBe('bill.pdf');
+
+      click('Save');
+      const [tx] = await stored();
+      expect(tx.attachments).toEqual([
+        expect.objectContaining({ name: 'bill.pdf', contentType: 'application/pdf', size: 4 }),
+      ]);
+      expect(tx.attachments![0].path.startsWith(`users/local/receipts/${tx.id}/`)).toBe(true);
+    });
+
+    it('waits for receipts still uploading before saving', async () => {
+      const { fixture, typeAmount, pick, click } = await setup();
+      typeAmount('5');
+      pick('Food and dining');
+      const upload = vi
+        .spyOn(TestBed.inject(ReceiptsRepo), 'upload')
+        .mockReturnValue(new Promise(() => {}));
+      void fixture.debugElement.injector.get(ReceiptDraft).add([bill()]);
+      await Promise.resolve();
+      click('Save');
+      expect(toasts.info).toHaveBeenCalledWith('Receipts are still uploading', expect.any(String));
+      expect(await stored()).toEqual([]);
+      upload.mockRestore();
+    });
+
+    it('opens an entry with its receipts showing, and saves their removal (ATT-04)', async () => {
+      const store = TestBed.inject(TransactionsStore);
+      const id = store.newId();
+      const receipt = await TestBed.inject(ReceiptsRepo).upload(id, bill(), 'bill.pdf');
+      store.add(
+        {
+          type: 'expense',
+          amount: 500,
+          currency: 'USD',
+          accountId: cash,
+          categoryId: 'exp_food',
+          date: '2026-09-27',
+          tags: [],
+          attachments: [receipt],
+        },
+        id,
+      );
+      const [transaction] = await stored();
+      const { fixture, el, click } = await setup({ transaction });
+      expect(el.querySelector('.receipt__name')!.textContent).toBe('bill.pdf');
+
+      fixture.debugElement.injector.get(ReceiptDraft).remove(receipt.path);
+      fixture.detectChanges();
+      click('Save');
+      await vi.waitFor(async () => expect((await stored())[0].attachments).toEqual([]));
     });
   });
 });

@@ -59,6 +59,8 @@ import { SegmentedControl } from '../../../shared/components/ui/segmented-contro
 import { injectSheet } from '../../../shared/services/sheet.service';
 import { AccountsStore } from '../../accounts/accounts.store';
 import { CategoriesStore } from '../../categories/categories.store';
+import { ReceiptDraft } from '../receipts/receipt-draft';
+import { ReceiptList } from '../receipts/receipt-list/receipt-list';
 import { TX_TYPE_LABELS, TX_TYPE_OPTIONS } from '../transaction-labels';
 import { TransactionsStore } from '../transactions.store';
 
@@ -108,7 +110,8 @@ const differentAccount = (control: AbstractControl<string | null>): ValidationEr
  * as an expense, today, on the last-used account. The amount accepts sums like
  * 120+45 (TXN-16) and becomes integer minor units only on save (BR-01). Payees
  * and tags are suggested from past entries (TXN-12), and a known payee picks
- * its last category until the user picks one (TXN-15).
+ * its last category until the user picks one (TXN-15). Receipts go up while
+ * the form is open and are saved with the entry (§3.12, see ReceiptDraft).
  */
 @Component({
   selector: 'app-transaction-form',
@@ -121,12 +124,14 @@ const differentAccount = (control: AbstractControl<string | null>): ValidationEr
     IconPicker,
     Menu,
     NumberInput,
+    ReceiptList,
     SegmentedControl,
     Select,
     TextInput,
     Textarea,
     TimeInput,
   ],
+  providers: [ReceiptDraft],
   templateUrl: './transaction-form.html',
   styleUrl: './transaction-form.scss',
   host: { '(keydown)': 'onKeydown($event)' },
@@ -141,11 +146,17 @@ export class TransactionForm {
   protected readonly breakpoints = inject(BreakpointService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly router = inject(Router);
+  protected readonly receipts = inject(ReceiptDraft);
 
   /** The entry being edited, as opened. */
   protected readonly original = this.sheet.data?.transaction;
   private readonly prefill = this.sheet.data?.prefill ?? {};
   protected readonly draft = this.sheet.data?.draft;
+  /**
+   * The entry's ID: a new one gets it before saving, so its receipts can be
+   * stored under it (ATT-01). Drafts have none: the rule writes them.
+   */
+  private entryId = this.original?.id ?? this.store.newId();
   protected readonly title =
     this.draft?.title ?? (this.original ? 'Edit transaction' : 'Add transaction');
 
@@ -214,7 +225,8 @@ export class TransactionForm {
       this.controls.payee.value ||
       this.controls.note.value ||
       this.controls.tags.value.length ||
-      this.original?.time
+      this.original?.time ||
+      this.original?.attachments?.length
     ),
   );
   protected readonly showAllCategories = signal(false);
@@ -294,6 +306,7 @@ export class TransactionForm {
       .subscribe(() => toAccountId.updateValueAndValidity());
     payee.valueChanges.pipe(takeUntilDestroyed()).subscribe((text) => this.suggestFor(text));
     date.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => this.followDate(value));
+    if (!this.draft) this.receipts.start(this.entryId, this.original?.attachments ?? []);
 
     // Quick add goes straight to the amount (US-01: a few taps).
     if (!this.original) {
@@ -325,6 +338,10 @@ export class TransactionForm {
       this.form.markAllAsTouched();
       return;
     }
+    if (this.receipts.uploading()) {
+      this.notify.info('Receipts are still uploading', 'Save again once they are done.');
+      return;
+    }
     const tx = this.toTransaction();
     if (tx.amount <= 0) {
       this.controls.amount.setErrors({ positive: 'Enter an amount above zero.' });
@@ -347,13 +364,14 @@ export class TransactionForm {
         this.close();
         return;
       }
-      this.store.update(before ?? this.original, tx);
+      this.receipts.saved(this.store.update(before ?? this.original, tx));
       this.notify.success('Transaction updated', summary);
       this.close({ action: 'saved', id: this.original.id });
       return;
     }
 
-    const id = this.store.add(tx);
+    const id = this.store.add(tx, this.entryId);
+    this.receipts.saved(Promise.resolve(true));
     this.notify.success(`${TX_TYPE_LABELS[tx.type]} added`, summary);
     if (another) this.startAnother();
     else this.close({ action: 'saved', id });
@@ -397,6 +415,7 @@ export class TransactionForm {
       payee: value.payee.trim() || null,
       note: value.note.trim() || null,
       tags: normalizeTags(value.tags),
+      ...(this.draft ? {} : { attachments: this.receipts.attachments() }),
     };
   }
 
@@ -425,6 +444,8 @@ export class TransactionForm {
       tags: [],
     });
     this.categoryByType.expense = this.categoryByType.income = null;
+    this.entryId = this.store.newId();
+    this.receipts.start(this.entryId, []);
     this.showAllCategories.set(false);
     this.suggestedFrom.set('');
     this.host.nativeElement.querySelector<HTMLInputElement>('.tx-form__amount input')?.focus();

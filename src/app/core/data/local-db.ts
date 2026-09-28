@@ -49,6 +49,11 @@ export function increment(by: number): unknown {
   return new Increment(by);
 }
 
+/** Like Firestore's `Timestamp.fromMillis()`: a fixed time, as a restore writes back. */
+export function timestampFromMillis(ms: number): TimestampLike {
+  return new LocalTimestamp(ms);
+}
+
 /** Like Firestore's `serverTimestamp()`: becomes the commit time. */
 export function serverTimestamp(): unknown {
   return SERVER_TIMESTAMP;

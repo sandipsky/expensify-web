@@ -1,6 +1,8 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
+import { ReceiptsRepo } from '../../core/data/receipts.repo';
 import { TransactionEdit, TransactionsRepo } from '../../core/data/transactions.repo';
+import { attachmentsOf } from '../../core/domain/attachments';
 import { DateRange } from '../../core/domain/period';
 import { withAccount, withCategory } from '../../core/domain/transactions';
 import { Category } from '../../core/models/category';
@@ -23,6 +25,7 @@ const RECENT_LIMIT = 200;
 @Injectable({ providedIn: 'root' })
 export class TransactionsStore {
   private readonly repo = inject(TransactionsRepo);
+  private readonly receipts = inject(ReceiptsRepo);
   private readonly accounts = inject(AccountsStore);
 
   /** New entries use the base currency until multi-currency (§8). */
@@ -55,9 +58,17 @@ export class TransactionsStore {
     return this.repo.watch(id);
   }
 
-  /** Saves a new entry (TXN-01) and remembers its account for the next one (TXN-04). */
-  add(tx: NewTransaction): string {
-    const id = this.repo.add(tx);
+  /** An ID for an entry not saved yet, so its receipts can go up while the form is open. */
+  newId(): string {
+    return this.repo.newId();
+  }
+
+  /**
+   * Saves a new entry (TXN-01) and remembers its account for the next one
+   * (TXN-04). Pass `id` when receipts were already stored under it.
+   */
+  add(tx: NewTransaction, id?: string): string {
+    id = this.repo.add(tx, id);
     this.lastAccountId.set(tx.accountId);
     try {
       localStorage.setItem(LAST_ACCOUNT_KEY, tx.accountId);
@@ -67,22 +78,30 @@ export class TransactionsStore {
     return id;
   }
 
-  /** Saves an edit; every balance it touches moves in the same write (TXN-06). */
-  update(before: Transaction, after: NewTransaction): void {
-    this.repo.update(before, after);
+  /**
+   * Saves an edit; every balance it touches moves in the same write (TXN-06).
+   * Resolves to whether it went through.
+   */
+  update(before: Transaction, after: NewTransaction): Promise<boolean> {
+    return this.repo.update(before, after);
   }
 
+  /** Deletes the entry; its receipts go once the Undo has passed (TXN-07, ATT-05). */
   delete(tx: Transaction): void {
     this.repo.delete(tx);
+    this.receipts.deleteLater(tx.id, tx.attachments ?? []);
   }
 
-  /** Undoes a delete of these transactions (TXN-07). */
+  /** Undoes a delete of these transactions, receipts included (TXN-07). */
   restore(txs: readonly Transaction[]): void {
+    for (const tx of txs) this.receipts.keep(tx.id);
     this.repo.restore(txs);
   }
 
+  /** Deletes the entries and their receipts; there's no Undo for a bulk delete (TXN-13, ATT-05). */
   deleteMany(txs: readonly Transaction[]): void {
     this.repo.deleteMany(txs);
+    this.receipts.delete(attachmentsOf(txs));
   }
 
   /**

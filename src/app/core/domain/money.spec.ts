@@ -4,6 +4,8 @@ import {
   formatCompactMoney,
   formatMoney,
   fractionDigits,
+  parseDecimal,
+  toDecimalString,
   toMajorUnits,
   toMinorUnits,
 } from './money';
@@ -88,6 +90,60 @@ describe('money', () => {
       expect(formatCompactMoney(0, 'USD', 'en-US')).toBe('$0');
       expect(formatCompactMoney(-50_000, 'USD', 'en-US', 'exceptZero')).toBe('-$500');
       expect(formatCompactMoney(50_000, 'USD', 'en-US', 'exceptZero')).toBe('+$500');
+    });
+  });
+  describe('toDecimalString (Appendix B)', () => {
+    it('writes major units with a dot and the currency places, from the digits', () => {
+      expect(toDecimalString(1250, 'USD')).toBe('12.50');
+      expect(toDecimalString(5, 'USD')).toBe('0.05');
+      expect(toDecimalString(300000, 'USD')).toBe('3000.00');
+      expect(toDecimalString(500, 'JPY')).toBe('500');
+      expect(toDecimalString(1250, 'KWD')).toBe('1.250');
+      expect(toDecimalString(-1250, 'USD')).toBe('-12.50');
+      expect(toDecimalString(MAX_AMOUNT, 'USD')).toBe('999999999.99');
+    });
+  });
+
+  describe('parseDecimal (BR-01, DAT-02)', () => {
+    it('splits on the decimal separator instead of multiplying floats', () => {
+      expect(parseDecimal('12.50', 'USD')).toBe(1250);
+      expect(parseDecimal('0.29', 'USD')).toBe(29);
+      expect(parseDecimal('1,234.56', 'USD')).toBe(123456);
+      expect(parseDecimal('12', 'USD')).toBe(1200);
+      expect(parseDecimal('.5', 'USD')).toBe(50);
+      expect(parseDecimal('500', 'JPY')).toBe(500);
+      expect(parseDecimal('1.250', 'KWD')).toBe(1250);
+    });
+
+    it('reads comma decimals and the spaces locales group with', () => {
+      expect(parseDecimal('12,5', 'EUR', ',')).toBe(1250);
+      expect(parseDecimal('1.234,56', 'EUR', ',')).toBe(123456);
+      expect(parseDecimal('1 234,56', 'EUR', ',')).toBe(123456);
+      expect(parseDecimal("1'234.56", 'CHF')).toBe(123456);
+    });
+
+    it('takes signs, parentheses and currency marks as banks write them', () => {
+      expect(parseDecimal('-12.50', 'USD')).toBe(-1250);
+      expect(parseDecimal('−12.50', 'USD')).toBe(-1250);
+      expect(parseDecimal('(40.00)', 'USD')).toBe(-4000);
+      expect(parseDecimal('12.50-', 'USD')).toBe(-1250);
+      expect(parseDecimal('$12.50', 'USD')).toBe(1250);
+      expect(parseDecimal('Rs 1,250.00', 'NPR')).toBe(125000);
+      expect(parseDecimal('-USD 3.10', 'USD')).toBe(-310);
+      expect(parseDecimal('12.50 USD', 'USD')).toBe(1250);
+      expect(parseDecimal('+7', 'USD')).toBe(700);
+      expect(parseDecimal('-0', 'USD')).toBe(0);
+    });
+
+    it('refuses what isn’t an amount, or has more places than the currency', () => {
+      expect(parseDecimal('', 'USD')).toBeNull();
+      expect(parseDecimal('abc', 'USD')).toBeNull();
+      expect(parseDecimal('1e5', 'USD')).toBeNull();
+      expect(parseDecimal('1.2.3', 'USD')).toBeNull();
+      expect(parseDecimal('12.345', 'USD')).toBeNull();
+      expect(parseDecimal('12.5', 'JPY')).toBeNull();
+      expect(parseDecimal('12.500', 'USD')).toBe(1250);
+      expect(parseDecimal('99999999999999999999', 'USD')).toBeNull();
     });
   });
 });

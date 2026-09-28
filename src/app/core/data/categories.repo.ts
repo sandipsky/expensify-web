@@ -74,6 +74,19 @@ export class CategoriesRepo {
     this.commit(batch);
   }
 
+  /** An ID for a category not written yet, so entries written with it can refer to it. */
+  newId(): string {
+    return this.db.newId();
+  }
+
+  /**
+   * Writes new categories under IDs from `newId()`, in one batch, as an import
+   * does for names it didn't find (DAT-02). Parents must come first.
+   */
+  createMany(categories: readonly SeedCategory[]): void {
+    this.seed(categories);
+  }
+
   /** Writes only the fields passed, so another device's edits to other fields survive (SYN-03). */
   update(id: string, changes: CategoryChanges): void {
     this.commit(this.db.batch().update(this.doc(id), { ...changes, updatedAt: serverTimestamp() }));

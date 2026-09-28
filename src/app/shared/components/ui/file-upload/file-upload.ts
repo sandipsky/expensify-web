@@ -43,7 +43,8 @@ let _uid = 0;
  * The component is presentational: it manages selection, validation, previews
  * and the list. Wire your real upload by handling `(added)` and reporting
  * progress/outcome back through {@link patchFile}. Selected files are exposed as
- * a two-way `files` model.
+ * a two-way `files` model. With `[listFiles]="false"` it only picks and checks
+ * files and hands them to `(added)`, for a caller that draws its own list.
  *
  * ```html
  * <l-file-upload accept="image/*" [multiple]="true" [maxSizeMb]="5"
@@ -74,6 +75,13 @@ export class FileUpload {
   readonly label = input<string>('Click or drag files here to upload');
   /** Secondary hint (defaults to a summary of the accept/size limits). */
   readonly hint = input<string>('');
+  /** Text of the `button` variant's trigger. */
+  readonly buttonLabel = input<string>('Upload');
+  /**
+   * Keep and list the picked files. `false` hands each pick to `(added)` and keeps
+   * nothing, so `maxCount` then caps one pick.
+   */
+  readonly listFiles = input(true);
 
   readonly files = model<UploadFile[]>([]);
 
@@ -95,7 +103,9 @@ export class FileUpload {
   });
 
   /** In single-file mode, hide the trigger once a file is chosen (shown again on remove). */
-  protected readonly _showTrigger = computed(() => this.multiple() || this.files().length === 0);
+  protected readonly _showTrigger = computed(
+    () => this.multiple() || !this.listFiles() || this.files().length === 0,
+  );
 
   protected readonly _resolvedHint = computed(() => {
     if (this.hint()) return this.hint();
@@ -196,6 +206,13 @@ export class FileUpload {
 
     if (!accepted.length) return;
 
+    if (!this.listFiles()) {
+      const cap = this.maxCount() || accepted.length;
+      accepted.slice(cap).forEach((f) => this.rejected.emit({ file: f.file, reason: 'count' }));
+      this.added.emit(accepted.slice(0, cap));
+      return;
+    }
+
     if (!this.multiple()) {
       // Single-file mode: the newest selection replaces the list.
       this._revokeAll(this.files());
@@ -223,7 +240,7 @@ export class FileUpload {
 
   private _toUploadFile(file: File): UploadFile {
     let url: string | undefined;
-    if (file.type.startsWith('image/')) {
+    if (file.type.startsWith('image/') && this.listFiles()) {
       url = URL.createObjectURL(file);
       this._objectUrls.add(url);
     }

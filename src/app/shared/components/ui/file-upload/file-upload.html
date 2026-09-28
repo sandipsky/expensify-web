@@ -53,7 +53,7 @@
       <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
-      <span>Upload</span>
+      <span>{{ buttonLabel() }}</span>
     </button>
     @if (_resolvedHint()) {
       <span class="l-upload__hint">{{ _resolvedHint() }}</span>
@@ -61,7 +61,7 @@
   </div>
 }
 
-@if (files().length) {
+@if (listFiles() && files().length) {
   <ul class="l-upload__files" [class.is-grid]="listType() === 'grid'">
     @for (item of files(); track item.id) {
       <li class="l-upload__file" [class]="'is-' + item.status">

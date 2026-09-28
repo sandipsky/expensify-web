@@ -4,6 +4,7 @@ import { SymbolIcon } from '../../../shared/components/symbol-icon/symbol-icon';
 import { Chip } from '../../../shared/components/ui/chip';
 import { Icon } from '../../../shared/components/ui/icon/icon';
 import { Checkbox } from '../../../shared/components/ui/input/checkbox/checkbox';
+import { receipts } from '../receipts/receipt-labels';
 import { TransactionAmount } from '../transaction-amount/transaction-amount';
 import { TxRow } from '../transaction-rows';
 
@@ -28,4 +29,6 @@ export class TransactionRow {
 
   readonly open = output<void>();
   readonly toggle = output<void>();
+
+  protected readonly receiptsLabel = receipts;
 }

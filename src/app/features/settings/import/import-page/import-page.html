@@ -1,0 +1,353 @@
+<div class="import-page">
+  <l-breadcrumb
+    [items]="[{ label: 'Settings', link: '/settings' }, { label: 'Import transactions' }]"
+  />
+
+  <l-stepper class="import-page__steps" [steps]="steps" [active]="store.step()" />
+
+  @switch (store.step()) {
+    @case (0) {
+      <l-card padding="lg">
+        <div class="import-step">
+          <p class="import-step__text">
+            Pick a CSV file: a statement your bank exports, or a CSV from Expensify or another app.
+            You'll match its columns and check every row before anything is saved.
+          </p>
+          @if (!accounts.loading() && !accounts.active().length) {
+            <div class="alert warn import-step__alert">
+              <span>Entries go into accounts, so add one first.</span>
+              <l-button variant="outlined-primary" size="lg" (click)="addAccount()">
+                Add account
+              </l-button>
+            </div>
+          }
+          <l-file-upload
+            accept=".csv,text/csv"
+            label="Choose a CSV file"
+            hint="Or drop it here"
+            [multiple]="false"
+            [listFiles]="false"
+            (added)="pick($event)"
+            (rejected)="rejected()"
+          />
+        </div>
+      </l-card>
+    }
+
+    @case (1) {
+      <l-card padding="lg" [title]="store.fileName()">
+        <div class="import-step">
+          <p class="import-step__text">
+            {{ store.dataRows().length }} rows. Match each field to a column; Date, Amount and
+            Account are needed.
+          </p>
+          <l-toggle
+            label="The first row holds column names"
+            [useValidation]="false"
+            [ngModel]="store.hasHeader()"
+            (ngModelChange)="store.setHasHeader($event)"
+          />
+
+          <div class="import-grid">
+            <l-select
+              label="Date"
+              placeholder="Choose a column"
+              bindValue="value"
+              bindLabel="label"
+              [items]="store.columnItems()"
+              [clearable]="true"
+              [useValidation]="false"
+              [ngModel]="column('date')"
+              (ngModelChange)="setColumn('date', $event)"
+            />
+            <l-select
+              label="Dates are written"
+              bindValue="value"
+              bindLabel="label"
+              [items]="dateOrders"
+              [useValidation]="false"
+              [ngModel]="store.mapping().dateOrder"
+              (ngModelChange)="setOption('dateOrder', $event)"
+            />
+          </div>
+
+          <div class="import-field">
+            <span class="import-field__label" id="amount-mode">Amounts are in</span>
+            <l-segmented-control
+              aria-labelledby="amount-mode"
+              size="lg"
+              [options]="amountModes"
+              [ngModel]="store.mapping().amountMode"
+              (ngModelChange)="setOption('amountMode', $event)"
+            />
+          </div>
+          <div class="import-grid">
+            @if (store.mapping().amountMode === 'signed') {
+              <l-select
+                label="Amount"
+                placeholder="Choose a column"
+                bindValue="value"
+                bindLabel="label"
+                [items]="store.columnItems()"
+                [clearable]="true"
+                [useValidation]="false"
+                [ngModel]="column('amount')"
+                (ngModelChange)="setColumn('amount', $event)"
+              />
+              <l-select
+                label="Type (optional)"
+                placeholder="From the amount's sign"
+                bindValue="value"
+                bindLabel="label"
+                [items]="store.columnItems()"
+                [clearable]="true"
+                [useValidation]="false"
+                [ngModel]="column('type')"
+                (ngModelChange)="setColumn('type', $event)"
+              />
+            } @else {
+              <l-select
+                label="Money in"
+                placeholder="Choose a column"
+                bindValue="value"
+                bindLabel="label"
+                [items]="store.columnItems()"
+                [clearable]="true"
+                [useValidation]="false"
+                [ngModel]="column('moneyIn')"
+                (ngModelChange)="setColumn('moneyIn', $event)"
+              />
+              <l-select
+                label="Money out"
+                placeholder="Choose a column"
+                bindValue="value"
+                bindLabel="label"
+                [items]="store.columnItems()"
+                [clearable]="true"
+                [useValidation]="false"
+                [ngModel]="column('moneyOut')"
+                (ngModelChange)="setColumn('moneyOut', $event)"
+              />
+            }
+            <l-select
+              label="Decimal separator"
+              bindValue="value"
+              bindLabel="label"
+              [items]="decimals"
+              [useValidation]="false"
+              [ngModel]="store.mapping().decimalSeparator"
+              (ngModelChange)="setOption('decimalSeparator', $event)"
+            />
+          </div>
+          @if (store.mapping().amountMode === 'signed' && column('type') === null) {
+            <p class="import-step__hint">Without a Type column, negative amounts are expenses.</p>
+          }
+
+          <div class="import-grid">
+            <l-select
+              label="Account column"
+              placeholder="None"
+              bindValue="value"
+              bindLabel="label"
+              [items]="store.columnItems()"
+              [clearable]="true"
+              [useValidation]="false"
+              [ngModel]="column('account')"
+              (ngModelChange)="setColumn('account', $event)"
+            />
+            <l-select
+              [label]="
+                column('account') === null
+                  ? 'Account for every row'
+                  : 'Account for rows without one'
+              "
+              placeholder="Choose an account"
+              bindValue="value"
+              bindLabel="label"
+              [items]="accountItems()"
+              [clearable]="true"
+              [useValidation]="false"
+              [ngModel]="store.mapping().accountId"
+              (ngModelChange)="setAccount($event)"
+            />
+          </div>
+
+          <h3 class="import-step__subtitle">Optional</h3>
+          <div class="import-grid">
+            @for (field of optionalFields; track field) {
+              <l-select
+                [label]="fieldLabels[field]"
+                placeholder="None"
+                bindValue="value"
+                bindLabel="label"
+                [items]="store.columnItems()"
+                [clearable]="true"
+                [useValidation]="false"
+                [ngModel]="column(field)"
+                (ngModelChange)="setColumn(field, $event)"
+              />
+            }
+          </div>
+        </div>
+
+        <div card-footer class="import-actions">
+          @if (gapMessage()) {
+            <p class="import-actions__note" role="status">{{ gapMessage() }}</p>
+          }
+          <l-button variant="outlined" size="lg" (click)="store.reset()">Back</l-button>
+          <l-button size="lg" [disabled]="!!store.gaps().length" (click)="store.review()">
+            Review rows
+          </l-button>
+        </div>
+      </l-card>
+    }
+
+    @case (2) {
+      <l-card padding="lg">
+        <div class="import-step">
+          <ul class="import-summary" aria-label="What the import does">
+            <li>
+              <l-chip variant="success">{{ store.counts().ready }} to import</l-chip>
+            </li>
+            @if (store.counts().duplicates) {
+              <li>
+                <l-chip variant="warn">{{ store.counts().duplicates }} already logged</l-chip>
+              </li>
+            }
+            @if (store.counts().errors) {
+              <li>
+                <l-chip variant="error">{{ store.counts().errors }} with problems</l-chip>
+              </li>
+            }
+            @if (newCategoryNames().length) {
+              <li>
+                <l-chip variant="info">{{ newCategoryNames().length }} new categories</l-chip>
+              </li>
+            }
+          </ul>
+
+          @if (store.checking()) {
+            <p class="import-step__hint" role="status">Looking for entries you already have…</p>
+          }
+          @if (store.counts().duplicates) {
+            <l-toggle
+              label="Skip entries that are already logged (same date, amount, account and payee)"
+              [useValidation]="false"
+              [ngModel]="store.skipDuplicates()"
+              (ngModelChange)="store.skipDuplicates.set($event)"
+            />
+          }
+          @if (newCategoryNames().length) {
+            <p class="import-step__text">New categories: {{ newCategoryNames().join(', ') }}.</p>
+          }
+          @if (problems().length) {
+            <details class="import-issues" [open]="problems().length <= 5">
+              <summary>
+                {{ problems().length }} {{ problems().length === 1 ? 'row' : 'rows' }} can't be
+                imported
+              </summary>
+              <ul>
+                @for (problem of problems().slice(0, 200); track problem.line) {
+                  <li>
+                    <strong>Line {{ problem.line }}:</strong> {{ problem.message }}
+                  </li>
+                }
+              </ul>
+            </details>
+          }
+          @if (warnings().length) {
+            <details class="import-issues import-issues--warn">
+              <summary>
+                {{ warnings().length }} {{ warnings().length === 1 ? 'row' : 'rows' }} changed
+                slightly
+              </summary>
+              <ul>
+                @for (warning of warnings().slice(0, 200); track warning.line) {
+                  <li>
+                    <strong>Line {{ warning.line }}:</strong> {{ warning.message }}
+                  </li>
+                }
+              </ul>
+            </details>
+          }
+        </div>
+
+        <l-virtual-list
+          class="import-preview"
+          [items]="preview()"
+          [itemSize]="rowHeight"
+          [trackBy]="rowKey"
+        >
+          <ng-template lVirtualItem let-row>
+            <div class="preview-row" [class]="'is-' + row.status">
+              <span class="preview-row__line" aria-hidden="true">{{ row.line }}</span>
+              <span class="preview-row__text">
+                <span class="preview-row__title text-ellipsis">
+                  @if (row.date) {
+                    <span class="preview-row__date">{{ row.date }}</span>
+                  }
+                  {{ row.title }}
+                </span>
+                <span class="preview-row__detail text-ellipsis">
+                  @switch (row.status) {
+                    @case ('error') {
+                      <l-icon name="error" [size]="14" color="var(--error)" />
+                    }
+                    @case ('skipped') {
+                      <l-icon name="content_copy" [size]="14" color="var(--warn)" />
+                      Already logged, skipped ·
+                    }
+                    @case ('duplicate') {
+                      <l-icon name="content_copy" [size]="14" color="var(--warn)" />
+                      Already logged, imported again ·
+                    }
+                  }
+                  {{ row.detail }}
+                </span>
+              </span>
+              @if (row.amount !== null) {
+                <span
+                  class="preview-row__amount"
+                  [class.is-income]="row.kind === 'income'"
+                  [class.is-expense]="row.kind === 'expense'"
+                >
+                  {{
+                    row.amount
+                      | money: row.currency : (row.kind === 'transfer' ? 'auto' : 'exceptZero')
+                  }}
+                </span>
+              }
+            </div>
+          </ng-template>
+        </l-virtual-list>
+
+        <div card-footer class="import-actions">
+          <l-button variant="outlined" size="lg" (click)="store.step.set(1)">Back</l-button>
+          <l-button
+            size="lg"
+            [disabled]="!store.counts().ready || store.checking()"
+            (click)="import()"
+          >
+            Import {{ store.counts().ready }}
+            {{ store.counts().ready === 1 ? 'transaction' : 'transactions' }}
+          </l-button>
+        </div>
+      </l-card>
+    }
+
+    @case (3) {
+      <l-card>
+        <app-empty-state
+          icon="check_circle"
+          [title]="'Imported ' + (store.result()?.count ?? 0) + ' transactions'"
+          message="Your balances include them already. You can edit or delete any of them from the list."
+        >
+          <l-button size="lg" (click)="viewImported()">View transactions</l-button>
+          <l-button variant="outlined" size="lg" (click)="store.reset()">
+            Import another file
+          </l-button>
+        </app-empty-state>
+      </l-card>
+    }
+  }
+</div>

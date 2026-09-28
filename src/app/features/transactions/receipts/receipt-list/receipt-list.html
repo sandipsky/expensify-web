@@ -1,0 +1,68 @@
+<div class="receipts" role="group" aria-labelledby="receipts-label">
+  <div class="receipts__header">
+    <span class="receipts__label" id="receipts-label">Receipts</span>
+    <span class="receipts__count">{{ draft.count() }} of {{ max }}</span>
+  </div>
+
+  @if (draft.list().length) {
+    <ul class="receipts__list">
+      @for (item of draft.list(); track item.key) {
+        <li class="receipt" [class.is-error]="item.status === 'error'">
+          <button
+            type="button"
+            class="receipt__open"
+            [disabled]="item.status !== 'ready'"
+            (click)="view(item)"
+          >
+            <span class="receipt__thumb" aria-hidden="true">
+              @if (item.previewUrl) {
+                <img [src]="item.previewUrl" alt="" />
+              } @else {
+                <l-icon
+                  [name]="item.kind === 'pdf' ? 'picture_as_pdf' : 'image'"
+                  [size]="24"
+                  [color]="item.kind === 'pdf' ? 'var(--error)' : 'var(--text-tertiary)'"
+                />
+              }
+            </span>
+            <span class="receipt__meta">
+              <span class="receipt__name text-ellipsis">{{ item.name }}</span>
+              <span class="receipt__sub" [attr.role]="item.status === 'error' ? 'alert' : null">
+                @switch (item.status) {
+                  @case ('uploading') {
+                    Uploading…
+                  }
+                  @case ('error') {
+                    {{ problem(item) }}
+                  }
+                  @default {
+                    {{ size(item.size) }}<span class="visually-hidden">, open</span>
+                  }
+                }
+              </span>
+            </span>
+          </button>
+          <l-button variant="ghost" size="lg" [rounded]="true" (click)="draft.remove(item.key)">
+            <l-icon name="close" color="inherit" />
+            <span class="visually-hidden">Remove {{ item.name }}</span>
+          </l-button>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (draft.remaining() > 0) {
+    <l-file-upload
+      [listFiles]="false"
+      [accept]="accept"
+      [multiple]="true"
+      [maxCount]="draft.remaining()"
+      [variant]="breakpoints.phone() ? 'button' : 'dropzone'"
+      buttonLabel="Add receipt"
+      label="Add a receipt"
+      [hint]="hint"
+      (added)="add($event)"
+      (rejected)="rejected($event)"
+    />
+  }
+</div>

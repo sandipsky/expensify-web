@@ -6,6 +6,14 @@
   margin: 0 auto;
 }
 
+.reports-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 // One row of controls above the report: everything below follows them.
 .reports-toolbar {
   display: flex;

@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   Injector,
   TemplateRef,
   Type,
@@ -12,6 +13,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { overlayStack } from '../overlay-stack';
 import { DrawerRef } from './drawer-ref';
 import { DRAWER_DATA, DrawerConfig } from './drawer.config';
 
@@ -82,7 +84,12 @@ export class DrawerContainer implements AfterViewInit {
     return classes.join(' ');
   });
 
+  constructor() {
+    inject(DestroyRef).onDestroy(() => overlayStack.remove(this));
+  }
+
   ngAfterViewInit(): void {
+    overlayStack.push(this);
     // Let the container drive the leave animation when close() is called.
     this.drawerRef._startClose = () => this._startLeave();
     this._renderContent();
@@ -102,8 +109,9 @@ export class DrawerContainer implements AfterViewInit {
     }
   }
 
+  /** Only the overlay on top closes, so a dialog over a sheet doesn't take the sheet with it. */
   protected _onEscape(): void {
-    if (!this.config.disableClose) {
+    if (!this.config.disableClose && overlayStack.isTop(this)) {
       this.drawerRef.close();
     }
   }

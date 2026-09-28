@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
+import { ReceiptsRepo } from '../../core/data/receipts.repo';
 import { NewTransaction } from '../../core/models/transaction';
 import { Preferences } from '../../core/preferences';
 import { AccountsStore } from '../accounts/accounts.store';
@@ -76,5 +77,40 @@ describe('TransactionsStore', () => {
     // Cash: the expense moved off (+1000); Bank: took it, and gained the income.
     expect(accounts.byId(cash)!.currentBalance).toBe(-1000);
     expect(accounts.byId(bank)!.currentBalance).toBe(1000);
+  });
+  describe('receipts (ATT-05)', () => {
+    const receipt = (path: string) => ({ path, name: 'r.jpg', contentType: 'image/jpeg', size: 1 });
+
+    it('deletes a deleted entry’s receipts after its Undo, or keeps them when undone', async () => {
+      const store = TestBed.inject(TransactionsStore);
+      const receipts = TestBed.inject(ReceiptsRepo);
+      const later = vi.spyOn(receipts, 'deleteLater');
+      const keep = vi.spyOn(receipts, 'keep');
+      const id = store.add(tx({ attachments: [receipt('p/a')] }));
+      const saved = (await firstValueFrom(store.watch(id)))!;
+
+      store.delete(saved);
+      expect(later).toHaveBeenCalledWith(id, [receipt('p/a')]);
+      store.restore([saved]);
+      expect(keep).toHaveBeenCalledWith(id);
+    });
+
+    it('deletes receipts at once with a bulk delete, which has no Undo', async () => {
+      const store = TestBed.inject(TransactionsStore);
+      const remove = vi.spyOn(TestBed.inject(ReceiptsRepo), 'delete');
+      store.add(tx({ attachments: [receipt('p/a'), receipt('p/b')] }));
+      store.add(tx());
+      store.deleteMany(await firstValueFrom(store.watchRecent()));
+      expect(remove).toHaveBeenCalledWith([receipt('p/a'), receipt('p/b')]);
+    });
+
+    it('deletes the receipts of an account’s entries with the account (ACC-05)', async () => {
+      const store = TestBed.inject(TransactionsStore);
+      const remove = vi.spyOn(TestBed.inject(ReceiptsRepo), 'delete');
+      store.add(tx({ accountId: bank, attachments: [receipt('p/a')] }));
+      store.add(tx({ attachments: [receipt('p/c')] }));
+      await accounts.delete(accounts.byId(bank)!);
+      expect(remove).toHaveBeenCalledWith([receipt('p/a')]);
+    });
   });
 });

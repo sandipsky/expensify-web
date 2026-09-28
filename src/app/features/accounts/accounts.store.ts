@@ -2,6 +2,7 @@ import { Injectable, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Observable, map } from 'rxjs';
 import { AccountChanges, AccountsRepo } from '../../core/data/accounts.repo';
+import { ReceiptsRepo } from '../../core/data/receipts.repo';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import {
   ACCOUNT_TYPE_DEFAULTS,
@@ -9,6 +10,7 @@ import {
   reconcileAdjustment,
   totalBalance,
 } from '../../core/domain/account';
+import { attachmentsOf } from '../../core/domain/attachments';
 import { compareNewestFirst, localDate, localTime } from '../../core/domain/transactions';
 import { Account, AccountInput } from '../../core/models/account';
 import { Transaction } from '../../core/models/transaction';
@@ -22,6 +24,7 @@ import { Preferences } from '../../core/preferences';
 export class AccountsStore {
   private readonly repo = inject(AccountsRepo);
   private readonly transactions = inject(TransactionsRepo);
+  private readonly receipts = inject(ReceiptsRepo);
 
   /** New accounts use the base currency until multi-currency (§8). */
   readonly currency = inject(Preferences).baseCurrency;
@@ -95,12 +98,14 @@ export class AccountsStore {
   }
 
   /**
-   * Deletes the account and its transactions (ACC-05). They're read again here,
-   * so entries added since the user was asked go too.
+   * Deletes the account and its transactions (ACC-05), and their receipts
+   * (ATT-05). They're read again here, so entries added since the user was
+   * asked go too.
    */
   async delete(account: Account): Promise<void> {
     const transactions = await this.transactions.listByAccount(account.id);
     this.repo.delete(account.id, transactions);
+    this.receipts.delete(attachmentsOf(transactions));
   }
 
   /** Undoes a delete of an account that had no transactions. */

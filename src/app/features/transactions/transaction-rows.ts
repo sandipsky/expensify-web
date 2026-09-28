@@ -34,10 +34,12 @@ export interface TxRow {
   upcoming: boolean;
   /** Written but not yet confirmed by the server (SYN-04). */
   pending: boolean;
+  /** How many receipts it has (ATT-01). */
+  receipts: number;
 }
 
 /** Names for system categories that may be referenced before categories are seeded. */
-const SYSTEM_NAMES: Readonly<Record<string, string>> = {
+export const SYSTEM_CATEGORY_NAMES: Readonly<Record<string, string>> = {
   [SYSTEM_CATEGORY_IDS.expense.uncategorized]: 'Uncategorized',
   [SYSTEM_CATEGORY_IDS.income.uncategorized]: 'Uncategorized',
   [SYSTEM_CATEGORY_IDS.expense.adjustment]: 'Balance adjustment',
@@ -100,6 +102,7 @@ export class TransactionRows {
       amount: tx.type === 'expense' ? -tx.amount : tx.amount,
       upcoming: isUpcoming(tx, today),
       pending: !!tx.pending,
+      receipts: tx.attachments?.length ?? 0,
     };
   }
 
@@ -113,7 +116,7 @@ export class TransactionRows {
     if (category) {
       return { name: this.categories.path(category), icon: category.icon, color: category.color };
     }
-    const name = (tx.categoryId && SYSTEM_NAMES[tx.categoryId]) || TX_TYPE_LABELS[tx.type];
+    const name = (tx.categoryId && SYSTEM_CATEGORY_NAMES[tx.categoryId]) || TX_TYPE_LABELS[tx.type];
     return { name, icon: isAdjustment(tx) ? 'tune' : 'help', color: null };
   }
 }

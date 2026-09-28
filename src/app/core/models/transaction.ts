@@ -6,7 +6,19 @@ export const TX_TYPES = ['expense', 'income', 'transfer'] as const;
 export type TxType = (typeof TX_TYPES)[number];
 export type TxSource = 'web' | 'android' | 'recurring' | 'import';
 
-/** `users/{uid}/transactions/{transactionId}` (§8). `attachments` arrives in v1.1. */
+/** One receipt on a transaction (§8 `attachments`, ATT-01): a file in Cloud Storage. */
+export interface Attachment {
+  /** Full Storage path: `users/{uid}/receipts/{transactionId}/{fileId}.{ext}` (§9 storage.rules). */
+  path: string;
+  /** What to show and download it as, e.g. `receipt.jpg`. */
+  name: string;
+  /** `image/jpeg`, `image/png`, `image/webp` or `application/pdf`. */
+  contentType: string;
+  /** Bytes as stored, after compression (ATT-02). */
+  size: number;
+}
+
+/** `users/{uid}/transactions/{transactionId}` (§8). */
 export interface Transaction {
   id: string;
   type: TxType;
@@ -28,6 +40,8 @@ export interface Transaction {
   payee?: string | null;
   note?: string | null;
   tags: string[];
+  /** Up to 3 receipts (ATT-01). Missing on entries written before v1.1. */
+  attachments?: Attachment[];
   recurringRuleId?: string | null;
   source: TxSource;
   createdAt: TimestampLike | null;

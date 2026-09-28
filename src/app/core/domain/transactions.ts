@@ -3,6 +3,7 @@
 import { format } from 'date-fns';
 import { ADJUSTMENT_CATEGORY_IDS, Category, CategoryType } from '../models/category';
 import { NewTransaction, Transaction, TxType } from '../models/transaction';
+import { sameAttachments } from './attachments';
 import { rollUpId } from './category';
 
 /** Longest payee (TXN-03). */
@@ -83,10 +84,11 @@ export function toNewTransaction(tx: Transaction): NewTransaction {
     payee: tx.payee ?? null,
     note: tx.note ?? null,
     tags: [...tx.tags],
+    attachments: [...(tx.attachments ?? [])],
   };
 }
 
-/** What a user can change on a transaction (TXN-06). */
+/** What a user can change on a transaction (TXN-06, ATT-04). */
 const EDITABLE_FIELDS = [
   'type',
   'amount',
@@ -99,6 +101,7 @@ const EDITABLE_FIELDS = [
   'payee',
   'note',
   'tags',
+  'attachments',
 ] as const;
 
 export type TransactionChanges = Partial<
@@ -108,7 +111,8 @@ export type TransactionChanges = Partial<
 /**
  * The fields `after` changes, so an edit writes only those and another device's
  * edits to other fields survive (SYN-03). A missing optional field and `null`
- * count as the same. `accountIds` follows whenever either account changes.
+ * count as the same, as do no attachments and an empty list. Attachments
+ * compare by Storage path. `accountIds` follows whenever either account changes.
  */
 export function transactionChanges(before: Transaction, after: NewTransaction): TransactionChanges {
   const old = toNewTransaction(before);
@@ -117,7 +121,12 @@ export function transactionChanges(before: Transaction, after: NewTransaction): 
   for (const field of EDITABLE_FIELDS) {
     const a = old[field];
     const b = next[field];
-    const same = Array.isArray(a) && Array.isArray(b) ? a.join('\n') === b.join('\n') : a === b;
+    const same =
+      field === 'attachments'
+        ? sameAttachments(old.attachments!, next.attachments!)
+        : Array.isArray(a) && Array.isArray(b)
+          ? a.join('\n') === b.join('\n')
+          : a === b;
     if (!same) changes[field] = b;
   }
   if ('accountId' in changes || 'toAccountId' in changes)

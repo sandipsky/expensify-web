@@ -1,0 +1,179 @@
+.monthly {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.monthly__toolbar,
+.monthly__controls,
+.monthly__period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.monthly__toolbar {
+  justify-content: space-between;
+}
+
+.monthly__period-label {
+  min-width: 140px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.monthly__tip {
+  flex-basis: 100%;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+// The page as it prints: a sheet on screen, the paper itself when printed.
+.sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px;
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  background: var(--bg-lightest);
+  color: var(--text-primary);
+
+  @media print {
+    padding: 0;
+    border: 0;
+  }
+
+  @media (max-width: 599px) {
+    padding: 16px;
+  }
+}
+
+.sheet__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--text-primary);
+}
+
+.sheet__title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.sheet__period {
+  font-size: 16px;
+}
+
+.sheet__meta,
+.sheet__changes,
+.sheet__note,
+.sheet__empty {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.sheet__meta {
+  text-align: right;
+}
+
+.sheet__section {
+  break-inside: avoid;
+
+  &--entries {
+    break-inside: auto;
+  }
+}
+
+.sheet__heading {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+// Fixed layout, so the tables' number columns line up with each other.
+.sheet__table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--separator-light);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+
+  .is-num,
+  .is-date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .is-num {
+    text-align: right;
+  }
+
+  th.is-num {
+    width: 18%;
+  }
+
+  &--entries {
+    font-size: 12px;
+
+    th:first-child {
+      width: 14%;
+    }
+
+    td {
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
+.sheet__name {
+  display: block;
+}
+
+.sheet__bar {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: var(--bg-light);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+  }
+}
+
+.sheet__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}

@@ -1,0 +1,133 @@
+<div class="settings-page">
+  <l-breadcrumb title="Settings" />
+
+  <section class="settings-section" aria-labelledby="data-heading">
+    <h2 class="settings-section__title" id="data-heading">Data and privacy</h2>
+
+    <l-card title="Export transactions" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          Save a period's transactions as a file. CSV opens in any spreadsheet and can be imported
+          back; Excel keeps dates and amounts as numbers.
+        </p>
+        <div class="settings-card__fields">
+          <l-select
+            class="settings-card__period"
+            label="Period"
+            bindValue="value"
+            bindLabel="label"
+            [items]="periodOptions"
+            [useValidation]="false"
+            [ngModel]="period()"
+            (ngModelChange)="setPeriod($event)"
+          />
+          <div class="settings-card__format">
+            <span class="settings-card__label" id="export-format">Format</span>
+            <l-segmented-control
+              aria-labelledby="export-format"
+              size="lg"
+              [options]="formatOptions"
+              [ngModel]="format()"
+              (ngModelChange)="setFormat($event)"
+            />
+          </div>
+        </div>
+        @if (period() === 'custom') {
+          <div class="settings-card__fields">
+            <l-date-input
+              label="From"
+              calendar="ad"
+              [clearable]="false"
+              [useValidation]="false"
+              [ngModel]="customStart()"
+              (ngModelChange)="setCustomDate('start', $event)"
+            />
+            <l-date-input
+              label="To"
+              calendar="ad"
+              [clearable]="false"
+              [useValidation]="false"
+              [ngModel]="customEnd()"
+              (ngModelChange)="setCustomDate('end', $event)"
+            />
+          </div>
+        }
+        <div class="settings-card__actions">
+          <p class="settings-card__hint" aria-live="polite">{{ rangeLabel() }}</p>
+          <l-button size="lg" [disabled]="exporting()" (click)="export()">
+            <l-icon name="download" color="inherit" />
+            Export {{ format() === 'csv' ? 'CSV' : 'Excel' }}
+          </l-button>
+        </div>
+      </div>
+    </l-card>
+
+    <l-card title="Import from CSV" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          Bring in a bank statement or another app's export: match its columns, check every row,
+          then import. Entries you already have are spotted and skipped.
+        </p>
+        <div class="settings-card__actions">
+          <l-button variant="outlined-primary" size="lg" (click)="go('/settings/import')">
+            <l-icon name="upload_file" color="inherit" />
+            Import CSV
+          </l-button>
+        </div>
+      </div>
+    </l-card>
+
+    <l-card title="Monthly report" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          A printable summary of one month: totals, spending by category, accounts and every entry.
+          Save it as PDF from the print dialog.
+        </p>
+        <div class="settings-card__actions">
+          <l-button variant="outlined-primary" size="lg" (click)="go('/reports/monthly')">
+            <l-icon name="picture_as_pdf" color="inherit" />
+            Open monthly report
+          </l-button>
+        </div>
+      </div>
+    </l-card>
+
+    <l-card title="Backup" padding="lg">
+      <div class="settings-card">
+        <p class="settings-card__text">
+          One JSON file with all your accounts, categories, transactions, budgets and recurring
+          rules. Receipts aren't included; download them from their transactions.
+        </p>
+        <div class="settings-card__actions">
+          <l-button variant="outlined-primary" size="lg" (click)="backup()">
+            <l-icon name="backup" color="inherit" />
+            Download backup
+          </l-button>
+        </div>
+
+        <div class="settings-card__divider"></div>
+
+        <h3 class="settings-card__subtitle">Restore a backup</h3>
+        @if (hasData() === false) {
+          <p class="settings-card__text">
+            Your account is empty, so a backup can be restored into it. Its categories replace the
+            ones you have.
+          </p>
+          <l-file-upload
+            variant="button"
+            accept=".json,application/json"
+            buttonLabel="Choose backup file"
+            [multiple]="false"
+            [listFiles]="false"
+            (added)="restore($event)"
+          />
+        } @else if (hasData()) {
+          <p class="settings-card__text">
+            A backup can only be restored into an empty account, so nothing is mixed up or
+            overwritten. Delete your accounts, budgets and recurring rules first.
+          </p>
+        }
+      </div>
+    </l-card>
+  </section>
+</div>

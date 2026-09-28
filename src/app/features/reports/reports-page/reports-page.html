@@ -1,5 +1,11 @@
 <div class="reports-page">
-  <l-breadcrumb title="Reports" />
+  <div class="reports-page__header">
+    <l-breadcrumb title="Reports" />
+    <l-button variant="outlined" size="lg" (click)="openMonthly()">
+      <l-icon name="picture_as_pdf" color="inherit" />
+      Monthly report
+    </l-button>
+  </div>
 
   <section class="reports-toolbar" aria-label="What the report shows">
     @if (breakpoints.desktop()) {

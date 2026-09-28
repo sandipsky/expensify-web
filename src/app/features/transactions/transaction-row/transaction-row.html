@@ -24,6 +24,10 @@
       @if (row().upcoming) {
         <l-chip size="sm" variant="info">Upcoming</l-chip>
       }
+      @if (row().receipts) {
+        <l-icon name="attach_file" [size]="14" color="var(--text-tertiary)" />
+        <span class="visually-hidden">{{ receiptsLabel(row().receipts) }}</span>
+      }
       @if (row().pending) {
         <l-icon name="schedule" [size]="14" />
         <span class="visually-hidden">Not synced yet</span>

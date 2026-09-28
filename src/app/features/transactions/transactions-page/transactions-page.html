@@ -3,6 +3,18 @@
     <l-breadcrumb title="Transactions" />
     <div class="tx-page__actions">
       @if (!list.selecting() && list.visible().length) {
+        <l-menu mode="right">
+          <l-button dropdown-display variant="outlined" size="lg">
+            <l-icon name="download" color="inherit" />
+            Export
+          </l-button>
+          <button type="button" dropdown-item (click)="export('csv')">
+            <l-icon name="description" [size]="18" />CSV
+          </button>
+          <button type="button" dropdown-item (click)="export('xlsx')">
+            <l-icon name="table_view" [size]="18" />Excel
+          </button>
+        </l-menu>
         <l-button variant="outlined" size="lg" (click)="list.startSelecting()">
           <l-icon name="checklist" color="inherit" />
           Select
@@ -257,6 +269,10 @@
               </button>
               @if (row.upcoming) {
                 <l-chip size="sm" variant="info">Upcoming</l-chip>
+              }
+              @if (row.receipts) {
+                <l-icon name="attach_file" [size]="14" color="var(--text-tertiary)" />
+                <span class="visually-hidden">{{ receiptsLabel(row.receipts) }}</span>
               }
               @if (row.pending) {
                 <l-icon name="schedule" [size]="14" />

@@ -184,4 +184,55 @@ describe('TransactionsRepo', () => {
     repo.deleteMany(await Promise.all(ids.map(read)));
     expect(await balances()).toEqual({ Bank: 100000, Cash: 5000 });
   });
+  it('writes under an ID chosen first, so receipts can go up before saving (ATT-01)', async () => {
+    const id = repo.newId();
+    const receipt = {
+      path: `users/local/receipts/${id}/r.jpg`,
+      name: 'r.jpg',
+      contentType: 'image/jpeg',
+      size: 5,
+    };
+    expect(repo.add({ ...expense(cash, '2026-09-26'), attachments: [receipt] }, id)).toBe(id);
+    expect(await read(id)).toMatchObject({ attachments: [receipt] });
+  });
+
+  it('resolves an edit once it went through, and a failed one to false', async () => {
+    const id = repo.add(expense(cash, '2026-09-26'));
+    const before = await read(id);
+    await expect(repo.update(before, { ...toNewTransaction(before), amount: 5 })).resolves.toBe(
+      true,
+    );
+    repo.delete(await read(id));
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(repo.update(before, { ...toNewTransaction(before), amount: 6 })).resolves.toBe(
+      false,
+    );
+    expect(errors).toHaveBeenCalled();
+    errors.mockRestore();
+  });
+
+  it('reads a range once, or everything, newest first (DAT-01)', async () => {
+    repo.add(expense(cash, '2026-08-31'));
+    repo.add(expense(cash, '2026-09-10'));
+    repo.add(expense(bank, '2026-09-30'));
+    const september = await repo.listRange({ start: '2026-09-01', end: '2026-09-30' });
+    expect(september.map((t) => t.date)).toEqual(['2026-09-30', '2026-09-10']);
+    expect((await repo.listRange(null)).map((t) => t.date)).toEqual([
+      '2026-09-30',
+      '2026-09-10',
+      '2026-08-31',
+    ]);
+  });
+
+  it('imports many entries in batches under Firestore’s cap, balances right (DAT-02)', async () => {
+    const batch = vi.spyOn(TestBed.inject(LocalDb), 'batch');
+    const txs = Array.from({ length: 1000 }, (_, i) =>
+      expense(i % 2 ? cash : bank, '2026-09-01', 10),
+    );
+    const ids = repo.addMany(txs);
+    expect(ids).toHaveLength(1000);
+    expect(batch.mock.calls.length).toBe(3);
+    expect(await balances()).toEqual({ Bank: 100000 - 5000, Cash: 5000 - 5000 });
+    expect(await read(ids[0])).toMatchObject({ source: 'import', accountIds: [bank] });
+  });
 });
