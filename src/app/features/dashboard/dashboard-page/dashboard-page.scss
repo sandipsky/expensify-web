@@ -1,0 +1,120 @@
+.dash {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dash__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dash__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Privacy mode (DSH-09): a 44px toggle, like the header's bell.
+.dash__privacy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+  }
+
+  &[aria-pressed='true'] {
+    background: var(--accent-bg);
+    color: var(--accent-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+// The period switcher, pinned to the top of the scrolling content (§3.7).
+.dash__period {
+  position: sticky;
+  top: calc(-1 * var(--l-layout-content-padding, 16px));
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 calc(-1 * var(--l-layout-content-padding, 16px));
+  padding: 8px var(--l-layout-content-padding, 16px);
+  background: var(--bg-light);
+}
+
+.dash__period-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.dash__custom {
+  display: grid;
+  flex-basis: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 240px));
+  gap: 12px;
+}
+
+// One column on phones, two on tablets, and §3.7's desktop arrangement:
+// the four summary cards in one row, balances, spending and budgets in the
+// next, then the trend beside recent transactions.
+.dash__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dash__card {
+  display: block;
+  grid-column: span 12;
+  min-width: 0;
+}
+
+@media (min-width: 600px) {
+  .dash__card {
+    grid-column: span 6;
+  }
+
+  .dash__card--summary,
+  .dash__card--empty {
+    grid-column: span 12;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dash__card--balances,
+  .dash__card--spending,
+  .dash__card--budgets {
+    grid-column: span 4;
+  }
+
+  .dash__card--trend {
+    grid-column: span 7;
+  }
+
+  .dash__card--recent,
+  .dash__card--upcoming,
+  .dash__card--largest {
+    grid-column: span 5;
+  }
+}

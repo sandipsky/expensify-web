@@ -10,6 +10,7 @@ import {
   monthPeriod,
   orderedRange,
   presetRange,
+  previousRanges,
   spanOf,
   weekPeriod,
   yearPeriod,
@@ -163,5 +164,20 @@ describe('periods (BR-05)', () => {
       expect(label).toMatch(/^25 Sept?\s–\s24 Oct 2026$/);
       expect(label).not.toContain('September');
     });
+  });
+});
+
+describe('previousRanges (DSH-10)', () => {
+  it('gives the same-length ranges right before a custom range, oldest first', () => {
+    expect(previousRanges({ start: '2026-09-10', end: '2026-09-19' }, 2)).toEqual([
+      { start: '2026-08-21', end: '2026-08-30' },
+      { start: '2026-08-31', end: '2026-09-09' },
+    ]);
+  });
+
+  it('steps a single day back a day at a time', () => {
+    expect(previousRanges({ start: '2026-03-01', end: '2026-03-01' }, 1)).toEqual([
+      { start: '2026-02-28', end: '2026-02-28' },
+    ]);
   });
 });

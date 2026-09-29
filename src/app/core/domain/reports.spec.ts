@@ -4,12 +4,14 @@ import {
   accountFlows,
   categoryChanges,
   categoryTotals,
+  changeOf,
   changePercent,
   largestExpenses,
   periodSummaries,
   recentMonths,
   savingsRate,
   shareOf,
+  summaryChange,
   topAndOther,
   topPayees,
   yearMonths,
@@ -213,5 +215,27 @@ describe('payees and largest expenses (RPT-07)', () => {
       [20000, '2026-09-02'],
       [1500, '2026-09-20'],
     ]);
+  });
+});
+
+describe('summaryChange (DSH-10)', () => {
+  it("gives each figure's change as an amount and a percent", () => {
+    expect(changeOf(20000, 25000)).toEqual({ amount: 5000, percent: 25 });
+    expect(changeOf(0, 5000)).toEqual({ amount: 5000, percent: null });
+    const change = summaryChange(
+      { income: 300000, expense: 100000, net: 200000, savingsRate: 67 },
+      { income: 300000, expense: 150000, net: 150000, savingsRate: 50 },
+    );
+    expect(change.income).toEqual({ amount: 0, percent: 0 });
+    expect(change.expense).toEqual({ amount: 50000, percent: 50 });
+    expect(change.net).toEqual({ amount: -50000, percent: -25 });
+    expect(change.savingsRate).toBe(-17);
+  });
+
+  it('has no savings rate change when either period had no income (BR-04)', () => {
+    const none = { income: 0, expense: 1000, net: -1000, savingsRate: null };
+    const some = { income: 1000, expense: 0, net: 1000, savingsRate: 100 };
+    expect(summaryChange(none, some).savingsRate).toBeNull();
+    expect(summaryChange(some, none).savingsRate).toBeNull();
   });
 });

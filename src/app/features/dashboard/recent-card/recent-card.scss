@@ -1,0 +1,18 @@
+@use '../dash';
+
+:host {
+  display: block;
+  height: 100%;
+
+  l-card {
+    height: 100%;
+  }
+}
+
+.recent {
+  list-style: none;
+
+  li:last-child app-transaction-row {
+    border-bottom: 0;
+  }
+}

@@ -28,6 +28,40 @@ export function changePercent(previous: number, current: number): number | null 
   return previous !== 0 ? Math.round(((current - previous) * 100) / Math.abs(previous)) : null;
 }
 
+/** How a figure moved from the previous period (DSH-10): the difference and, when there was something before, the whole percent. */
+export interface Change {
+  amount: number;
+  percent: number | null;
+}
+
+export function changeOf(previous: number, current: number): Change {
+  return { amount: current - previous, percent: changePercent(previous, current) };
+}
+
+/** Each summary figure's change from `previous` to `current` (DSH-10). */
+export interface SummaryChange {
+  income: Change;
+  expense: Change;
+  net: Change;
+  /** In percentage points; null when either period has no income (BR-04). */
+  savingsRate: number | null;
+}
+
+export function summaryChange(
+  previous: Pick<PeriodSummary, 'income' | 'expense' | 'net' | 'savingsRate'>,
+  current: Pick<PeriodSummary, 'income' | 'expense' | 'net' | 'savingsRate'>,
+): SummaryChange {
+  return {
+    income: changeOf(previous.income, current.income),
+    expense: changeOf(previous.expense, current.expense),
+    net: changeOf(previous.net, current.net),
+    savingsRate:
+      previous.savingsRate === null || current.savingsRate === null
+        ? null
+        : current.savingsRate - previous.savingsRate,
+  };
+}
+
 /** One top-level category's part of a period's income or expense (RPT-01). */
 export interface CategoryTotal {
   /** The top-level category, with its subcategories rolled in (CAT-07). */

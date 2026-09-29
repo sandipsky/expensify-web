@@ -1,0 +1,56 @@
+<l-card title="Budgets" [flush]="true">
+  @if (store.moreBudgets()) {
+    <a card-extra class="dash-link" routerLink="/budgets">See all</a>
+  }
+
+  @if (!store.budgetRows().length) {
+    <app-empty-state
+      icon="donut_large"
+      [title]="budgets.all().length ? 'All your budgets are paused' : 'No budgets yet'"
+      message="Set a limit for all your spending, or for categories such as Food or Transport, and see what's safe to spend each day."
+    >
+      <l-button size="lg" (click)="add()">Set a budget</l-button>
+    </app-empty-state>
+  } @else {
+    <ul class="budgets__list" aria-label="Budgets">
+      @for (row of store.budgetRows(); track row.budget.id) {
+        <li>
+          <a class="budgets__row" [routerLink]="['/budgets', row.budget.id]">
+            <div class="budgets__head">
+              <app-symbol-icon
+                [icon]="budgets.iconOf(row.budget).icon"
+                [color]="budgets.iconOf(row.budget).color"
+                [size]="36"
+              />
+              <span class="budgets__name text-ellipsis">{{ row.budget.name }}</span>
+              @if (row.progress; as p) {
+                <span class="budgets__figures">
+                  {{ store.money(p.spent) }}
+                  <span class="budgets__of">of {{ store.money(p.limit) }}</span>
+                </span>
+              }
+            </div>
+            @if (row.progress; as p) {
+              @let s = state(p);
+              <l-progress
+                [value]="p.percent ?? 100"
+                [variant]="s.progress"
+                [label]="row.budget.name + ' budget used'"
+              />
+              <div class="budgets__status">
+                <l-chip size="sm" [variant]="s.chip">
+                  <l-icon [name]="s.icon" [size]="14" color="inherit" />
+                  {{ s.label }}
+                </l-chip>
+                <span class="budgets__percent">{{ percentLabel(p.percent) }}</span>
+                <span class="budgets__per-day">{{ perDay(p) }}</span>
+              </div>
+            } @else {
+              <l-skeleton height="44px" />
+            }
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</l-card>

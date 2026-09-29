@@ -1,9 +1,14 @@
 import { Routes } from '@angular/router';
 
-// authGuard, onboardingGuard and adminGuard (§10) arrive with sign-in, and the
-// dashboard becomes the default route once it exists.
+// authGuard, onboardingGuard and adminGuard (§10) arrive with sign-in.
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'accounts' },
+  { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+  {
+    path: 'dashboard',
+    title: 'Dashboard',
+    loadComponent: () =>
+      import('./features/dashboard/dashboard-page/dashboard-page').then((m) => m.DashboardPage),
+  },
   {
     path: 'transactions',
     loadChildren: () =>
@@ -46,5 +51,5 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
   },
-  { path: '**', redirectTo: 'accounts' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

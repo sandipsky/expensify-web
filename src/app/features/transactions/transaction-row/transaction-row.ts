@@ -26,6 +26,8 @@ export class TransactionRow {
   /** Show a checkbox; a tap then selects instead of opening. */
   readonly selecting = input(false);
   readonly selected = input(false);
+  /** Privacy mode (DSH-09): show dots instead of the amount. */
+  readonly masked = input(false);
 
   readonly open = output<void>();
   readonly toggle = output<void>();

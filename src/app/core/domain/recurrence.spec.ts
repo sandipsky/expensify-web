@@ -13,6 +13,7 @@ import {
   resumedDueDate,
   scheduleAfter,
   templateOf,
+  upcomingDates,
   weekdaysOf,
 } from './recurrence';
 
@@ -174,6 +175,35 @@ describe('dueDates (REC-06)', () => {
 
   it('has nothing due while paused', () => {
     expect(dueDates(rule({ active: false }), '2026-09-27')).toEqual([]);
+  });
+});
+
+describe('upcomingDates (DSH-08)', () => {
+  it('lists what is due and what comes in the next days, oldest first', () => {
+    const daily = rule({ frequency: 'daily', nextDueDate: '2026-09-26' });
+    expect(upcomingDates(daily, '2026-09-27', 2)).toEqual([
+      '2026-09-26',
+      '2026-09-27',
+      '2026-09-28',
+      '2026-09-29',
+    ]);
+  });
+
+  it('has nothing beyond the window, while paused, or once ended', () => {
+    expect(upcomingDates(rule({ nextDueDate: '2026-10-05' }), '2026-09-27', 7)).toEqual([]);
+    expect(upcomingDates(rule({ nextDueDate: '2026-10-04' }), '2026-09-27', 7)).toEqual([
+      '2026-10-04',
+    ]);
+    expect(
+      upcomingDates(rule({ nextDueDate: '2026-10-01', active: false }), '2026-09-27', 7),
+    ).toEqual([]);
+    expect(
+      upcomingDates(
+        rule({ nextDueDate: '2026-10-01', endType: 'until', endDate: '2026-09-30' }),
+        '2026-09-27',
+        7,
+      ),
+    ).toEqual([]);
   });
 });
 

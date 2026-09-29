@@ -1,0 +1,46 @@
+@use '../dash';
+
+:host {
+  display: block;
+  height: 100%;
+
+  l-card {
+    height: 100%;
+  }
+}
+
+.spending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.spending__donut {
+  align-self: center;
+}
+
+.spending__total {
+  display: block;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.spending__caption {
+  display: block;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+// Rows run edge to edge, past the card's padding.
+.spending__list {
+  margin: 0 -12px -12px;
+  list-style: none;
+
+  li + li {
+    border-top: 1px solid var(--separator-light);
+  }
+}

@@ -1,0 +1,50 @@
+<div class="sheet-form">
+  <h2 class="sheet-form__title">Customize the dashboard</h2>
+  <p class="sheet-form__intro">
+    Choose which cards to show and in what order. This is remembered on this device.
+  </p>
+
+  <ul class="customize" aria-label="Cards">
+    @for (card of layout.order(); track card; let first = $first; let last = $last) {
+      <li class="customize__row">
+        <l-checkbox
+          class="customize__check"
+          [label]="label(card)"
+          [useValidation]="false"
+          [ngModel]="layout.isShown(card)"
+          (ngModelChange)="layout.setShown(card, $event)"
+        />
+        <span class="customize__move">
+          <l-button
+            variant="ghost"
+            size="lg"
+            [rounded]="true"
+            [disabled]="first"
+            (click)="layout.move(card, -1)"
+          >
+            <l-icon name="arrow_upward" color="inherit" />
+            <span class="visually-hidden">Move {{ label(card) }} up</span>
+          </l-button>
+          <l-button
+            variant="ghost"
+            size="lg"
+            [rounded]="true"
+            [disabled]="last"
+            (click)="layout.move(card, 1)"
+          >
+            <l-icon name="arrow_downward" color="inherit" />
+            <span class="visually-hidden">Move {{ label(card) }} down</span>
+          </l-button>
+        </span>
+      </li>
+    }
+  </ul>
+
+  <div class="sheet-form__actions">
+    <l-button variant="ghost" size="lg" [disabled]="!layout.customized()" (click)="layout.reset()">
+      <l-icon name="undo" color="inherit" />
+      Reset
+    </l-button>
+    <l-button size="lg" (click)="sheet.close()">Done</l-button>
+  </div>
+</div>

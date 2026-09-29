@@ -1,0 +1,20 @@
+@for (tile of tiles(); track tile.key) {
+  <button type="button" class="tile" (click)="open(tile.type)">
+    <span class="tile__label">
+      @if (tile.icon) {
+        <l-icon [name]="tile.icon" [size]="16" [color]="tile.iconColor" />
+      }
+      {{ tile.label }}
+    </span>
+    <span class="tile__value">{{ tile.value }}</span>
+    @if (tile.change; as change) {
+      <span class="tile__change">
+        @if (change.icon) {
+          <l-icon [name]="change.icon" [size]="14" color="inherit" />
+        }
+        {{ change.text }}
+        <span class="visually-hidden">from the previous period</span>
+      </span>
+    }
+  </button>
+}

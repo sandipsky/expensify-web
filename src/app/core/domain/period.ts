@@ -132,6 +132,19 @@ export function spanOf(ranges: readonly DateRange[]): DateRange | null {
   return { start, end };
 }
 
+/**
+ * The `count` ranges of the same length that come right before `range`,
+ * oldest first: what "the previous period" means for a custom range (DSH-10).
+ */
+export function previousRanges(range: DateRange, count: number): DateRange[] {
+  const days = daysIn(range);
+  const start = parseISO(range.start);
+  return Array.from({ length: count }, (_, i) => {
+    const back = (count - i) * days;
+    return { start: ymd(addDays(start, -back)), end: ymd(addDays(start, -back + days - 1)) };
+  });
+}
+
 /** How many days the range covers, both ends included. */
 export function daysIn(range: DateRange): number {
   return differenceInCalendarDays(parseISO(range.end), parseISO(range.start)) + 1;

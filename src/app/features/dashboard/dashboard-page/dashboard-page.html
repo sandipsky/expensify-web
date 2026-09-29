@@ -1,0 +1,106 @@
+<div class="dash">
+  <div class="dash__header">
+    <l-breadcrumb title="Dashboard" />
+    <div class="dash__actions">
+      <button
+        type="button"
+        class="dash__privacy"
+        [attr.aria-pressed]="layout.privacy()"
+        (click)="layout.togglePrivacy()"
+      >
+        <l-icon [name]="layout.privacy() ? 'visibility_off' : 'visibility'" color="inherit" />
+        <span class="visually-hidden">Hide amounts</span>
+      </button>
+      <l-button variant="outlined" size="lg" (click)="customize()">
+        <l-icon name="tune" color="inherit" />
+        Customize
+      </l-button>
+    </div>
+  </div>
+
+  <section class="dash__period" aria-label="Period">
+    <l-segmented-control
+      aria-label="Period"
+      size="lg"
+      [fullWidth]="breakpoints.phone()"
+      [options]="presetOptions"
+      [ngModel]="store.preset()"
+      (ngModelChange)="setPreset($event)"
+    />
+    <p class="dash__period-label" aria-live="polite">{{ store.periodLabel() }}</p>
+    @if (store.preset() === 'custom') {
+      <div class="dash__custom">
+        <l-date-input
+          label="From"
+          calendar="ad"
+          [clearable]="false"
+          [useValidation]="false"
+          [ngModel]="customStart()"
+          (ngModelChange)="setCustomDate('start', $event)"
+        />
+        <l-date-input
+          label="To"
+          calendar="ad"
+          [clearable]="false"
+          [useValidation]="false"
+          [ngModel]="customEnd()"
+          (ngModelChange)="setCustomDate('end', $event)"
+        />
+      </div>
+    }
+  </section>
+
+  @if (store.loading()) {
+    <div class="dash__grid" aria-busy="true">
+      <l-skeleton class="dash__card dash__card--summary" height="88px" />
+      <l-skeleton class="dash__card dash__card--balances" height="240px" />
+      <l-skeleton class="dash__card dash__card--spending" height="240px" />
+      <l-skeleton class="dash__card dash__card--budgets" height="240px" />
+    </div>
+  } @else {
+    <div class="dash__grid">
+      @if (store.empty()) {
+        <l-card class="dash__card dash__card--empty">
+          <app-empty-state
+            icon="receipt_long"
+            [title]="'Nothing logged in ' + store.periodLabel()"
+            message="Add an entry to see where your money goes, or pick another period above."
+          >
+            <l-button size="lg" (click)="add()">Add transaction</l-button>
+          </app-empty-state>
+        </l-card>
+      }
+
+      @for (card of store.cards(); track card) {
+        @switch (card) {
+          @case ('summary') {
+            <app-summary-cards class="dash__card dash__card--summary" />
+          }
+          @case ('balances') {
+            <app-balances-card class="dash__card dash__card--balances" />
+          }
+          @case ('spending') {
+            <app-spending-card class="dash__card dash__card--spending" />
+          }
+          @case ('budgets') {
+            <app-budgets-card class="dash__card dash__card--budgets" />
+          }
+          @case ('trend') {
+            <app-trend-card class="dash__card dash__card--trend" />
+          }
+          @case ('recent') {
+            <app-recent-card class="dash__card dash__card--recent" />
+          }
+          @case ('upcoming') {
+            @if (store.upcoming().length) {
+              <app-upcoming-card class="dash__card dash__card--upcoming" />
+            }
+          }
+          @case ('largest') {
+            <app-largest-card class="dash__card dash__card--largest" />
+          }
+        }
+      }
+    </div>
+  }
+</div>

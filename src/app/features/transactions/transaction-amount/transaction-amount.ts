@@ -5,6 +5,9 @@ import { MoneyPipe } from '../../../shared/pipes/money.pipe';
 import { TX_TYPE_LABELS } from '../transaction-labels';
 import { TxRow } from '../transaction-rows';
 
+/** What every amount reads as in privacy mode (DSH-09). */
+export const MASKED_AMOUNT = '••••';
+
 /**
  * A transaction's amount as lists show it: signed, in the income or expense
  * color, and with a direction icon and a spoken type, so it never relies on
@@ -17,7 +20,11 @@ import { TxRow } from '../transaction-rows';
   template: `
     <l-icon [name]="_icon()" [size]="14" color="inherit" />
     <span class="visually-hidden">{{ _label() }}</span>
-    {{ _amount() | money: _currency() : (_kind() === 'transfer' ? 'auto' : 'exceptZero') }}
+    @if (masked()) {
+      <span aria-label="Amount hidden">{{ MASK }}</span>
+    } @else {
+      {{ _amount() | money: _currency() : (_kind() === 'transfer' ? 'auto' : 'exceptZero') }}
+    }
   `,
   styles: `
     :host {
@@ -51,7 +58,10 @@ export class TransactionAmount {
   /** Signed as `TxRow.amount` is: − for an expense, in minor units. */
   readonly amount = input(0);
   readonly currency = input('');
+  /** Privacy mode (DSH-09): show dots instead of the amount. */
+  readonly masked = input(false);
 
+  protected readonly MASK = MASKED_AMOUNT;
   protected readonly _kind = computed(() => this.row()?.kind ?? this.kind());
   protected readonly _amount = computed(() => this.row()?.amount ?? this.amount());
   protected readonly _currency = computed(() => this.row()?.tx.currency ?? this.currency());

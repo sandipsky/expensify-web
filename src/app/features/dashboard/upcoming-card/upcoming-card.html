@@ -1,0 +1,41 @@
+<l-card title="Upcoming" [flush]="true">
+  <a card-extra class="dash-link" routerLink="/recurring">See all</a>
+
+  <ul class="upcoming" aria-label="Upcoming recurring entries">
+    @for (row of store.upcoming(); track row.key) {
+      <li class="upcoming__item">
+        <a class="upcoming__row" [routerLink]="['/recurring', row.view.id]">
+          <app-symbol-icon
+            [icon]="row.view.icon"
+            [color]="row.view.color ?? 'var(--text-tertiary)'"
+            [size]="36"
+          />
+          <span class="upcoming__text">
+            <span class="upcoming__name text-ellipsis">{{ row.view.name }}</span>
+            <span class="upcoming__caption text-ellipsis">
+              {{ store.dueLabel(row.date) }} · {{ row.view.accountLabel }}
+            </span>
+          </span>
+          <app-tx-amount
+            [kind]="row.view.kind"
+            [amount]="row.view.amount"
+            [currency]="store.currency()"
+            [masked]="store.masked()"
+          />
+        </a>
+        @if (row.due && row.view.rule.mode === 'confirm') {
+          <div class="upcoming__actions">
+            <l-button size="lg" (click)="actions.confirm(row.view, row.date)">
+              <l-icon name="check" color="inherit" />
+              Confirm
+            </l-button>
+            <l-button variant="outlined" size="lg" (click)="actions.skip(row.view, row.date)">
+              <l-icon name="skip_next" color="inherit" />
+              Skip
+            </l-button>
+          </div>
+        }
+      </li>
+    }
+  </ul>
+</l-card>

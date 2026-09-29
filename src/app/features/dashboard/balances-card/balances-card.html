@@ -1,0 +1,40 @@
+<l-card title="Balances" [flush]="true">
+  @if (rows().length) {
+    <a card-extra class="dash-link" routerLink="/accounts">See all</a>
+  }
+
+  @if (!rows().length) {
+    <app-empty-state
+      icon="account_balance_wallet"
+      [title]="accounts.all().length ? 'All your accounts are archived' : 'No accounts yet'"
+      message="Add the places your money sits: cash, a bank account, a card or a mobile wallet."
+    >
+      <l-button size="lg" (click)="add()">Add an account</l-button>
+    </app-empty-state>
+  } @else {
+    <a class="balances__total" routerLink="/accounts">
+      <span class="balances__label">Total balance</span>
+      <span class="balances__amount" [class.is-negative]="accounts.total() < 0">
+        {{ store.money(accounts.total()) }}
+      </span>
+      <span class="balances__note">{{ note() }}</span>
+    </a>
+
+    <ul class="balances__list" aria-label="Accounts">
+      @for (row of rows(); track row.account.id) {
+        <li>
+          <a class="balances__row" [routerLink]="['/accounts', row.account.id]">
+            <app-symbol-icon [icon]="row.account.icon" [color]="row.account.color" [size]="36" />
+            <span class="balances__text">
+              <span class="balances__name text-ellipsis">{{ row.account.name }}</span>
+              <span class="balances__caption text-ellipsis">{{ row.caption }}</span>
+            </span>
+            <span class="balances__value" [class.is-negative]="row.negative">
+              {{ store.money(row.amount) }}
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+</l-card>

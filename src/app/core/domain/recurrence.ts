@@ -185,6 +185,22 @@ export function dueDates(
   return rule.active ? pendingDates(rule, limit, today) : [];
 }
 
+/**
+ * The occurrences from the rule's next date through `days` days after `today`,
+ * oldest first (DSH-08): what's due now, and what's coming up. None while the
+ * rule is paused.
+ */
+export function upcomingDates(
+  rule: RuleState & Pick<RecurringRule, 'active'>,
+  today: string,
+  days: number,
+  limit = CATCH_UP_LIMIT,
+): string[] {
+  if (!rule.active) return [];
+  const through = format(addDays(parseISO(today), days), 'yyyy-MM-dd');
+  return pendingDates(rule, limit, through);
+}
+
 /** The transaction a rule's occurrence on `date` is written as. */
 export function occurrenceOf(
   ruleId: string,

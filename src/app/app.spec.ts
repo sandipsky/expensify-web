@@ -54,6 +54,7 @@ describe('App', () => {
     await fixture.whenStable();
     const links = [...(fixture.nativeElement as HTMLElement).querySelectorAll('l-sidebar nav a')];
     expect(links.map((a) => [a.getAttribute('href'), a.textContent?.trim()])).toEqual([
+      ['/dashboard', 'Dashboard'],
       ['/transactions', 'Transactions'],
       ['/accounts', 'Accounts'],
       ['/budgets', 'Budgets'],

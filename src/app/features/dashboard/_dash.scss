@@ -1,0 +1,25 @@
+// Shared by the dashboard's cards: each card component `@use`s it.
+
+// "See all" in a card's header: a link or a button that reads as one.
+.dash-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    border-radius: 4px;
+    outline: 2px solid var(--accent);
+  }
+}

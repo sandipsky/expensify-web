@@ -1,0 +1,47 @@
+<l-card title="Spending by category" [flush]="!store.spending().length">
+  @if (!store.spending().length) {
+    <app-empty-state
+      icon="pie_chart"
+      title="No expenses this period"
+      message="Add an expense to see where the money goes."
+    >
+      <l-button size="lg" (click)="add()">Add expense</l-button>
+    </app-empty-state>
+  } @else {
+    <div class="spending">
+      <l-donut-chart
+        class="spending__donut"
+        [label]="'Spending by category, ' + store.periodLabel()"
+        [segments]="store.segments()"
+        [format]="store.money"
+        [clickable]="true"
+        [legend]="false"
+        [size]="180"
+        [(showTable)]="showTable"
+        (segmentClick)="openSegment($event)"
+      >
+        <span class="spending__total">{{ store.money(store.spent()) }}</span>
+        <span class="spending__caption">{{ entries(store.spentCount()) }}</span>
+      </l-donut-chart>
+
+      @if (!showTable()) {
+        <ul class="spending__list" aria-label="Spending by category">
+          @for (row of store.spending(); track row.key) {
+            <li>
+              <app-report-row
+                [icon]="row.icon"
+                [color]="row.color"
+                [name]="row.name"
+                [caption]="caption(row)"
+                [value]="store.money(row.amount)"
+                [detail]="percent(row.share)"
+                [clickable]="!!row.categoryIds.length"
+                (open)="open(row)"
+              />
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</l-card>
