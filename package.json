@@ -9,8 +9,9 @@
     "test": "ng test",
     "test:rules": "firebase emulators:exec --only firestore --project demo-expensify \"npx vitest run --config vitest.rules.config.ts\"",
     "emulators": "firebase emulators:start --project demo-expensify",
-    "deploy:rules": "firebase deploy --only firestore,storage",
-    "deploy": "ng build && firebase deploy"
+    "deploy:rules": "firebase deploy --only firestore",
+    "deploy:storage": "firebase deploy --only storage",
+    "deploy": "ng build && firebase deploy --only hosting,firestore"
   },
   "private": true,
   "packageManager": "npm@11.12.1",

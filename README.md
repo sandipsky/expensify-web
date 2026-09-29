@@ -17,7 +17,8 @@ A personal income, expense and transfer tracker: an Angular 22 progressive web a
 | `npm test`               | Unit tests (Vitest); `npx ng test --watch=false` for a single run      |
 | `npm run test:rules`     | Security Rules tests on the Firestore emulator (needs Java 11+)        |
 | `npm run emulators`      | Start the Firebase Emulator Suite                                      |
-| `npm run deploy:rules`   | Deploy `firestore.rules`, `firestore.indexes.json` and `storage.rules` |
+| `npm run deploy:rules`   | Deploy `firestore.rules` and `firestore.indexes.json`                  |
+| `npm run deploy:storage` | Deploy `storage.rules`, once Cloud Storage is set up (Blaze plan)      |
 | `npm run deploy`         | Build and deploy hosting, rules and indexes to the selected project    |
 | `npx prettier --check .` | Formatting                                                             |
 

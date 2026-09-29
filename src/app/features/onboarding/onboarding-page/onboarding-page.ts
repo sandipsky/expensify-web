@@ -72,6 +72,9 @@ export class OnboardingPage {
   private readonly router = inject(Router);
   private readonly notify = inject(NotificationService);
 
+  /** Made here, in the injection context `toObservable` needs; `complete()` runs outside it. */
+  private readonly profile$ = toObservable(this.auth.profile);
+
   protected readonly steps = STEPS;
   protected readonly active = signal(0);
   protected readonly finishing = signal(false);
@@ -143,6 +146,8 @@ export class OnboardingPage {
     if (this.finishing()) return;
     this.finishing.set(true);
     try {
+      // The one step that can fail goes first, so trying again never writes the account twice.
+      await this.categories.seedMissing();
       const value = this.form.getRawValue();
       const currency = withChoices ? value.currency : this.prefs.baseCurrency();
       if (withChoices && currency !== this.prefs.baseCurrency()) {
@@ -164,7 +169,6 @@ export class OnboardingPage {
           currency,
         );
       }
-      await this.categories.seedMissing();
       this.users.completeOnboarding();
       await this.confirmed();
       await this.router.navigateByUrl('/dashboard');
@@ -183,7 +187,7 @@ export class OnboardingPage {
   /** Waits for the profile to show onboarding done, so the guards let the dashboard open. */
   private confirmed(): Promise<unknown> {
     return firstValueFrom(
-      toObservable(this.auth.profile).pipe(
+      this.profile$.pipe(
         filter((profile) => !!profile?.onboardingCompleted),
         take(1),
         timeout({ first: CONFIRM_TIMEOUT_MS }),

@@ -142,7 +142,7 @@ The rules in `firestore.rules` are what stop one user from reading another user'
    npm run deploy:rules
    ```
 
-   This runs `firebase deploy --only firestore,storage`. The storage rules deploy only if Cloud Storage exists on the project; if it complains about Storage, run `firebase deploy --only firestore` instead. Receipts stay on the device until Storage is set up, which needs the paid Blaze plan and is a v1.1 job.
+   This runs `firebase deploy --only firestore`. The storage rules have their own command, `npm run deploy:storage`, because it fails until Cloud Storage is set up on the project, and that needs the paid Blaze plan. Until then receipts stay on the device.
 
    Indexes take a minute or two to build. You can watch them under **Firestore Database → Indexes**.
 

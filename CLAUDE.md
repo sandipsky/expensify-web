@@ -20,7 +20,8 @@ npx ng test --watch=false                   # single run (CI)
 npx ng test --include=src/app/core/domain/money.spec.ts   # one file
 npm run test:rules                          # Security Rules tests on the Firestore emulator (Java 11+)
 npm run emulators                           # Firebase Emulator Suite (set useEmulators in environment.development.ts)
-npm run deploy:rules                        # deploy firestore.rules, indexes and storage.rules
+npm run deploy:rules                        # deploy firestore.rules and indexes
+npm run deploy:storage                      # deploy storage.rules (needs Cloud Storage, Blaze plan)
 npx prettier --check .                      # format check (printWidth 100, single quotes)
 ```
 
