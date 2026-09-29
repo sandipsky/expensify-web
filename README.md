@@ -1,59 +1,30 @@
-# ExpensifyWeb
+# Expensify web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+A personal income, expense and transfer tracker: an Angular 22 progressive web app on Firebase. The spec is [docs/requirements.md](docs/requirements.md); a native Android app will share the same Firestore data later.
 
-## Development server
+## Getting started
 
-To start a local development server, run:
+1. Install Node.js 24 and run `npm install`.
+2. Connect a Firebase project: follow [docs/firebase.md](docs/firebase.md). It walks through creating the project, turning on sign-in, filling in `src/environments/`, deploying the Security Rules and making yourself the first admin.
+3. `npm start` and open <http://localhost:4200>.
 
-```bash
-ng serve
-```
+## Commands
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+| Command                  | What it does                                                           |
+| ------------------------ | ---------------------------------------------------------------------- |
+| `npm start`              | Dev server with `environment.development.ts`                           |
+| `npm run build`          | Production build with `environment.ts` into `dist/`                    |
+| `npm test`               | Unit tests (Vitest); `npx ng test --watch=false` for a single run      |
+| `npm run test:rules`     | Security Rules tests on the Firestore emulator (needs Java 11+)        |
+| `npm run emulators`      | Start the Firebase Emulator Suite                                      |
+| `npm run deploy:rules`   | Deploy `firestore.rules`, `firestore.indexes.json` and `storage.rules` |
+| `npm run deploy`         | Build and deploy hosting, rules and indexes to the selected project    |
+| `npx prettier --check .` | Formatting                                                             |
 
-## Code scaffolding
+## Layout
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- `src/app/core/` — Firebase setup, auth and guards, repositories, pure domain logic, models
+- `src/app/features/` — one folder per screen group (auth, onboarding, dashboard, transactions, …, admin)
+- `src/app/layout/` — the shell, breakpoints, theme
+- `src/app/shared/` — Lumen UI, the in-house component library, plus app composites, pipes and styles
+- `firestore.rules`, `firestore.indexes.json`, `storage.rules`, `firebase.json` — the Firebase project files, tested in `firebase/`

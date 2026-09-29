@@ -1,0 +1,73 @@
+// Layout shared by the sign-in pages: each page component `@use`s it.
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+// "or" between the password form and Google.
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-quaternary);
+  font-size: 12px;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--separator-light);
+  }
+}
+
+.auth-google {
+  flex-shrink: 0;
+}
+
+.auth-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  color: var(--text-secondary);
+  line-height: 20px;
+}
+
+.auth-link {
+  color: var(--accent-text);
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.auth-note {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+// Page-level notices (a failed sign-in, a sent reset link): a little larger than a field's inline error.
+.auth-alert {
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 18px;
+}

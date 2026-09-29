@@ -1,0 +1,214 @@
+.app-brand {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 8px;
+}
+
+.app-nav__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  &.is-active {
+    background: var(--accent-bg);
+    color: var(--accent-dark);
+  }
+}
+
+// How many items wait, such as recurring entries to confirm or users to approve.
+.app-nav__count {
+  min-width: 20px;
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--text-white);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}
+
+// The collapsed desktop rail is 70px wide: icons only.
+.app-nav.is-collapsed {
+  .app-nav__count {
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    min-width: 16px;
+    padding: 0 4px;
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  .app-nav__link {
+    position: relative;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-nav__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.app-header {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// The alerts bell (NTF-05) and the account button: 44px, the header's own tap targets.
+.app-header__bell,
+.app-header__account {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--bg-light);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+.app-header__key {
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+}
+
+// The account menu: who is signed in, then the two ways out.
+.app-account {
+  min-width: 220px;
+}
+
+.app-account__name {
+  padding: 4px 8px 0;
+  color: var(--text-primary);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-account__email {
+  padding: 0 8px 8px;
+  border-bottom: 1px solid var(--separator-light);
+  margin-bottom: 4px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-account__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--separator);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+}
+
+// Phones: the + button of TXN-05, above the content and below sheets and the nav drawer.
+.app-fab {
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--text-white);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--accent-hover) 35%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent-hover);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--accent-bg);
+    outline-offset: 2px;
+  }
+}
+
+.app-fab-space {
+  height: 72px;
+}

@@ -6,7 +6,7 @@ import { Budget } from '../models/budget';
 import { Category } from '../models/category';
 import { RecurringRule } from '../models/recurring';
 import { Transaction } from '../models/transaction';
-import { LocalBatch, LocalDb, LocalDoc, serverTimestamp } from './local-db';
+import { Batch, Db, Doc, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
 
 /** What a new category is written with; the repo adds the audit fields. */
@@ -30,15 +30,22 @@ export interface Reassignment {
  */
 @Injectable({ providedIn: 'root' })
 export class CategoriesRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
-  private readonly path = `${this.db.userPath}/categories`;
+  private get path(): string {
+    return `${this.db.userPath}/categories`;
+  }
 
   /** Every category, archived ones too, by `sortOrder`. A few dozen at most, so one listener serves the app. */
   watchAll(): Observable<Category[]> {
     return this.db
       .watch(this.path, { orderBy: [['sortOrder', 'asc']] })
       .pipe(map((docs) => docs.map(toCategory)));
+  }
+
+  /** Every category once, read from the server when online, as seeding checks before it writes. */
+  async listAll(): Promise<Category[]> {
+    return (await this.db.get(this.path)).map(toCategory);
   }
 
   /** Writes a new category and returns its ID. */
@@ -148,13 +155,13 @@ export class CategoriesRepo {
   }
 
   // Not awaited: offline, a commit resolves only once the server confirms (§10).
-  private commit(batch: LocalBatch): void {
+  private commit(batch: Batch): void {
     batch.commit().catch((error) => this.errors.report(error));
   }
 }
 
 /** Fills the fields an older or Android-written document may lack. */
-function toCategory(doc: LocalDoc): Category {
+function toCategory(doc: Doc): Category {
   const data = doc.data as Partial<Category>;
   return {
     ...data,
@@ -167,6 +174,6 @@ function toCategory(doc: LocalDoc): Category {
     sortOrder: data.sortOrder ?? 0,
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
-    pending: false,
+    pending: doc.pending,
   } as Category;
 }

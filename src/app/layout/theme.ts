@@ -13,13 +13,17 @@ export const THEME_KEY = 'expensify.theme';
  * Applies the theme preference (SET-06) as `data-theme` on `<html>`: `light`
  * or `dark` pin it, and no attribute follows the system through
  * `prefers-color-scheme`. The colors themselves are the tokens in
- * `_colors.scss`. Started from the app config.
+ * `_colors.scss`. Started from the app config. Until the profile is read
+ * (or while signed out) the theme `index.html` applied stays, so the sign-in
+ * pages keep the user's last choice.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   constructor() {
-    const theme = inject(Preferences).theme;
-    effect(() => applyTheme(theme()));
+    const prefs = inject(Preferences);
+    effect(() => {
+      if (prefs.loaded()) applyTheme(prefs.theme());
+    });
   }
 }
 

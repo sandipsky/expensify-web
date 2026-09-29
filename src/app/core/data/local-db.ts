@@ -1,68 +1,21 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, distinctUntilChanged, map } from 'rxjs';
-import { TimestampLike } from '../models/timestamp';
+import { BehaviorSubject, Observable, distinctUntilChanged, map, of } from 'rxjs';
+import type { Batch, Db, Doc, DocData, DocSnapshot, Query, SetOptions, Tx, WhereOp } from './db';
+import { Increment, MillisTimestamp, SERVER_TIMESTAMP, randomId } from './fields';
+
+// The names the specs know these by.
+export { increment, serverTimestamp, timestampFromMillis } from './fields';
+export { MillisTimestamp as LocalTimestamp };
+export type { Doc as LocalDoc, DocData, Query as LocalQuery, WhereOp };
 
 /*
- * Stand-in for Cloud Firestore until the Firebase SDK and sign-in land (M0). It keeps
- * Firestore's document paths and write semantics (atomic batches, transactions, increment(),
- * serverTimestamp(), auto IDs, undefined fields ignored) and persists to
- * localStorage, so the repos built on it can switch to the modular SDK without
- * their callers changing. Nothing syncs: the data stays in this browser.
+ * Stand-in for Cloud Firestore that keeps its document paths and write
+ * semantics (atomic batches, transactions, increment(), serverTimestamp(),
+ * auto IDs, undefined fields ignored) in localStorage. The unit tests run the
+ * repos on it, since they were written against `Db` and can't tell the
+ * difference; the running app uses `FirestoreDb`. Nothing syncs: the data
+ * stays in this browser, under the one fixed user `users/local`.
  */
-
-export type DocData = Record<string, unknown>;
-
-/** A stored document. Documents a write didn't touch keep their identity. */
-export interface LocalDoc {
-  readonly id: string;
-  readonly data: Readonly<DocData>;
-}
-
-export type WhereOp = '==' | '<=' | '>=' | 'array-contains';
-
-export interface LocalQuery {
-  where?: readonly (readonly [field: string, op: WhereOp, value: unknown])[];
-  orderBy?: readonly (readonly [field: string, direction: 'asc' | 'desc'])[];
-  limit?: number;
-}
-
-export class LocalTimestamp implements TimestampLike {
-  constructor(private readonly ms: number) {}
-
-  toMillis(): number {
-    return this.ms;
-  }
-
-  toJSON(): { __ts: number } {
-    return { __ts: this.ms };
-  }
-}
-
-class Increment {
-  constructor(readonly by: number) {}
-}
-
-const SERVER_TIMESTAMP = Symbol('serverTimestamp');
-
-/** Like Firestore's `increment()`: adds to the stored number (or to 0) when the batch applies. */
-export function increment(by: number): unknown {
-  return new Increment(by);
-}
-
-/** Like Firestore's `Timestamp.fromMillis()`: a fixed time, as a restore writes back. */
-export function timestampFromMillis(ms: number): TimestampLike {
-  return new LocalTimestamp(ms);
-}
-
-/** Like Firestore's `serverTimestamp()`: becomes the commit time. */
-export function serverTimestamp(): unknown {
-  return SERVER_TIMESTAMP;
-}
-
-/** Like Firestore's `SetOptions`: `merge` keeps the fields the write doesn't name. */
-export interface SetOptions {
-  merge?: boolean;
-}
 
 type Write =
   | { kind: 'set'; path: string; data: DocData; merge?: boolean }
@@ -70,7 +23,7 @@ type Write =
   | { kind: 'delete'; path: string };
 
 /** Like Firestore's `WriteBatch`: every write applies, or none does. */
-export class LocalBatch {
+export class LocalBatch implements Batch {
   private readonly writes: Write[] = [];
   private committed = false;
 
@@ -110,14 +63,14 @@ export class LocalBatch {
  * `runTransaction` runs the function again. Unlike Firestore's, it also works
  * offline, since everything here is local.
  */
-export class LocalTransaction {
+export class LocalTransaction implements Tx {
   /** What each read saw, to detect a concurrent change before committing. */
-  readonly reads = new Map<string, LocalDoc | null>();
+  readonly reads = new Map<string, Doc | null>();
   readonly writes: Write[] = [];
 
-  constructor(private readonly docs: () => ReadonlyMap<string, LocalDoc>) {}
+  constructor(private readonly docs: () => ReadonlyMap<string, Doc>) {}
 
-  get(path: string): Promise<LocalDoc | null> {
+  get(path: string): Promise<Doc | null> {
     const doc = this.docs().get(path) ?? null;
     if (!this.reads.has(path)) this.reads.set(path, doc);
     return Promise.resolve(doc);
@@ -143,14 +96,16 @@ export class LocalTransaction {
 const TRANSACTION_ATTEMPTS = 5;
 
 const STORAGE_KEY = 'expensify.local-db.v1';
-const ID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+/** The one user the local database holds. */
+export const LOCAL_UID = 'local';
 
 @Injectable({ providedIn: 'root' })
-export class LocalDb {
-  /** Root of the current user's data (`users/{uid}`). Fixed until there's sign-in. */
-  readonly userPath = 'users/local';
+export class LocalDb implements Db {
+  readonly uid$: Observable<string | null> = of(LOCAL_UID);
+  readonly userPath = `users/${LOCAL_UID}`;
 
-  private readonly docs$ = new BehaviorSubject<ReadonlyMap<string, LocalDoc>>(load());
+  private readonly docs$ = new BehaviorSubject<ReadonlyMap<string, Doc>>(load());
 
   constructor() {
     // Another tab wrote: take its changes, as Firestore's multi-tab cache would.
@@ -159,23 +114,15 @@ export class LocalDb {
     });
   }
 
-  /** A 20-character random ID, like Firestore's auto IDs; works offline. */
   newId(): string {
-    const bytes = crypto.getRandomValues(new Uint8Array(20));
-    return Array.from(bytes, (b) => ID_CHARS[b % ID_CHARS.length]).join('');
+    return randomId();
   }
 
   batch(): LocalBatch {
     return new LocalBatch((writes) => this.apply(writes));
   }
 
-  /**
-   * Like Firestore's `runTransaction`: runs `update`, then applies its writes
-   * at once, unless a document it read changed while it ran, in which case it
-   * runs again. Resolves to what `update` returned; rejects, applying nothing,
-   * if `update` throws or an update targets a missing document.
-   */
-  async runTransaction<T>(update: (tx: LocalTransaction) => Promise<T>): Promise<T> {
+  async runTransaction<T>(update: (tx: Tx) => Promise<T>): Promise<T> {
     for (let attempt = 1; ; attempt++) {
       const tx = new LocalTransaction(() => this.docs$.value);
       const result = await update(tx);
@@ -191,30 +138,34 @@ export class LocalDb {
     }
   }
 
-  /** Live query over one collection, like `onSnapshot`. Emits again only when the result changes. */
-  watch(collectionPath: string, query: LocalQuery = {}): Observable<LocalDoc[]> {
+  /** Emits again only when the result changes. */
+  watch(collectionPath: string, query: Query = {}): Observable<Doc[]> {
     return this.docs$.pipe(
       map((docs) => runQuery(docs, collectionPath, query)),
       distinctUntilChanged((a, b) => a.length === b.length && a.every((doc, i) => doc === b[i])),
     );
   }
 
-  /** Live view of one document, like `onSnapshot` on a doc; `null` while it doesn't exist. */
-  watchDoc(path: string): Observable<LocalDoc | null> {
+  /** Nothing here is ever only from a cache: a missing document is missing. */
+  watchDoc(path: string): Observable<DocSnapshot> {
     return this.docs$.pipe(
       map((docs) => docs.get(path) ?? null),
       distinctUntilChanged(),
+      map((doc) => ({ doc, fromCache: false })),
     );
   }
 
-  /** One-off query, like `getDocs`. */
-  get(collectionPath: string, query: LocalQuery = {}): Promise<LocalDoc[]> {
+  get(collectionPath: string, query: Query = {}): Promise<Doc[]> {
     return Promise.resolve(runQuery(this.docs$.value, collectionPath, query));
+  }
+
+  getDoc(path: string): Promise<Doc | null> {
+    return Promise.resolve(this.docs$.value.get(path) ?? null);
   }
 
   private apply(writes: readonly Write[]): void {
     const next = new Map(this.docs$.value);
-    const now = new LocalTimestamp(Date.now());
+    const now = new MillisTimestamp(Date.now());
     for (const write of writes) {
       if (write.kind === 'delete') {
         next.delete(write.path);
@@ -234,7 +185,7 @@ export class LocalDb {
           setAt(data, path, value === SERVER_TIMESTAMP ? now : value);
         }
       }
-      next.set(write.path, { id: idOf(write.path), data });
+      next.set(write.path, { id: idOf(write.path), data, pending: false });
     }
     save(next);
     this.docs$.next(next);
@@ -267,7 +218,7 @@ function isMap(value: unknown): value is DocData {
     typeof value === 'object' &&
     !Array.isArray(value) &&
     !(value instanceof Increment) &&
-    !(value instanceof LocalTimestamp)
+    !(value instanceof MillisTimestamp)
   );
 }
 
@@ -301,18 +252,14 @@ function setAt(data: DocData, path: readonly string[], value: unknown): void {
   data[key] = child;
 }
 
-function runQuery(
-  docs: ReadonlyMap<string, LocalDoc>,
-  collectionPath: string,
-  query: LocalQuery,
-): LocalDoc[] {
+function runQuery(docs: ReadonlyMap<string, Doc>, collectionPath: string, query: Query): Doc[] {
   const prefix = `${collectionPath}/`;
-  let rows: LocalDoc[] = [];
+  let rows: Doc[] = [];
   for (const [path, doc] of docs) {
     if (path.startsWith(prefix) && !path.includes('/', prefix.length)) rows.push(doc);
   }
   // Fields may be paths into maps, such as `template.categoryId`, as in Firestore.
-  const at = (doc: LocalDoc, field: string) => valueAt(doc.data, field.split('.'));
+  const at = (doc: Doc, field: string) => valueAt(doc.data, field.split('.'));
   for (const [field, op, value] of query.where ?? []) {
     rows = rows.filter((doc) => matches(at(doc, field), op, value));
   }
@@ -348,21 +295,24 @@ function matches(actual: unknown, op: WhereOp, expected: unknown): boolean {
 function compare(a: unknown, b: unknown): number {
   if (typeof a === 'number' && typeof b === 'number') return Math.sign(a - b);
   if (typeof a === 'string' && typeof b === 'string') return a < b ? -1 : a > b ? 1 : 0;
+  if (a instanceof MillisTimestamp && b instanceof MillisTimestamp) {
+    return Math.sign(a.toMillis() - b.toMillis());
+  }
   return 0;
 }
 
-function load(): Map<string, LocalDoc> {
+function load(): Map<string, Doc> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return new Map();
     const entries = JSON.parse(raw, revive) as [string, DocData][];
-    return new Map(entries.map(([path, data]) => [path, { id: idOf(path), data }]));
+    return new Map(entries.map(([path, data]) => [path, { id: idOf(path), data, pending: false }]));
   } catch {
     return new Map();
   }
 }
 
-function save(docs: ReadonlyMap<string, LocalDoc>): void {
+function save(docs: ReadonlyMap<string, Doc>): void {
   try {
     const entries = [...docs].map(([path, doc]) => [path, doc.data]);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
@@ -374,7 +324,7 @@ function save(docs: ReadonlyMap<string, LocalDoc>): void {
 function revive(_key: string, value: unknown): unknown {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     const ts = (value as { __ts?: unknown }).__ts;
-    if (Object.keys(value).length === 1 && typeof ts === 'number') return new LocalTimestamp(ts);
+    if (Object.keys(value).length === 1 && typeof ts === 'number') return new MillisTimestamp(ts);
   }
   return value;
 }

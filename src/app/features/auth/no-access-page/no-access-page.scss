@@ -1,0 +1,36 @@
+.no-access {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.no-access__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--warn-bg);
+  color: var(--warn);
+
+  &.is-disabled {
+    background: var(--error-bg);
+    color: var(--error);
+  }
+}
+
+.no-access__text {
+  color: var(--text-secondary);
+  line-height: 20px;
+}
+
+.no-access__email {
+  color: var(--text-secondary);
+  line-height: 20px;
+  overflow-wrap: anywhere;
+
+  strong {
+    color: var(--text-primary);
+  }
+}

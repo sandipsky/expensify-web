@@ -27,6 +27,7 @@ import { DataActions } from '../data-actions';
 import { ManageSettings } from '../manage-settings/manage-settings';
 import { NotificationSettings } from '../notification-settings/notification-settings';
 import { PreferenceSettings } from '../preference-settings/preference-settings';
+import { ProfileSettings } from '../profile-settings/profile-settings';
 
 /** What the export can cover (DAT-01): the list's periods, last year, or everything. */
 type ExportPeriod = 'this_month' | 'last_month' | 'this_year' | 'last_year' | 'all' | 'custom';
@@ -46,7 +47,8 @@ const FORMAT_OPTIONS: readonly { value: ExportFormat; label: string }[] = [
 ];
 
 /**
- * `/settings` (§3.14): preferences (SET-01, SET-02, SET-05, SET-06),
+ * `/settings` (§3.14): the profile and sign-in methods (§3.1), preferences
+ * (SET-01, SET-02, SET-05, SET-06),
  * notifications (SET-07), links to manage accounts, categories, budgets and
  * rules (SET-03), and Data and privacy (SET-04, §3.11): export transactions as
  * CSV or Excel for a chosen period (DAT-01, DAT-05), import a CSV (DAT-02), the
@@ -67,6 +69,7 @@ const FORMAT_OPTIONS: readonly { value: ExportFormat; label: string }[] = [
     ManageSettings,
     NotificationSettings,
     PreferenceSettings,
+    ProfileSettings,
     SegmentedControl,
     Select,
   ],

@@ -1,0 +1,135 @@
+.onboarding {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 16px;
+  background: var(--bg-light);
+}
+
+.onboarding__card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 640px;
+  margin: auto 0;
+  padding: 32px 24px;
+  border: 1px solid var(--separator-light);
+  border-radius: 12px;
+  background: var(--bg-lightest);
+}
+
+.onboarding__header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onboarding__brand {
+  color: var(--accent-text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.onboarding__title {
+  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.onboarding__subtitle,
+.onboarding__text {
+  color: var(--text-secondary);
+  line-height: 20px;
+}
+
+.onboarding__step {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 200px;
+}
+
+.onboarding__step-title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.onboarding__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboarding__hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.onboarding__categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 24px;
+}
+
+.onboarding__list-title {
+  margin-bottom: 8px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.onboarding__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+.onboarding__category {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.onboarding__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.onboarding__spacer {
+  flex: 1;
+}
+
+.onboarding__skip {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  text-align: center;
+}
+
+.onboarding__skip-link {
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}

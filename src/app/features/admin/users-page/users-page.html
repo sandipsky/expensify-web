@@ -1,0 +1,167 @@
+<div class="users-page">
+  <l-breadcrumb title="Users" />
+
+  <p class="users-page__intro">
+    Approve new sign-ups, switch access off and on, and choose who else is an admin. Admins manage
+    access only: nobody's accounts or transactions are visible here.
+  </p>
+
+  <l-segmented-control
+    aria-label="Filter by status"
+    size="lg"
+    [options]="filterOptions()"
+    [ngModel]="filter()"
+    (ngModelChange)="setFilter($event)"
+  />
+
+  @if (store.loading()) {
+    <l-card padding="none">
+      <ul class="user-list" aria-busy="true" aria-label="Loading users">
+        @for (i of [1, 2, 3]; track i) {
+          <li class="user-row">
+            <l-skeleton width="40px" height="40px" [circle]="true" />
+            <div class="user-row__who">
+              <l-skeleton width="140px" height="16px" />
+              <l-skeleton width="200px" height="12px" />
+            </div>
+          </li>
+        }
+      </ul>
+    </l-card>
+  } @else if (!filtered().length) {
+    <l-card>
+      <app-empty-state icon="group" [title]="empty().title" [message]="empty().message" />
+    </l-card>
+  } @else {
+    <l-card padding="none">
+      <ul class="user-list">
+        @for (user of filtered(); track user.uid) {
+          <li class="user-row" [class.is-self]="store.isSelf(user)">
+            <l-avatar [imageUrl]="user.photoURL ?? ''" [name]="userName(user)" size="40px" />
+
+            <div class="user-row__who">
+              <span class="user-row__name">
+                {{ userName(user) }}
+                @if (store.isSelf(user)) {
+                  <l-chip size="sm">You</l-chip>
+                }
+              </span>
+              @if (user.email) {
+                <span class="user-row__email">{{ user.email }}</span>
+              }
+              <span class="user-row__meta">
+                <l-chip size="sm" [variant]="statusVariants[user.status]" [dot]="true">
+                  {{ statusLabels[user.status] }}
+                </l-chip>
+                @if (user.role === 'admin') {
+                  <l-chip size="sm" variant="primary">
+                    <l-icon name="shield" color="inherit" [size]="12" />
+                    {{ roleLabels.admin }}
+                  </l-chip>
+                }
+                <span class="user-row__date">Signed up {{ signUp(user) }}</span>
+              </span>
+            </div>
+
+            @if (!store.isSelf(user)) {
+              <div class="user-row__actions">
+                @switch (user.status) {
+                  @case ('pending') {
+                    <l-button size="sm" (click)="store.approve(user)">
+                      <l-icon name="check" color="inherit" [size]="16" />
+                      Approve
+                    </l-button>
+                  }
+                  @case ('disabled') {
+                    <l-button size="sm" variant="outlined-primary" (click)="store.approve(user)">
+                      Enable
+                    </l-button>
+                  }
+                  @case ('active') {
+                    <l-button
+                      size="sm"
+                      variant="outlined"
+                      [disabled]="store.isLastAdmin(user)"
+                      (click)="store.disable(user)"
+                    >
+                      Disable
+                    </l-button>
+                  }
+                }
+                @if (user.status === 'active') {
+                  <l-menu mode="right">
+                    <button
+                      type="button"
+                      dropdown-display
+                      class="user-row__more"
+                      [attr.aria-label]="'More actions for ' + userName(user)"
+                    >
+                      <l-icon name="more_vert" color="inherit" [size]="20" />
+                    </button>
+                    @if (user.role === 'admin') {
+                      <button
+                        type="button"
+                        dropdown-item
+                        [disabled]="store.isLastAdmin(user)"
+                        (click)="store.removeAdmin(user)"
+                      >
+                        <l-icon name="person" color="inherit" [size]="18" />
+                        Remove admin
+                      </button>
+                    } @else {
+                      <button type="button" dropdown-item (click)="store.makeAdmin(user)">
+                        <l-icon name="shield" color="inherit" [size]="18" />
+                        Make admin
+                      </button>
+                    }
+                  </l-menu>
+                }
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    </l-card>
+  }
+
+  <l-card title="Invited emails" padding="lg">
+    <div class="invites">
+      <p class="invites__text">
+        Someone who signs up with an invited email is active straight away, with no approval step.
+        They start as a regular user.
+      </p>
+      <div class="invites__form">
+        <l-email-input
+          label="Email to invite"
+          placeholder="name@example.com"
+          [useValidation]="false"
+          [ngModel]="inviteEmail()"
+          (ngModelChange)="inviteEmail.set($event)"
+          (enter)="invite()"
+        />
+        <l-button size="lg" [disabled]="!inviteEmail().trim()" (click)="invite()">
+          <l-icon name="person_add" color="inherit" [size]="18" />
+          Invite
+        </l-button>
+      </div>
+      @if (store.invited().length) {
+        <ul class="invites__list" aria-label="Invited emails">
+          @for (invite of store.invited(); track invite.email) {
+            <li>
+              <l-chip
+                [removable]="true"
+                [removeLabel]="'Withdraw invite for ' + invite.email"
+                (removed)="store.uninvite(invite.email)"
+              >
+                <l-icon name="mail" color="inherit" [size]="14" />
+                {{ invite.email }}
+              </l-chip>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="invites__none">No invites yet.</p>
+      }
+    </div>
+  </l-card>
+</div>

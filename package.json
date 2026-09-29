@@ -6,7 +6,11 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-expensify \"npx vitest run --config vitest.rules.config.ts\"",
+    "emulators": "firebase emulators:start --project demo-expensify",
+    "deploy:rules": "firebase deploy --only firestore,storage",
+    "deploy": "ng build && firebase deploy"
   },
   "private": true,
   "packageManager": "npm@11.12.1",
@@ -18,6 +22,7 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "date-fns": "^4.4.0",
+    "firebase": "^12.19.0",
     "papaparse": "^5.7.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
@@ -26,6 +31,7 @@
     "@angular/build": "^22.2.0",
     "@angular/cli": "^22.2.0",
     "@angular/compiler-cli": "^22.2.0",
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@types/papaparse": "^5.5.2",
     "jsdom": "^30.0.0",
     "prettier": "^3.8.1",

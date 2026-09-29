@@ -11,14 +11,7 @@ import { accountIdsOf } from '../domain/transactions';
 import { TimestampLike } from '../models/timestamp';
 import { Transaction } from '../models/transaction';
 import { ChunkedWriter, MAX_BATCH_WRITES } from './chunked-writer';
-import {
-  DocData,
-  LocalBatch,
-  LocalDb,
-  increment,
-  serverTimestamp,
-  timestampFromMillis,
-} from './local-db';
+import { DocData, Batch, Db, increment, serverTimestamp, timestampFromMillis } from './db';
 import { WriteErrors } from './write-errors';
 
 /** What a restore leaves out of a transaction: receipt files aren't in a backup. */
@@ -31,7 +24,7 @@ const NOT_RESTORED = ['attachments', 'pending'];
  */
 @Injectable({ providedIn: 'root' })
 export class BackupRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
 
   /** Every document of the backed-up collections, fields as stored, timestamps as ISO strings. */
@@ -125,7 +118,7 @@ export class BackupRepo {
   }
 
   // Not awaited by the UI: offline, a commit resolves only once the server confirms (§10).
-  private commit(batch: LocalBatch): Promise<boolean> {
+  private commit(batch: Batch): Promise<boolean> {
     return batch.commit().then(
       () => true,
       (error) => {

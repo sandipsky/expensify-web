@@ -1,0 +1,117 @@
+<section class="settings-section" aria-labelledby="profile-heading">
+  <h2 class="settings-section__title" id="profile-heading">Profile</h2>
+
+  <l-card title="You" padding="lg">
+    <div class="settings-card">
+      <div class="profile-identity">
+        <l-avatar [imageUrl]="photo()" [name]="name() || email()" size="64px" />
+        <div class="profile-identity__photo-actions">
+          <input
+            #photoInput
+            class="visually-hidden"
+            type="file"
+            accept="image/*"
+            aria-label="Choose a profile photo"
+            (change)="pickPhoto(photoInput)"
+          />
+          <l-button variant="outlined" [disabled]="busy()" (click)="photoInput.click()">
+            <l-icon name="photo_camera" color="inherit" [size]="18" />
+            Change photo
+          </l-button>
+          @if (photo()) {
+            <l-button variant="ghost" [disabled]="busy()" (click)="removePhoto()">Remove</l-button>
+          }
+        </div>
+      </div>
+
+      <div class="settings-card__fields">
+        <l-text-input
+          label="Name"
+          placeholder="Your name"
+          autocomplete="name"
+          [useValidation]="false"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          (enter)="saveName()"
+        />
+        <l-button
+          class="profile-save"
+          size="lg"
+          [disabled]="busy() || !nameChanged() || !name().trim()"
+          (click)="saveName()"
+        >
+          Save name
+        </l-button>
+      </div>
+
+      <div class="profile-email">
+        <span class="settings-card__label">Email</span>
+        <span class="profile-email__value">{{ email() || '—' }}</span>
+        <p class="settings-card__hint">
+          Password reset emails go here. If this isn't right, sign out and create an account with
+          the right address.
+        </p>
+      </div>
+    </div>
+  </l-card>
+
+  <l-card title="Sign-in methods" padding="lg">
+    <div class="settings-card">
+      <ul class="sign-in-methods">
+        <li class="sign-in-method">
+          <span class="sign-in-method__icon">
+            <l-icon name="key" color="inherit" [size]="20" />
+          </span>
+          <span class="sign-in-method__text">
+            <span class="sign-in-method__name">Email and password</span>
+            @if (hasPassword()) {
+              <l-chip size="sm" variant="success" [dot]="true">Set up</l-chip>
+            } @else {
+              <l-chip size="sm">Not set</l-chip>
+            }
+          </span>
+          @if (hasPassword()) {
+            <l-button variant="outlined" [disabled]="busy()" (click)="changePassword()">
+              Change password
+            </l-button>
+          } @else {
+            <l-button variant="outlined" [disabled]="busy()" (click)="setPassword()">
+              Set a password
+            </l-button>
+          }
+        </li>
+        <li class="sign-in-method">
+          <span class="sign-in-method__icon">
+            <l-icon name="verified_user" color="inherit" [size]="20" />
+          </span>
+          <span class="sign-in-method__text">
+            <span class="sign-in-method__name">Google</span>
+            @if (hasGoogle()) {
+              <l-chip size="sm" variant="success" [dot]="true">Linked</l-chip>
+            } @else {
+              <l-chip size="sm">Not linked</l-chip>
+            }
+          </span>
+          @if (!hasGoogle()) {
+            <l-button variant="outlined" [disabled]="busy()" (click)="linkGoogle()">
+              Link Google
+            </l-button>
+          } @else if (hasPassword()) {
+            <l-button variant="outlined" [disabled]="busy()" (click)="unlinkGoogle()">
+              Unlink
+            </l-button>
+          }
+        </li>
+      </ul>
+      <p class="settings-card__hint">
+        Keep at least one way in: Google can only be unlinked once a password is set.
+      </p>
+      <div class="settings-card__actions">
+        <l-button variant="outlined" size="lg" (click)="signOut()">
+          <l-icon name="logout" color="inherit" [size]="18" />
+          Sign out
+        </l-button>
+      </div>
+    </div>
+  </l-card>
+</section>

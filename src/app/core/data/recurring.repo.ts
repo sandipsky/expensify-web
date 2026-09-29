@@ -18,14 +18,7 @@ import {
   RecurringTemplate,
 } from '../models/recurring';
 import { NewTransaction } from '../models/transaction';
-import {
-  LocalBatch,
-  LocalDb,
-  LocalDoc,
-  LocalTransaction,
-  increment,
-  serverTimestamp,
-} from './local-db';
+import { Batch, Db, Doc, Tx, increment, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
 
 /** Fields an edit may change. Template fields are written one by one (SYN-03). */
@@ -63,9 +56,11 @@ export type OccurrenceOutcome = 'done' | 'stale' | 'missing-account' | 'failed';
  */
 @Injectable({ providedIn: 'root' })
 export class RecurringRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
-  private readonly path = `${this.db.userPath}/recurringRules`;
+  private get path(): string {
+    return `${this.db.userPath}/recurringRules`;
+  }
 
   /** Every rule, paused ones too. A handful at most, so one listener serves the app. */
   watchAll(): Observable<RecurringRule[]> {
@@ -166,7 +161,7 @@ export class RecurringRepo {
   private async handleNext(
     ruleId: string,
     date: string,
-    handle: (tx: LocalTransaction, rule: RecurringRule) => Promise<OccurrenceOutcome>,
+    handle: (tx: Tx, rule: RecurringRule) => Promise<OccurrenceOutcome>,
   ): Promise<OccurrenceOutcome> {
     try {
       return await this.db.runTransaction(async (tx) => {
@@ -187,7 +182,7 @@ export class RecurringRepo {
    * again. Writes nothing when an account the entries need is missing.
    */
   private async createOccurrences(
-    tx: LocalTransaction,
+    tx: Tx,
     rule: RecurringRule,
     dates: readonly string[],
     entry?: NewTransaction,
@@ -234,7 +229,7 @@ export class RecurringRepo {
     return { handled: dates.length, created: deltas.length };
   }
 
-  private async readRule(tx: LocalTransaction, id: string): Promise<RecurringRule | null> {
+  private async readRule(tx: Tx, id: string): Promise<RecurringRule | null> {
     const doc = await tx.get(this.doc(id));
     return doc ? toRule(doc) : null;
   }
@@ -248,7 +243,7 @@ export class RecurringRepo {
   }
 
   // Not awaited: offline, a commit resolves only once the server confirms (§10).
-  private commit(batch: LocalBatch): void {
+  private commit(batch: Batch): void {
     batch.commit().catch((error) => this.errors.report(error));
   }
 }
@@ -258,7 +253,7 @@ export class RecurringRepo {
  * frequency reads as monthly, and an unknown mode as ask-first, so a value
  * from a newer app never makes this one create money on its own.
  */
-function toRule(doc: LocalDoc): RecurringRule {
+function toRule(doc: Doc): RecurringRule {
   const data = doc.data as Partial<RecurringRule>;
   const template = (data.template ?? {}) as Partial<RecurringTemplate>;
   return {
@@ -289,6 +284,6 @@ function toRule(doc: LocalDoc): RecurringRule {
     active: data.active ?? true,
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
-    pending: false,
+    pending: doc.pending,
   } as RecurringRule;
 }

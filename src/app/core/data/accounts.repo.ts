@@ -3,7 +3,7 @@ import { Observable, map } from 'rxjs';
 import { effects } from '../domain/balance';
 import { Account } from '../models/account';
 import { Transaction } from '../models/transaction';
-import { LocalBatch, LocalDb, LocalDoc, increment, serverTimestamp } from './local-db';
+import { Batch, Db, Doc, increment, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
 
 /** What a new account is written with; the repo adds the balance and audit fields. */
@@ -26,9 +26,11 @@ export type AccountChanges = Partial<
  */
 @Injectable({ providedIn: 'root' })
 export class AccountsRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
-  private readonly path = `${this.db.userPath}/accounts`;
+  private get path(): string {
+    return `${this.db.userPath}/accounts`;
+  }
 
   /** Every account, archived ones too, by `sortOrder`. Accounts are few, so one listener serves the app. */
   watchAll(): Observable<Account[]> {
@@ -111,13 +113,13 @@ export class AccountsRepo {
   }
 
   // Not awaited: offline, a commit resolves only once the server confirms (§10).
-  private commit(batch: LocalBatch): void {
+  private commit(batch: Batch): void {
     batch.commit().catch((error) => this.errors.report(error));
   }
 }
 
 /** Fills the fields an older or Android-written document may lack. */
-function toAccount(doc: LocalDoc): Account {
+function toAccount(doc: Doc): Account {
   const data = doc.data as Partial<Account>;
   return {
     ...data,
@@ -128,6 +130,6 @@ function toAccount(doc: LocalDoc): Account {
     sortOrder: data.sortOrder ?? 0,
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
-    pending: false,
+    pending: doc.pending,
   } as Account;
 }

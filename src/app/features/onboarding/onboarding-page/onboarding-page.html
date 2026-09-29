@@ -1,0 +1,132 @@
+<div class="onboarding">
+  <main class="onboarding__card">
+    <header class="onboarding__header">
+      <span class="onboarding__brand">Expensify</span>
+      <h1 class="onboarding__title">
+        @if (firstName(); as name) {
+          Welcome, {{ name }}
+        } @else {
+          Welcome
+        }
+      </h1>
+      <p class="onboarding__subtitle">
+        Three quick steps and you're set. Each one can be skipped and changed later in Settings.
+      </p>
+    </header>
+
+    <l-stepper [steps]="steps" [active]="active()" />
+
+    <div class="onboarding__step" [formGroup]="form">
+      @switch (active()) {
+        @case (0) {
+          <h2 class="onboarding__step-title">Which currency do you use?</h2>
+          <p class="onboarding__text">
+            Every amount is shown in this currency. We guessed it from your browser's language.
+          </p>
+          <l-select
+            label="Currency"
+            formControlName="currency"
+            bindValue="value"
+            bindLabel="label"
+            [items]="currencyOptions()"
+            [searchable]="true"
+            [virtualScroll]="true"
+          />
+        }
+        @case (1) {
+          <h2 class="onboarding__step-title">Where is your money?</h2>
+          <p class="onboarding__text">
+            Add the account you use most. You can add banks, cards and wallets later.
+          </p>
+          <l-text-input
+            label="Account name"
+            formControlName="name"
+            placeholder="e.g. Cash, Everyday bank"
+          />
+          <l-select
+            label="Type"
+            formControlName="type"
+            bindValue="value"
+            bindLabel="label"
+            [items]="typeOptions"
+          />
+          <div class="onboarding__field">
+            <l-number-input
+              formControlName="balance"
+              [label]="balanceLabel()"
+              [prefix]="symbol()"
+              [decimalPlaces]="decimalPlaces()"
+              [allowNegative]="true"
+            />
+            <p class="onboarding__hint">Roughly is fine. You can reconcile it later.</p>
+          </div>
+        }
+        @case (2) {
+          <h2 class="onboarding__step-title">Your starting categories</h2>
+          <p class="onboarding__text">
+            These are added for you. Rename, recolor or remove any of them later in Categories.
+          </p>
+          <div class="onboarding__categories">
+            <section aria-labelledby="onb-expense">
+              <h3 class="onboarding__list-title" id="onb-expense">Expenses</h3>
+              <ul class="onboarding__list">
+                @for (category of defaults.expense; track category.id) {
+                  <li class="onboarding__category">
+                    <app-symbol-icon [icon]="category.icon" [color]="category.color" [size]="28" />
+                    {{ category.name }}
+                  </li>
+                }
+              </ul>
+            </section>
+            <section aria-labelledby="onb-income">
+              <h3 class="onboarding__list-title" id="onb-income">Income</h3>
+              <ul class="onboarding__list">
+                @for (category of defaults.income; track category.id) {
+                  <li class="onboarding__category">
+                    <app-symbol-icon [icon]="category.icon" [color]="category.color" [size]="28" />
+                    {{ category.name }}
+                  </li>
+                }
+              </ul>
+            </section>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="onboarding__actions">
+      @if (active() > 0) {
+        <l-button variant="outlined" size="lg" [disabled]="finishing()" (click)="back()">
+          <l-icon name="chevron_left" color="inherit" [size]="18" />
+          Back
+        </l-button>
+      }
+      <span class="onboarding__spacer"></span>
+      @if (active() < 2) {
+        <l-button variant="ghost" size="lg" [disabled]="finishing()" (click)="skipStep()">
+          Skip
+        </l-button>
+        <l-button size="lg" [disabled]="finishing()" (click)="next()">
+          Next
+          <l-icon name="chevron_right" color="inherit" [size]="18" />
+        </l-button>
+      } @else {
+        <l-button size="lg" [disabled]="finishing()" (click)="finish()">
+          {{ finishing() ? 'Setting up…' : 'Finish' }}
+        </l-button>
+      }
+    </div>
+
+    <p class="onboarding__skip">
+      In a hurry?
+      <button
+        type="button"
+        class="onboarding__skip-link"
+        [disabled]="finishing()"
+        (click)="skipAll()"
+      >
+        Skip setup for now
+      </button>
+    </p>
+  </main>
+</div>

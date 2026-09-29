@@ -119,9 +119,20 @@ export class CategoriesStore {
     return isNameTaken(this.all(), { name, type, parentId, id: exceptId });
   }
 
-  /** Writes the Appendix A categories that are missing (ONB-02, ONB-03). Onboarding calls this too. */
+  /** Writes the Appendix A categories that are missing from the loaded list (ONB-02, ONB-03). */
   seedDefaults(): void {
     this.repo.seed(DEFAULT_CATEGORIES.filter((c) => !this.byId(c.id)));
+  }
+
+  /**
+   * Writes the Appendix A categories that a fresh read says are missing, as
+   * onboarding does (ONB-02, ONB-03): the listener may still be answering
+   * from an empty cache, and a seed overwrites, so it would undo edits made
+   * on another device to categories seeded there.
+   */
+  async seedMissing(): Promise<void> {
+    const existing = new Set((await this.repo.listAll()).map((c) => c.id));
+    this.repo.seed(DEFAULT_CATEGORIES.filter((c) => !existing.has(c.id)));
   }
 
   /**

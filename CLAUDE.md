@@ -6,9 +6,9 @@ Personal income/expense/transfer tracker. This repo is the **Angular web app (ph
 
 ## Current state
 
-Angular 22 CLI scaffold: `src/app/app.html` is still the CLI placeholder page and `app.routes.ts` is empty. **Lumen UI**, the in-house component library, is already in `src/app/shared/` (see the Lumen UI section) but no page uses it yet, and its icon folder `public/svg/` is empty. Not yet installed: Firebase JS SDK, `@angular/pwa`, ESLint (angular-eslint), Playwright, Firebase Emulator Suite, i18n. **Angular Material and the CDK are not used**: Material 3 is the Android app's toolkit, and the web UI is Lumen. Next milestone is **M0 Setup** (§15).
+Every MVP and v1.1 feature of §3 is built on **Lumen UI** (see that section): sign-in, onboarding, dashboard, transactions, accounts, categories, budgets, recurring, reports, import/export/backup, receipts, notifications, settings and the admin Users page. The **Firebase JS SDK is installed**: `core/firebase/firebase.ts` initializes the app, App Check and Auth from `src/environments/`, and loads Firestore lazily; `core/firebase/firestore-db.ts` implements the `Db` contract (`core/data/db.ts`) that every repo is written against. `core/data/local-db.ts` implements the same contract in localStorage and is the **default provider in unit tests** (`app.config.ts` swaps in `FirestoreDb`), so a spec never touches Firebase. Receipts still use `LocalBucket` (device-only) until Cloud Storage arrives with the Blaze plan. Not yet installed: `@angular/pwa`, ESLint (angular-eslint), Playwright, i18n. **Angular Material and the CDK are not used**: Material 3 is the Android app's toolkit, and the web UI is Lumen.
 
-The spec assumes a monorepo (`web/`, `android/`, `functions/`, `firebase/`, `spec/`). Here the web app lives at the repo root, so `web/src/app/...` in the spec means `src/app/...` here. Shared artifacts (`firestore.rules`, `storage.rules`, `firestore.indexes.json`, `spec/default-categories.json`, `spec/test-vectors/*.json`) don't exist yet. **Ask where they should live before creating them.**
+The spec assumes a monorepo (`web/`, `android/`, `functions/`, `firebase/`, `spec/`). Here the web app lives at the repo root, so `web/src/app/...` in the spec means `src/app/...` here. The Firebase project files live at the repo root too, where the Firebase CLI expects them: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`, with the rules tests in `firebase/`. `spec/default-categories.json` and `spec/test-vectors/*.json` don't exist yet (the seed list is `core/domain/default-categories.ts`). **Ask where they should live before creating them.** Connecting a Firebase project is documented step by step in `docs/firebase.md`; until `src/environments/*.ts` are filled in, the sign-in page says so and nothing else works.
 
 ## Commands
 
@@ -18,6 +18,9 @@ npm run build                               # production build (default config) 
 npm test                                    # Vitest via @angular/build:unit-test
 npx ng test --watch=false                   # single run (CI)
 npx ng test --include=src/app/core/domain/money.spec.ts   # one file
+npm run test:rules                          # Security Rules tests on the Firestore emulator (Java 11+)
+npm run emulators                           # Firebase Emulator Suite (set useEmulators in environment.development.ts)
+npm run deploy:rules                        # deploy firestore.rules, indexes and storage.rules
 npx prettier --check .                      # format check (printWidth 100, single quotes)
 ```
 
@@ -45,8 +48,9 @@ Getting these wrong corrupts balances or breaks Android parity.
 
 ## Firebase and data access
 
-- All user data lives under `users/{uid}/...` (§8). Use the **modular Firebase JS SDK** wrapped in injectable repository services in `core/data/*.repo.ts`. **Don't use AngularFire** (it lags Angular majors). Components and stores never import `firebase/*` directly.
-- Firestore is initialized with `persistentLocalCache({ tabManager: persistentMultipleTabManager() })` and `ignoreUndefinedProperties: true`, and App Check uses reCAPTCHA Enterprise (§10). Config comes from `src/environments/environment.ts`.
+- All user data lives under `users/{uid}/...` (§8). Use the **modular Firebase JS SDK** wrapped in injectable repository services in `core/data/*.repo.ts`. **Don't use AngularFire** (it lags Angular majors). Components, stores and repos never import `firebase/*` directly: repos inject the abstract `Db` (`core/data/db.ts`: `batch()`, `runTransaction()`, `watch()`, `watchDoc()`, `get()`, `getDoc()`, `userPath`, `uid$`) and use its `increment()`, `serverTimestamp()` and `timestampFromMillis()` markers, which `FirestoreDb` turns into the SDK's values. Only `core/firebase/*` and `core/auth/auth.service.ts` import `firebase/*`.
+- Firestore is initialized with `persistentLocalCache({ tabManager: persistentMultipleTabManager() })` and `ignoreUndefinedProperties: true`, and App Check uses reCAPTCHA Enterprise (§10). Config comes from `src/environments/environment.ts` (production build) and `environment.development.ts` (`ng serve`); `docs/firebase.md` explains how to fill them. Firestore itself is loaded with `loadFirestore()` on first use to keep the sign-in pages light (NFR-02); never import `firebase/firestore` statically in `src/`.
+- **Sign-in flow** (`AuthService`, §10): once Auth resolves, the profile is listened to (`UsersRepo.watchProfile()`, switching on `Db.uid$`). If the _server_ says there is none (`fromCache` false), it is created as `user`/`pending`, or `active` when `invites/{email}` exists. `settled` is what the guards await; `follow()` moves a user to or from `/no-access` when their status changes mid-session. Signing out (or losing the session) does a full page reload onto `/login`, which is how the singleton stores drop the previous user's data.
 - **Queries are always period-scoped:** `date >= start && date <= end`, `orderBy('date', 'desc')`. Filter by category, tag, amount and text on the device. All-time views page 50 at a time with `startAfter`. Never listen to a whole collection, because of the free-quota cost (NFR-19).
 - Use `onSnapshot(..., { includeMetadataChanges: true })` and map `metadata.hasPendingWrites` to a `pending` flag for the unsynced marker (SYN-04). Sort within a day by `time`, then `createdAt`.
 - Multi-document changes use batches or transactions (NFR-14). New composite indexes go in `firestore.indexes.json` (§8).
@@ -153,7 +157,8 @@ Lumen is our own component library, checked into this repo: standalone, `OnPush`
 ## Testing (§14)
 
 - Domain logic in `core/domain/` is pure and needs at least 80% coverage, driven by the shared JSON test vectors that the Kotlin app also runs.
-- Security Rules are tested with `@firebase/rules-unit-testing` on the Emulator. End-to-end tests use Playwright against the Emulator and cover user stories US-01 to US-10 (§5).
+- Unit tests run the repos and stores on `LocalDb` (the default `Db` provider), so they need no emulator; seed data with `TestBed.inject(LocalDb).batch().set(...)`. Services that need a signed-in user get a fake `AuthService` (`{ user: signal(...), isAdmin: signal(...) }`).
+- Security Rules are tested with `@firebase/rules-unit-testing` on the Emulator: `firebase/firestore.rules.spec.ts`, run with `npm run test:rules` (Vitest in Node via `vitest.rules.config.ts`, outside `ng test`). End-to-end tests use Playwright against the Emulator and cover user stories US-01 to US-10 (§5).
 - The Firebase environments are the local Emulator (`firebase emulators:start`), `expense-tracker-dev` (deployed on merge to `main`) and `expense-tracker-prod` (deployed on tagged releases).
 
 ## Working with the spec

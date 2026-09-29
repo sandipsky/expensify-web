@@ -4,7 +4,7 @@ import { combineEffects, editEffects, effects, reverseEffects } from '../domain/
 import { DateRange } from '../domain/period';
 import { accountIdsOf, transactionChanges } from '../domain/transactions';
 import { NewTransaction, Transaction, TxSource } from '../models/transaction';
-import { LocalBatch, LocalDb, LocalDoc, increment, serverTimestamp } from './local-db';
+import { Batch, Db, Doc, increment, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
 
 /** One transaction as it was and as it should become. */
@@ -25,9 +25,11 @@ const MAX_BATCH_WRITES = 450;
  */
 @Injectable({ providedIn: 'root' })
 export class TransactionsRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
-  private readonly path = `${this.db.userPath}/transactions`;
+  private get path(): string {
+    return `${this.db.userPath}/transactions`;
+  }
 
   /**
    * The period's transactions by date, newest first (§10 "Reading a period"). A
@@ -78,7 +80,7 @@ export class TransactionsRepo {
 
   /** One transaction, live; `null` once it's deleted (here or on another device). */
   watch(id: string): Observable<Transaction | null> {
-    return this.db.watchDoc(this.doc(id)).pipe(map((doc) => (doc ? toTransaction(doc) : null)));
+    return this.db.watchDoc(this.doc(id)).pipe(map(({ doc }) => (doc ? toTransaction(doc) : null)));
   }
 
   /**
@@ -151,7 +153,7 @@ export class TransactionsRepo {
    */
   addMany(txs: readonly NewTransaction[], source: TxSource = 'import'): string[] {
     const ids: string[] = [];
-    let batch: LocalBatch | null = null;
+    let batch: Batch | null = null;
     let deltas: Map<string, number>[] = [];
     let accounts = new Set<string>();
     const flush = () => {
@@ -241,7 +243,7 @@ export class TransactionsRepo {
    * Adds `increment()` for each non-zero balance change, then commits. Callers
    * don't wait for it; it resolves to whether it went through.
    */
-  private commit(batch: LocalBatch, deltas: ReadonlyMap<string, number>): Promise<boolean> {
+  private commit(batch: Batch, deltas: ReadonlyMap<string, number>): Promise<boolean> {
     for (const [accountId, delta] of deltas) {
       if (delta !== 0) {
         batch.update(`${this.db.userPath}/accounts/${accountId}`, {
@@ -262,7 +264,7 @@ export class TransactionsRepo {
 }
 
 /** Fills the fields an older or Android-written document may lack. */
-function toTransaction(doc: LocalDoc): Transaction {
+function toTransaction(doc: Doc): Transaction {
   const data = doc.data as Partial<Transaction>;
   return {
     ...data,
@@ -272,6 +274,6 @@ function toTransaction(doc: LocalDoc): Transaction {
     attachments: data.attachments ?? [],
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
-    pending: false,
+    pending: doc.pending,
   } as Transaction;
 }

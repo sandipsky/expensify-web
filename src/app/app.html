@@ -1,124 +1,18 @@
-<l-layout [(collapsed)]="navCollapsed">
-  <nav layout-sidebar class="app-nav" [class.is-collapsed]="navCollapsed()" aria-label="Main">
-    <a
-      class="app-nav__link"
-      routerLink="/dashboard"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="dashboard" color="inherit" />
-      <span class="app-nav__label">Dashboard</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/transactions"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="receipt_long" color="inherit" />
-      <span class="app-nav__label">Transactions</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/accounts"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="account_balance_wallet" color="inherit" />
-      <span class="app-nav__label">Accounts</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/budgets"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="donut_large" color="inherit" />
-      <span class="app-nav__label">Budgets</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/reports"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="bar_chart" color="inherit" />
-      <span class="app-nav__label">Reports</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/recurring"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="event_repeat" color="inherit" />
-      <span class="app-nav__label">Recurring</span>
-      @if (badges.recurring(); as waiting) {
-        <span class="app-nav__count">
-          {{ waiting }}<span class="visually-hidden"> waiting for you</span>
-        </span>
-      }
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/categories"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="category" color="inherit" />
-      <span class="app-nav__label">Categories</span>
-    </a>
-    <a
-      class="app-nav__link"
-      routerLink="/settings"
-      routerLinkActive="is-active"
-      ariaCurrentWhenActive="page"
-    >
-      <l-icon name="settings" color="inherit" />
-      <span class="app-nav__label">Settings</span>
-    </a>
-  </nav>
+<router-outlet />
 
-  <div layout-header class="app-header">
-    <span class="app-brand">Expensify</span>
-    <div class="app-header__actions">
-      <button
-        type="button"
-        class="app-header__bell"
-        [attr.aria-label]="alertsLabel(inbox.unread())"
-        [lBadge]="inbox.unread()"
-        lBadgeColor="var(--accent)"
-        lBadgeSize="sm"
-        [lBadgeOverflowCount]="9"
-        (click)="openAlerts()"
-      >
-        <l-icon name="notifications" color="inherit" [size]="22" />
-      </button>
-      @if (!breakpoints.phone()) {
-        <l-button class="app-header__add" (click)="quickAdd()">
-          <l-icon name="add" color="inherit" [size]="18" />
-          Add transaction
-          <kbd class="app-header__key" aria-hidden="true">N</kbd>
-          <span class="visually-hidden">(shortcut: N)</span>
-        </l-button>
+@if (!auth.settled()) {
+  <div class="app-boot" role="status" aria-live="polite">
+    <span class="app-boot__brand">Expensify</span>
+    <span class="app-boot__pulse" aria-hidden="true"></span>
+    <p class="app-boot__text">
+      @if (slow()) {
+        Still connecting… check your internet connection.
+      } @else {
+        Loading your account
       }
-    </div>
+    </p>
   </div>
-
-  <router-outlet />
-
-  <!-- Room at the end of every page, so the + button never covers the last item. -->
-  @if (breakpoints.phone()) {
-    <div class="app-fab-space" aria-hidden="true"></div>
-  }
-</l-layout>
+}
 
 <!-- The one blocking wait, for work such as deleting the account (SpinnerService). -->
 <l-loading-spinner />
-
-@if (breakpoints.phone()) {
-  <button type="button" class="app-fab" (click)="quickAdd()">
-    <l-icon name="add" color="inherit" [size]="28" />
-    <span class="visually-hidden">Add transaction</span>
-  </button>
-}

@@ -1,0 +1,68 @@
+@use '../settings';
+
+.profile-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-identity__photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// The Save button lines up with the field beside it.
+.profile-save {
+  flex: 0 0 auto;
+}
+
+.profile-email {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-email__value {
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.sign-in-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+}
+
+.sign-in-method {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.sign-in-method__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.sign-in-method__text {
+  display: flex;
+  flex: 1 1 160px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.sign-in-method__name {
+  color: var(--text-primary);
+  font-weight: 500;
+}

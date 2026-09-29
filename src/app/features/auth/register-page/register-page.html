@@ -1,0 +1,47 @@
+<app-auth-card
+  title="Create an account"
+  subtitle="Track income, expenses and transfers in one place."
+>
+  <div class="auth-form" [formGroup]="form">
+    <l-text-input
+      label="Name"
+      formControlName="name"
+      placeholder="How should we call you?"
+      autocomplete="name"
+      (enter)="register()"
+    />
+    <l-email-input
+      label="Email"
+      formControlName="email"
+      placeholder="you@example.com"
+      autocomplete="email"
+      (enter)="register()"
+    />
+    <l-password-input
+      label="Password"
+      formControlName="password"
+      autocomplete="new-password"
+      [showRules]="true"
+      (enter)="register()"
+    />
+
+    @if (error(); as message) {
+      <div class="alert error auth-alert" role="alert">{{ message }}</div>
+    }
+
+    <div class="auth-form__actions">
+      <l-button size="lg" width="full" [disabled]="busy() || !configured" (click)="register()">
+        {{ busy() ? 'Creating your account…' : 'Create account' }}
+      </l-button>
+    </div>
+
+    <p class="auth-note">
+      New accounts need an admin's approval before they can be used. You'll see a waiting page until
+      then. No verification email is sent.
+    </p>
+  </div>
+
+  <div class="auth-links">
+    <span>Already have an account? <a class="auth-link" routerLink="/login">Sign in</a></span>
+  </div>
+</app-auth-card>

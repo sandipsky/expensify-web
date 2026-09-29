@@ -83,7 +83,13 @@ describe('SettingsPage (§3.11, §3.14)', () => {
   it('holds preferences, notifications, manage links and data and privacy (SET-01 to SET-07)', async () => {
     const { el, button } = await setup();
     const headings = [...el.querySelectorAll('h2')].map((h) => h.textContent?.trim());
-    expect(headings).toEqual(['Preferences', 'Notifications', 'Manage', 'Data and privacy']);
+    expect(headings).toEqual([
+      'Profile',
+      'Preferences',
+      'Notifications',
+      'Manage',
+      'Data and privacy',
+    ]);
     expect(
       [...el.querySelectorAll<HTMLAnchorElement>('.manage-link')].map((a) =>
         a.getAttribute('href'),

@@ -1,79 +1,30 @@
-import { Component, Injector, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AlertInbox } from './features/notifications/alert-inbox';
-import { alertsLabel } from './features/notifications/notification-labels';
-import { BreakpointService } from './layout/breakpoint.service';
-import { NavBadges } from './layout/nav-badges';
-import { Layout } from './shared/components/layout';
-import { BadgeDirective } from './shared/components/ui/badge';
-import { Button } from './shared/components/ui/button/button';
-import { DrawerService } from './shared/components/ui/drawer';
-import { Icon } from './shared/components/ui/icon/icon';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth/auth.service';
 import { LoadingSpinner } from './shared/components/ui/loading-spinner/loading-spinner';
-import { ModalService } from './shared/components/ui/modal';
 
-/** Where a keystroke is text entry, so N types an "n" there instead of opening quick add. */
-const EDITABLE =
-  'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="listbox"]';
+/** After this long without the session settling, say so instead of showing a bare spinner. */
+const SLOW_START_MS = 8000;
 
+/**
+ * The root: the router's outlet, the one blocking spinner (SpinnerService),
+ * and a start-up screen that covers the page until the session is known
+ * (AUTH-05), since the guards can't send anyone anywhere before that.
+ */
 @Component({
-  imports: [
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    Layout,
-    BadgeDirective,
-    Button,
-    Icon,
-    LoadingSpinner,
-  ],
   selector: 'app-root',
-  styleUrl: './app.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterOutlet, LoadingSpinner],
   templateUrl: './app.html',
-  host: { '(document:keydown)': 'onKeydown($event)' },
+  styleUrl: './app.scss',
 })
 export class App {
-  /** Desktop sidebar state: collapsed to a rail shows icons only. */
-  protected readonly navCollapsed = signal(false);
-  protected readonly breakpoints = inject(BreakpointService);
-  protected readonly badges = inject(NavBadges);
-  protected readonly inbox = inject(AlertInbox);
-  protected readonly alertsLabel = alertsLabel;
-  private readonly injector = inject(Injector);
-  private readonly modals = inject(ModalService);
-  private readonly drawers = inject(DrawerService);
+  protected readonly auth = inject(AuthService);
+  /** True once start-up has taken long enough to suggest a connection problem. */
+  protected readonly slow = signal(false);
 
-  /**
-   * Quick add from any screen (TXN-05). The form loads on first use, which
-   * keeps it out of the initial bundle (NFR-02).
-   */
-  protected async quickAdd(): Promise<void> {
-    const { TransactionActions } = await import('./features/transactions/transaction-actions');
-    this.injector.get(TransactionActions).create().subscribe();
-  }
-
-  /**
-   * The recent alerts (NTF-05): a side panel on tablets and desktops, a bottom
-   * sheet on phones. Loaded on first use (NFR-02).
-   */
-  protected async openAlerts(): Promise<void> {
-    const { AlertsPanel } = await import('./features/notifications/alerts-panel/alerts-panel');
-    const phone = this.breakpoints.phone();
-    this.drawers.open(AlertsPanel, {
-      position: phone ? 'bottom' : 'right',
-      size: phone ? '75vh' : '400px',
-    });
-  }
-
-  /** N opens quick add, except while typing or with a dialog or sheet open (TXN-05). */
-  protected onKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'n' && event.key !== 'N') return;
-    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat || event.defaultPrevented) {
-      return;
-    }
-    if (this.modals.hasOpen() || this.drawers.hasOpen()) return;
-    if (event.target instanceof Element && event.target.closest(EDITABLE)) return;
-    event.preventDefault();
-    void this.quickAdd();
+  constructor() {
+    const timer = setTimeout(() => this.slow.set(true), SLOW_START_MS);
+    inject(DestroyRef).onDestroy(() => clearTimeout(timer));
   }
 }

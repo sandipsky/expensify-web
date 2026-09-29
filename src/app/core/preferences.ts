@@ -8,7 +8,7 @@ import {
   Theme,
 } from './models/user';
 
-/** The currency a profile starts with until onboarding asks for one (ONB-01). */
+/** The currency a profile starts with when the browser's locale gives no better guess (ONB-01). */
 export const DEFAULT_CURRENCY = 'NPR';
 
 /** The browser's language, as a new profile's locale. */
@@ -31,11 +31,15 @@ export function deviceTimeZone(): string {
 @Injectable({ providedIn: 'root' })
 export class Preferences {
   private readonly repo = inject(UsersRepo);
-  /** `undefined` until the profile is read, `null` while there is none. */
-  private readonly profile = toSignal(this.repo.watchProfile());
+  private readonly snapshot = toSignal(this.repo.watchProfile());
+  /** `undefined` until the profile is read or while signed out, `null` while there is none. */
+  private readonly profile = computed(() => {
+    const snapshot = this.snapshot();
+    return snapshot ? snapshot.profile : undefined;
+  });
 
-  /** False until the profile has been read. */
-  readonly loaded = computed(() => this.profile() !== undefined);
+  /** True once the signed-in user's profile has been read. */
+  readonly loaded = computed(() => !!this.profile());
   /** BCP 47 tag numbers, amounts and dates are formatted for (SET-01). */
   readonly locale = computed(() => this.profile()?.locale ?? deviceLocale());
   /** ISO 4217 code amounts are in (SET-01). */
@@ -54,24 +58,9 @@ export class Preferences {
   /**
    * Saves the preferences passed, and only those, so another device's change
    * to a different one survives (SYN-03). The signals follow from the local
-   * cache at once. Creates the profile if there's none yet.
+   * cache at once. Sign-in created the profile, so this only ever merges.
    */
   save(changes: PreferenceChanges): void {
-    // Not read yet (`undefined`) is treated like an existing profile: a merging
-    // write can't overwrite what the snapshot hasn't brought in.
-    if (this.profile() !== null) {
-      this.repo.update(changes, deviceTimeZone());
-      return;
-    }
-    this.repo.create({
-      baseCurrency: changes.baseCurrency ?? this.baseCurrency(),
-      locale: changes.locale ?? this.locale(),
-      timeZone: deviceTimeZone(),
-      monthStartDay: changes.monthStartDay ?? this.monthStartDay(),
-      weekStartDay: changes.weekStartDay ?? this.weekStartDay(),
-      theme: changes.theme ?? this.theme(),
-      onboardingCompleted: false,
-      notificationPrefs: { ...this.notifications(), ...changes.notificationPrefs },
-    });
+    this.repo.update(changes, deviceTimeZone());
   }
 }

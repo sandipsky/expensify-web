@@ -2,7 +2,7 @@ import { DestroyRef, Injectable, inject } from '@angular/core';
 import { receiptPath } from '../domain/attachments';
 import { Attachment } from '../models/transaction';
 import { LocalBucket } from './local-bucket';
-import { LocalDb } from './local-db';
+import { Db } from './db';
 
 /**
  * How long a deleted transaction's receipts stay, so its 5-second Undo can
@@ -19,7 +19,7 @@ export const RECEIPT_DELETE_DELAY_MS = 8000;
  */
 @Injectable({ providedIn: 'root' })
 export class ReceiptsRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly bucket = inject(LocalBucket);
   /** Deletes waiting out an Undo, by transaction ID. */
   private readonly scheduled = new Map<

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { DEFAULT_ALERT_THRESHOLDS } from '../domain/budget';
 import { BUDGET_PERIODS, Budget, BudgetAlert, NewBudget } from '../models/budget';
-import { LocalBatch, LocalDb, LocalDoc, serverTimestamp } from './local-db';
+import { Batch, Db, Doc, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
 
 /** Fields an edit may change. */
@@ -19,9 +19,11 @@ export type BudgetChanges = Partial<
  */
 @Injectable({ providedIn: 'root' })
 export class BudgetsRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly errors = inject(WriteErrors);
-  private readonly path = `${this.db.userPath}/budgets`;
+  private get path(): string {
+    return `${this.db.userPath}/budgets`;
+  }
 
   /** Every budget, paused ones too. A handful at most, so one listener serves the app. */
   watchAll(): Observable<Budget[]> {
@@ -77,13 +79,13 @@ export class BudgetsRepo {
   }
 
   // Not awaited: offline, a commit resolves only once the server confirms (§10).
-  private commit(batch: LocalBatch): void {
+  private commit(batch: Batch): void {
     batch.commit().catch((error) => this.errors.report(error));
   }
 }
 
 /** Fills the fields an older or Android-written document may lack. */
-function toBudget(doc: LocalDoc): Budget {
+function toBudget(doc: Doc): Budget {
   const data = doc.data as Partial<Budget>;
   return {
     ...data,
@@ -99,6 +101,6 @@ function toBudget(doc: LocalDoc): Budget {
     active: data.active ?? true,
     createdAt: data.createdAt ?? null,
     updatedAt: data.updatedAt ?? null,
-    pending: false,
+    pending: doc.pending,
   } as Budget;
 }

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import { TransactionsRepo } from '../../core/data/transactions.repo';
 import { UserDataRepo } from '../../core/data/user-data.repo';
 import { Preferences } from '../../core/preferences';
@@ -9,12 +10,15 @@ import { NotificationService } from '../../shared/components/ui/notification';
 import { SpinnerService } from '../../shared/services/spinner.service';
 import { AccountsStore } from '../accounts/accounts.store';
 import { AlertInbox } from '../notifications/alert-inbox';
-import { DataActions } from './data-actions';
+import { DELETED_URL, DataActions } from './data-actions';
+import { Reauth } from './reauth';
 
 describe('DataActions (SET-01, SET-04)', () => {
   let confirmed: boolean | undefined;
   const open = vi.fn(() => ({ afterClosed: () => of(confirmed) }));
   const notify = { success: vi.fn(), error: vi.fn(), warn: vi.fn(), info: vi.fn() };
+  const auth = { deleteLogin: vi.fn(() => Promise.resolve()), leave: vi.fn() };
+  const reauth = { confirm: vi.fn(() => Promise.resolve(true)) };
   let actions: DataActions;
   let prefs: Preferences;
 
@@ -50,6 +54,8 @@ describe('DataActions (SET-01, SET-04)', () => {
         provideRouter([]),
         { provide: ModalService, useValue: { open } },
         { provide: NotificationService, useValue: notify },
+        { provide: AuthService, useValue: auth },
+        { provide: Reauth, useValue: reauth },
       ],
     });
     prefs = TestBed.inject(Preferences);
@@ -123,30 +129,43 @@ describe('DataActions (SET-01, SET-04)', () => {
     });
   });
 
-  describe('deleteAccount (SET-04)', () => {
-    it('asks for DELETE, then wipes the data, the alerts and the profile', async () => {
+  describe('deleteAccount (SET-04, AUTH-07)', () => {
+    it('asks for DELETE and a fresh sign-in, then wipes the data, the alerts, the profile and the login', async () => {
       seed();
       const inbox = TestBed.inject(AlertInbox);
       inbox.add({ id: 'a', kind: 'budget', tone: 'warn', title: 'Food', message: '', link: null });
       const spinner = TestBed.inject(SpinnerService);
       const show = vi.spyOn(spinner, 'show');
-      const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
       expect(await actions.deleteAccount()).toBe(true);
       expect(dialog()).toMatchObject({ confirmPhrase: 'DELETE', confirmVariant: 'danger' });
+      expect(reauth.confirm).toHaveBeenCalled();
       expect(show).toHaveBeenCalled();
       expect(spinner.visible()).toBe(false);
       expect(TestBed.inject(AccountsStore).all()).toEqual([]);
       expect(inbox.alerts()).toEqual([]);
       expect(prefs.baseCurrency()).toBe('NPR');
-      expect(navigate).toHaveBeenCalledWith('/');
+      expect(auth.deleteLogin).toHaveBeenCalledTimes(1);
+      expect(auth.leave).toHaveBeenCalledWith(DELETED_URL);
     });
 
-    it('keeps everything when cancelled', async () => {
+    it('keeps everything when cancelled, or when the user can’t prove it’s them', async () => {
       seed();
       confirmed = false;
       expect(await actions.deleteAccount()).toBe(false);
+      expect(reauth.confirm).not.toHaveBeenCalled();
+
+      confirmed = true;
+      reauth.confirm.mockResolvedValueOnce(false);
+      expect(await actions.deleteAccount()).toBe(false);
+      reauth.confirm.mockRejectedValueOnce(new Error('Wrong email or password.'));
+      expect(await actions.deleteAccount()).toBe(false);
+      expect(notify.error).toHaveBeenCalledWith(
+        'Couldn’t confirm it’s you',
+        'Wrong email or password.',
+      );
       expect(TestBed.inject(AccountsStore).all()).toHaveLength(1);
+      expect(auth.deleteLogin).not.toHaveBeenCalled();
     });
   });
 });

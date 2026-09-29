@@ -3,7 +3,7 @@ import { attachmentsOf } from '../domain/attachments';
 import { combineEffects, reverseEffects } from '../domain/balance';
 import { Transaction } from '../models/transaction';
 import { ChunkedWriter, MAX_BATCH_WRITES } from './chunked-writer';
-import { LocalBatch, LocalDb, increment, serverTimestamp } from './local-db';
+import { Batch, Db, increment, serverTimestamp } from './db';
 import { LocalBucket } from './local-bucket';
 import { ReceiptsRepo } from './receipts.repo';
 import { UsersRepo } from './users.repo';
@@ -28,7 +28,7 @@ export const USER_COLLECTIONS = [
  */
 @Injectable({ providedIn: 'root' })
 export class UserDataRepo {
-  private readonly db = inject(LocalDb);
+  private readonly db = inject(Db);
   private readonly bucket = inject(LocalBucket);
   private readonly receipts = inject(ReceiptsRepo);
   private readonly users = inject(UsersRepo);
@@ -129,7 +129,7 @@ export class UserDataRepo {
     return `${this.collection(name)}/${id}`;
   }
 
-  private commit(batch: LocalBatch): Promise<boolean> {
+  private commit(batch: Batch): Promise<boolean> {
     return batch.commit().then(
       () => true,
       (error) => {

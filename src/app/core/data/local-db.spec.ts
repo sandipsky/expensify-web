@@ -127,7 +127,7 @@ describe('LocalDb', () => {
 
   it('watches one document until it is deleted', async () => {
     const seen: unknown[] = [];
-    const sub = db.watchDoc('c/a').subscribe((doc) => seen.push(doc?.data['n'] ?? null));
+    const sub = db.watchDoc('c/a').subscribe(({ doc }) => seen.push(doc?.data['n'] ?? null));
     await db.batch().set('c/a', { n: 1 }).commit();
     await db.batch().set('c/b', { n: 9 }).commit();
     await db.batch().update('c/a', { n: 2 }).commit();

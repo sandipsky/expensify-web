@@ -46,13 +46,17 @@ export class AccountsStore {
     return this.all().find((a) => a.id === id);
   }
 
-  /** Adds the account at the end of the list and returns its ID (ACC-01). */
-  create(input: AccountInput): string {
+  /**
+   * Adds the account at the end of the list and returns its ID (ACC-01), in
+   * the base currency unless `currency` says otherwise, as onboarding does
+   * before its currency choice has come back from the profile.
+   */
+  create(input: AccountInput, currency = this.currency()): string {
     const { icon, color } = ACCOUNT_TYPE_DEFAULTS[input.type];
     return this.repo.create({
       name: input.name.trim(),
       type: input.type,
-      currency: this.currency(),
+      currency,
       openingBalance: input.openingBalance,
       creditLimit: input.type === 'credit_card' ? input.creditLimit : null,
       icon,

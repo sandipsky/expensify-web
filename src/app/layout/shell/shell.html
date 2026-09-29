@@ -1,0 +1,161 @@
+<l-layout [(collapsed)]="navCollapsed">
+  <nav layout-sidebar class="app-nav" [class.is-collapsed]="navCollapsed()" aria-label="Main">
+    <a
+      class="app-nav__link"
+      routerLink="/dashboard"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="dashboard" color="inherit" />
+      <span class="app-nav__label">Dashboard</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/transactions"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="receipt_long" color="inherit" />
+      <span class="app-nav__label">Transactions</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/accounts"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="account_balance_wallet" color="inherit" />
+      <span class="app-nav__label">Accounts</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/budgets"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="donut_large" color="inherit" />
+      <span class="app-nav__label">Budgets</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/reports"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="bar_chart" color="inherit" />
+      <span class="app-nav__label">Reports</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/recurring"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="event_repeat" color="inherit" />
+      <span class="app-nav__label">Recurring</span>
+      @if (badges.recurring(); as waiting) {
+        <span class="app-nav__count">
+          {{ waiting }}<span class="visually-hidden"> waiting for you</span>
+        </span>
+      }
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/categories"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="category" color="inherit" />
+      <span class="app-nav__label">Categories</span>
+    </a>
+    <a
+      class="app-nav__link"
+      routerLink="/settings"
+      routerLinkActive="is-active"
+      ariaCurrentWhenActive="page"
+    >
+      <l-icon name="settings" color="inherit" />
+      <span class="app-nav__label">Settings</span>
+    </a>
+    @if (auth.isAdmin()) {
+      <a
+        class="app-nav__link"
+        routerLink="/admin/users"
+        routerLinkActive="is-active"
+        ariaCurrentWhenActive="page"
+      >
+        <l-icon name="group" color="inherit" />
+        <span class="app-nav__label">Users</span>
+        @if (badges.pendingUsers(); as pending) {
+          <span class="app-nav__count">
+            {{ pending }}<span class="visually-hidden"> waiting for approval</span>
+          </span>
+        }
+      </a>
+    }
+  </nav>
+
+  <div layout-header class="app-header">
+    <span class="app-brand">Expensify</span>
+    <div class="app-header__actions">
+      <button
+        type="button"
+        class="app-header__bell"
+        [attr.aria-label]="alertsLabel(inbox.unread())"
+        [lBadge]="inbox.unread()"
+        lBadgeColor="var(--accent)"
+        lBadgeSize="sm"
+        [lBadgeOverflowCount]="9"
+        (click)="openAlerts()"
+      >
+        <l-icon name="notifications" color="inherit" [size]="22" />
+      </button>
+      @if (!breakpoints.phone()) {
+        <l-button class="app-header__add" (click)="quickAdd()">
+          <l-icon name="add" color="inherit" [size]="18" />
+          Add transaction
+          <kbd class="app-header__key" aria-hidden="true">N</kbd>
+          <span class="visually-hidden">(shortcut: N)</span>
+        </l-button>
+      }
+      <l-menu mode="right">
+        <button
+          type="button"
+          dropdown-display
+          class="app-header__account"
+          aria-label="Account menu"
+        >
+          <l-avatar [imageUrl]="user()?.photoURL ?? ''" [name]="displayName()" size="32px" />
+        </button>
+        <div dropdown-content class="app-account">
+          <p class="app-account__name">{{ displayName() }}</p>
+          @if (user()?.email; as email) {
+            <p class="app-account__email">{{ email }}</p>
+          }
+          <a class="app-account__item" routerLink="/settings">
+            <l-icon name="person" color="inherit" [size]="18" />
+            Profile and settings
+          </a>
+          <button type="button" class="app-account__item" (click)="signOut()">
+            <l-icon name="logout" color="inherit" [size]="18" />
+            Sign out
+          </button>
+        </div>
+      </l-menu>
+    </div>
+  </div>
+
+  <router-outlet />
+
+  <!-- Room at the end of every page, so the + button never covers the last item. -->
+  @if (breakpoints.phone()) {
+    <div class="app-fab-space" aria-hidden="true"></div>
+  }
+</l-layout>
+
+@if (breakpoints.phone()) {
+  <button type="button" class="app-fab" (click)="quickAdd()">
+    <l-icon name="add" color="inherit" [size]="28" />
+    <span class="visually-hidden">Add transaction</span>
+  </button>
+}

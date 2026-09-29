@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AuthService, LOGIN_URL } from '../../core/auth/auth.service';
 import { BackupRepo } from '../../core/data/backup.repo';
 import { UserDataRepo } from '../../core/data/user-data.repo';
 import { formatMoney, fractionDigits } from '../../core/domain/money';
@@ -11,7 +11,11 @@ import { SpinnerService } from '../../shared/services/spinner.service';
 import { AlertInbox } from '../notifications/alert-inbox';
 import { clearNotificationState } from '../notifications/device-state';
 import { entries } from '../transactions/transaction-labels';
+import { Reauth } from './reauth';
 import { currencyName } from './settings-labels';
+
+/** Where a deleted account lands, with a note that says so. */
+export const DELETED_URL = `${LOGIN_URL}?deleted=1`;
 
 /**
  * The Settings actions that change data in bulk: switching the base currency
@@ -27,7 +31,8 @@ export class DataActions {
   private readonly notify = inject(NotificationService);
   private readonly spinner = inject(SpinnerService);
   private readonly inbox = inject(AlertInbox);
-  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly reauth = inject(Reauth);
 
   /**
    * Makes `currency` the base currency (SET-01). With nothing entered yet it
@@ -112,26 +117,39 @@ export class DataActions {
   }
 
   /**
-   * Deletes the account once the user types DELETE (SET-04): all their data
-   * on every device, receipts too, then the profile. The spinner holds the
-   * screen while it runs. Signing out and deleting the sign-in follow in M0.
+   * Deletes the account once the user types DELETE and proves it's them
+   * (AUTH-07, SET-04): all their data on every device, receipts too, then the
+   * profile, then the login itself (§12). The spinner holds the screen while
+   * it runs, and the app reloads on the sign-in page with a note (US-09).
    */
   async deleteAccount(): Promise<boolean> {
     const confirmed = await this.confirm({
       title: 'Delete your account?',
       message:
         'This deletes your accounts, transactions, categories, budgets, recurring rules and ' +
-        'receipts on every device, then your profile. It can’t be undone, so download a ' +
-        'backup first if you might want them back.',
+        'receipts on every device, then your profile and your login. It can’t be undone, so ' +
+        'download a backup first if you might want them back.',
       confirmText: 'Delete account',
       confirmVariant: 'danger',
       confirmPhrase: 'DELETE',
     });
     if (!confirmed) return false;
+    try {
+      if (!(await this.reauth.confirm('Deleting your account needs a fresh sign-in first.'))) {
+        return false;
+      }
+    } catch (error) {
+      this.notify.error('Couldn’t confirm it’s you', error instanceof Error ? error.message : '');
+      return false;
+    }
     this.spinner.show();
     let ok = false;
     try {
       ok = await this.repo.deleteAll();
+      if (ok) await this.auth.deleteLogin();
+    } catch (error) {
+      console.error('[account delete failed]', error);
+      ok = false;
     } finally {
       this.spinner.hide();
     }
@@ -141,8 +159,7 @@ export class DataActions {
     }
     this.inbox.clear();
     clearNotificationState();
-    this.notify.success('Your account was deleted', 'Everything you entered is gone.');
-    void this.router.navigateByUrl('/');
+    this.auth.leave(DELETED_URL);
     return true;
   }
 
