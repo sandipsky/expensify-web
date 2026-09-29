@@ -40,14 +40,6 @@
         { "fieldPath": "active", "order": "ASCENDING" },
         { "fieldPath": "nextDueDate", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

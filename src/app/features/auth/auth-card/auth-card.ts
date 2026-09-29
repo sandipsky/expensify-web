@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
- * The centred card the sign-in pages and the no-access screen sit in (§13):
+ * The centred card the sign-in pages sit in (§13):
  * brand, a heading, an optional line under it, then the page's own content.
  */
 @Component({

@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/auth/admin.guard';
-import { authGuard, guestGuard, noAccessGuard } from './core/auth/auth.guard';
+import { authGuard, guestGuard } from './core/auth/auth.guard';
 import { onboardingGuard, onboardingPageGuard } from './core/auth/onboarding.guard';
 
 /**
- * The route table of §10. The sign-in pages and `/no-access` are outside the
- * shell; everything inside it needs a signed-in, active user who has finished
- * onboarding (`authGuard`, `onboardingGuard`), and `/admin` an admin on top.
+ * The route table of §10. The sign-in pages are outside the shell; everything
+ * inside it needs a signed-in user who has finished onboarding (`authGuard`,
+ * `onboardingGuard`).
  */
 export const routes: Routes = [
   {
@@ -30,13 +29,6 @@ export const routes: Routes = [
       import('./features/auth/forgot-password-page/forgot-password-page').then(
         (m) => m.ForgotPasswordPage,
       ),
-  },
-  {
-    path: 'no-access',
-    title: 'No access',
-    canActivate: [noAccessGuard],
-    loadComponent: () =>
-      import('./features/auth/no-access-page/no-access-page').then((m) => m.NoAccessPage),
   },
   {
     path: 'onboarding',
@@ -102,11 +94,6 @@ export const routes: Routes = [
         path: 'settings',
         loadChildren: () =>
           import('./features/settings/settings.routes').then((m) => m.SETTINGS_ROUTES),
-      },
-      {
-        path: 'admin',
-        canActivate: [adminGuard],
-        loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
       },
     ],
   },

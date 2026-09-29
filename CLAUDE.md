@@ -6,7 +6,7 @@ Personal income/expense/transfer tracker. This repo is the **Angular web app (ph
 
 ## Current state
 
-Every MVP and v1.1 feature of §3 is built on **Lumen UI** (see that section): sign-in, onboarding, dashboard, transactions, accounts, categories, budgets, recurring, reports, import/export/backup, receipts, notifications, settings and the admin Users page. The **Firebase JS SDK is installed**: `core/firebase/firebase.ts` initializes the app, App Check and Auth from `src/environments/`, and loads Firestore lazily; `core/firebase/firestore-db.ts` implements the `Db` contract (`core/data/db.ts`) that every repo is written against. `core/data/local-db.ts` implements the same contract in localStorage and is the **default provider in unit tests** (`app.config.ts` swaps in `FirestoreDb`), so a spec never touches Firebase. Receipts still use `LocalBucket` (device-only) until Cloud Storage arrives with the Blaze plan. Not yet installed: `@angular/pwa`, ESLint (angular-eslint), Playwright, i18n. **Angular Material and the CDK are not used**: Material 3 is the Android app's toolkit, and the web UI is Lumen.
+Every MVP and v1.1 feature of §3 is built on **Lumen UI** (see that section): sign-in, onboarding, dashboard, transactions, accounts, categories, budgets, recurring, reports, import/export/backup, receipts, notifications and settings. The **Firebase JS SDK is installed**: `core/firebase/firebase.ts` initializes the app, App Check and Auth from `src/environments/`, and loads Firestore lazily; `core/firebase/firestore-db.ts` implements the `Db` contract (`core/data/db.ts`) that every repo is written against. `core/data/local-db.ts` implements the same contract in localStorage and is the **default provider in unit tests** (`app.config.ts` swaps in `FirestoreDb`), so a spec never touches Firebase. Receipts still use `LocalBucket` (device-only) until Cloud Storage arrives with the Blaze plan. Not yet installed: `@angular/pwa`, ESLint (angular-eslint), Playwright, i18n. **Angular Material and the CDK are not used**: Material 3 is the Android app's toolkit, and the web UI is Lumen.
 
 The spec assumes a monorepo (`web/`, `android/`, `functions/`, `firebase/`, `spec/`). Here the web app lives at the repo root, so `web/src/app/...` in the spec means `src/app/...` here. The Firebase project files live at the repo root too, where the Firebase CLI expects them: `firebase.json`, `.firebaserc`, `firestore.rules`, `firestore.indexes.json`, `storage.rules`, with the rules tests in `firebase/`. `spec/default-categories.json` and `spec/test-vectors/*.json` don't exist yet (the seed list is `core/domain/default-categories.ts`). **Ask where they should live before creating them.** Connecting a Firebase project is documented step by step in `docs/firebase.md`; until `src/environments/*.ts` are filled in, the sign-in page says so and nothing else works.
 
@@ -50,7 +50,7 @@ Getting these wrong corrupts balances or breaks Android parity.
 
 - All user data lives under `users/{uid}/...` (§8). Use the **modular Firebase JS SDK** wrapped in injectable repository services in `core/data/*.repo.ts`. **Don't use AngularFire** (it lags Angular majors). Components, stores and repos never import `firebase/*` directly: repos inject the abstract `Db` (`core/data/db.ts`: `batch()`, `runTransaction()`, `watch()`, `watchDoc()`, `get()`, `getDoc()`, `userPath`, `uid$`) and use its `increment()`, `serverTimestamp()` and `timestampFromMillis()` markers, which `FirestoreDb` turns into the SDK's values. Only `core/firebase/*` and `core/auth/auth.service.ts` import `firebase/*`.
 - Firestore is initialized with `persistentLocalCache({ tabManager: persistentMultipleTabManager() })` and `ignoreUndefinedProperties: true`, and App Check uses reCAPTCHA Enterprise (§10). Config comes from `src/environments/environment.ts` (production build) and `environment.development.ts` (`ng serve`); `docs/firebase.md` explains how to fill them. Firestore itself is loaded with `loadFirestore()` on first use to keep the sign-in pages light (NFR-02); never import `firebase/firestore` statically in `src/`.
-- **Sign-in flow** (`AuthService`, §10): once Auth resolves, the profile is listened to (`UsersRepo.watchProfile()`, switching on `Db.uid$`). If the _server_ says there is none (`fromCache` false), it is created as `user`/`pending`, or `active` when `invites/{email}` exists. `settled` is what the guards await; `follow()` moves a user to or from `/no-access` when their status changes mid-session. Signing out (or losing the session) does a full page reload onto `/login`, which is how the singleton stores drop the previous user's data.
+- **Sign-in flow** (`AuthService`, §10): once Auth resolves, the profile is listened to (`UsersRepo.watchProfile()`, switching on `Db.uid$`). If the _server_ says there is none (`fromCache` false), it is created, and the new user goes straight to onboarding: there is no approval step, no roles and no admin. `settled` is what the guards await. Signing out (or losing the session) does a full page reload onto `/login`, which is how the singleton stores drop the previous user's data.
 - **Queries are always period-scoped:** `date >= start && date <= end`, `orderBy('date', 'desc')`. Filter by category, tag, amount and text on the device. All-time views page 50 at a time with `startAfter`. Never listen to a whole collection, because of the free-quota cost (NFR-19).
 - Use `onSnapshot(..., { includeMetadataChanges: true })` and map `metadata.hasPendingWrites` to a `pending` flag for the unsynced marker (SYN-04). Sort within a day by `time`, then `createdAt`.
 - Multi-document changes use batches or transactions (NFR-14). New composite indexes go in `firestore.indexes.json` (§8).
@@ -58,7 +58,7 @@ Getting these wrong corrupts balances or breaks Android parity.
 - Notifications (§3.13) are raised on the device until FCM and the Functions exist: `features/notifications/notifier.ts` shows a toast, or a system notification while the tab is hidden and permission is granted, and records it in the device-local alert list (`AlertInbox`, NTF-05). Each alert source checks its `notificationPrefs` switch first (NTF-04). The alert list and "already reminded" state live in localStorage (`device-state.ts`), not Firestore.
 - Recurring occurrences (§3.9) are written by `RecurringRepo` in one transaction (`LocalDb.runTransaction`, later Firestore's) under the fixed ID `{ruleId}_{YYYYMMDD}`, so they're exactly-once (REC-05). `RecurringRunner` does it on the device until the generateRecurring Function exists; keep the schedule rules in `core/domain/recurrence.ts` in step with §8.
 - **Never deploy test-mode Security Rules.** Rules follow §9 and need rules tests.
-- **Access control (§3.16, §9):** every profile has `role` (`user` · `admin`) and `status` (`pending` · `active` · `disabled`). The client creates its own profile as `user`/`pending` (or `active` when `invites/{email}` exists) and never sets its own role or status afterwards. Rules deny everything under `users/{uid}/*` unless status is `active`; admins may list profiles and change only `role` and `status` on other users, never subcollections. Account deletion deletes the profile document last.
+- **Ownership (§9):** everything under `users/{uid}` is readable and writable by that signed-in user only, from the moment they sign up; nothing else in Firestore is open, and nobody can list other profiles.
 
 ## Angular conventions (§10)
 
@@ -66,7 +66,7 @@ Getting these wrong corrupts balances or breaks Android parity.
 - Forms: **typed reactive forms** (`FormBuilder.nonNullable`), never Signal Forms. Lumen inputs are `ControlValueAccessor`s and their inline validation reads `NgControl`, which Signal Forms does not provide.
 - State: one signal-based store service per feature. Turn streams into signals with `toSignal()` and derive totals with `computed()`. Use NgRx SignalStore only if features end up sharing a lot of state.
 - UI: **Lumen UI** from `src/app/shared/components/ui/` (next section). No Angular Material, no CDK, no other component library.
-- Routing: every feature is lazy-loaded (`loadComponent`/`loadChildren`). Every route except `/login`, `/register`, `/forgot-password` and `/no-access` uses the functional `authGuard` (signed in **and** `status: 'active'`, otherwise redirect to `/no-access`); all of those except `/onboarding` add `onboardingGuard`, and `/admin/*` adds `adminGuard`. Route table is in §10.
+- Routing: every feature is lazy-loaded (`loadComponent`/`loadChildren`). Every route except `/login`, `/register` and `/forgot-password` uses the functional `authGuard` (signed in, otherwise redirect to `/login`); all of those except `/onboarding` add `onboardingGuard`. Route table is in §10.
 - Components use SCSS. The current scaffold uses suffix-less component files (`app.ts`/`app.html`/`app.scss`); Lumen follows the same convention. Follow the spec's names for services, guards, repos and pipes (`auth.service.ts`, `auth.guard.ts`, `accounts.repo.ts`, `money.pipe.ts`).
 
 Target layout:
@@ -75,7 +75,7 @@ Target layout:
 src/app/
 ├── core/
 │   ├── firebase/   firebase.ts: app, Auth, Firestore (persistent cache), App Check
-│   ├── auth/       auth.service.ts, auth.guard.ts, admin.guard.ts, onboarding.guard.ts
+│   ├── auth/       auth.service.ts, auth.guard.ts, onboarding.guard.ts
 │   ├── data/       accounts / categories / transactions / budgets / users .repo.ts
 │   ├── domain/     money, balance, period, budget, recurrence: pure TS, no Angular or Firebase imports
 │   └── models/     interfaces mirroring §8
@@ -88,7 +88,7 @@ src/app/
 │   ├── styles/          _fonts.scss, _colors.scss (tokens), _form.scss, _utils.scss; forwarded by src/styles.scss
 │   └── pipes/           money.pipe.ts, …
 ├── layout/         shell: side nav ≥1024px, rail 600–1023px, bottom bar + FAB <600px; breakpoint.service.ts
-└── features/       auth, onboarding, dashboard, transactions, accounts, categories, budgets, reports, recurring, settings, admin
+└── features/       auth, onboarding, dashboard, transactions, accounts, categories, budgets, reports, recurring, settings
 ```
 
 ## Lumen UI (`src/app/shared`)
@@ -157,7 +157,7 @@ Lumen is our own component library, checked into this repo: standalone, `OnPush`
 ## Testing (§14)
 
 - Domain logic in `core/domain/` is pure and needs at least 80% coverage, driven by the shared JSON test vectors that the Kotlin app also runs.
-- Unit tests run the repos and stores on `LocalDb` (the default `Db` provider), so they need no emulator; seed data with `TestBed.inject(LocalDb).batch().set(...)`. Services that need a signed-in user get a fake `AuthService` (`{ user: signal(...), isAdmin: signal(...) }`).
+- Unit tests run the repos and stores on `LocalDb` (the default `Db` provider), so they need no emulator; seed data with `TestBed.inject(LocalDb).batch().set(...)`. Services that need a signed-in user get a fake `AuthService` (`{ user: signal(...) }`).
 - Security Rules are tested with `@firebase/rules-unit-testing` on the Emulator: `firebase/firestore.rules.spec.ts`, run with `npm run test:rules` (Vitest in Node via `vitest.rules.config.ts`, outside `ng test`). End-to-end tests use Playwright against the Emulator and cover user stories US-01 to US-10 (§5).
 - The Firebase environments are the local Emulator (`firebase emulators:start`), `expense-tracker-dev` (deployed on merge to `main`) and `expense-tracker-prod` (deployed on tagged releases).
 

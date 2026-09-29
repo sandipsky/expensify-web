@@ -15,8 +15,7 @@ export const MIN_PASSWORD_LENGTH = 8;
 /**
  * `/register` (AUTH-01): name, email and a password of at least 8 characters
  * with the strength checklist. No verification email follows (AUTH-02): the
- * new account waits on `/no-access` until an admin approves it, unless its
- * email was invited (ADM-08).
+ * new account goes straight on to onboarding.
  */
 @Component({
   selector: 'app-register-page',

@@ -17,9 +17,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
  * `public/svg/` come from `@material-symbols/svg-400` (Apache 2.0) with `fill="currentColor"`
  * added to the root `<svg>`, and each is named exactly after its symbol. `card_giftcard` is
  * a copy of `redeem`: the package dropped that name, and the font maps both to one glyph (U+E8F6).
- * `block`, `group`, `hourglass_empty`, `key`, `logout`, `mail`, `person`, `person_add`,
- * `photo_camera` and `verified_user` are the classic Material Icons (24px grid, same names),
- * added by hand for the sign-in, profile and admin screens.
+ * `key`, `logout`, `person`, `photo_camera` and `verified_user` are the classic Material
+ * Icons (24px grid, same names), added by hand for the sign-in and profile screens.
  */
 const ICON_NAMES = [
   'account_balance',
@@ -35,7 +34,6 @@ const ICON_NAMES = [
   'backup',
   'bar_chart',
   'beach_access',
-  'block',
   'bolt',
   'build',
   'calendar_month',
@@ -72,10 +70,8 @@ const ICON_NAMES = [
   'filter_list',
   'fitness_center',
   'flight',
-  'group',
   'help',
   'home',
-  'hourglass_empty',
   'image',
   'key',
   'local_bar',
@@ -84,7 +80,6 @@ const ICON_NAMES = [
   'local_taxi',
   'lock',
   'logout',
-  'mail',
   'medical_services',
   'medication',
   'more_vert',
@@ -96,7 +91,6 @@ const ICON_NAMES = [
   'pause',
   'payments',
   'person',
-  'person_add',
   'pets',
   'phone_iphone',
   'photo_camera',

@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
-import { AdminStore } from '../../features/admin/admin.store';
 import { BudgetAlerts } from '../../features/budgets/budget-alerts';
 import { BillReminders } from '../../features/notifications/bill-reminders';
 import { DailyReminder } from '../../features/notifications/daily-reminder';
@@ -18,10 +17,8 @@ describe('Shell', () => {
   const originalMatchMedia = window.matchMedia;
   const create = vi.fn(() => of(undefined));
   const signOut = vi.fn(() => Promise.resolve());
-  const isAdmin = signal(false);
 
   beforeEach(async () => {
-    isAdmin.set(false);
     // jsdom has no `matchMedia`; the layout's sidebar reads it on creation.
     window.matchMedia = ((query: string) => ({
       matches: false,
@@ -47,7 +44,6 @@ describe('Shell', () => {
               photoURL: null,
               providers: ['password'],
             }),
-            isAdmin,
             signOut,
           },
         },
@@ -56,7 +52,6 @@ describe('Shell', () => {
         { provide: DailyReminder, useValue: {} },
         { provide: BillReminders, useValue: {} },
         { provide: RecurringRunner, useValue: {} },
-        { provide: AdminStore, useValue: {} },
       ],
     }).compileComponents();
     create.mockClear();
@@ -74,7 +69,7 @@ describe('Shell', () => {
     expect(compiled.querySelector('l-layout main router-outlet')).not.toBeNull();
   });
 
-  it('links to every feature from the sidebar, and to Users for admins (ADM-03)', async () => {
+  it('links to every feature from the sidebar', async () => {
     const fixture = TestBed.createComponent(Shell);
     await fixture.whenStable();
     const links = () =>
@@ -92,11 +87,6 @@ describe('Shell', () => {
       ['/categories', 'Categories'],
       ['/settings', 'Settings'],
     ]);
-
-    isAdmin.set(true);
-    TestBed.inject(NavBadges).pendingUsers.set(3);
-    await fixture.whenStable();
-    expect(links().at(-1)).toEqual(['/admin/users', 'Users 3 waiting for approval']);
   });
 
   it('shows how many recurring entries wait to be confirmed (REC-04)', async () => {

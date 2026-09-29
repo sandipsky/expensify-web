@@ -5,7 +5,6 @@ import {
   Injector,
   ProviderToken,
   computed,
-  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -30,12 +29,11 @@ const EDITABLE =
 
 /**
  * The app shell (§10): side navigation, header with the alerts bell, quick
- * add and the account menu, and the page. It only renders for a signed-in,
- * active user who finished onboarding, so this is also where the features
- * that work from any screen start: budget alerts (BUD-06), reminders (NTF-01,
- * NTF-03), due recurring entries (REC-04, REC-06) and, for admins, the
- * pending-users count (ADM-03). They load after the shell, which keeps them
- * out of the initial bundle (NFR-02).
+ * add and the account menu, and the page. It only renders for a signed-in
+ * user who finished onboarding, so this is also where the features that work
+ * from any screen start: budget alerts (BUD-06), reminders (NTF-01, NTF-03)
+ * and due recurring entries (REC-04, REC-06). They load after the shell,
+ * which keeps them out of the initial bundle (NFR-02).
  */
 @Component({
   selector: 'app-shell',
@@ -61,8 +59,8 @@ export class Shell {
   protected readonly breakpoints = inject(BreakpointService);
   protected readonly badges = inject(NavBadges);
   protected readonly inbox = inject(AlertInbox);
-  protected readonly auth = inject(AuthService);
   protected readonly alertsLabel = alertsLabel;
+  private readonly auth = inject(AuthService);
   private readonly injector = inject(Injector);
   private readonly modals = inject(ModalService);
   private readonly drawers = inject(DrawerService);
@@ -73,18 +71,12 @@ export class Shell {
     () => this.user()?.displayName || this.user()?.email || 'Your account',
   );
 
-  private adminStarted = false;
   /** Set once the shell is gone, so a feature that loads late isn't started on a dead injector. */
   private destroyed = false;
 
   constructor() {
     inject(DestroyRef).onDestroy(() => (this.destroyed = true));
     this.startBackgroundFeatures();
-    effect(() => {
-      if (!this.auth.isAdmin() || this.adminStarted) return;
-      this.adminStarted = true;
-      void import('../../features/admin/admin.store').then((m) => this.start(m.AdminStore));
-    });
   }
 
   /**

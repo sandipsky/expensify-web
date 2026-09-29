@@ -36,9 +36,8 @@ import {
  * on that once. Listeners include metadata changes, so `Doc.pending` follows
  * `hasPendingWrites` for the unsynced marker (SYN-04), and a document snapshot
  * says whether it came from the cache alone, which sign-in needs before it
- * creates a profile. A listener that fails, as one does the moment an admin
- * disables the user (ADM-04), logs its error code and stops rather than
- * throwing into the screen; the profile listener moves the user on.
+ * creates a profile. A listener that fails, as one does when the rules refuse
+ * it, logs its error code and stops rather than throwing into the screen.
  */
 @Injectable()
 export class FirestoreDb implements Db {

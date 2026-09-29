@@ -5,7 +5,7 @@ A personal income, expense and transfer tracker: an Angular 22 progressive web a
 ## Getting started
 
 1. Install Node.js 24 and run `npm install`.
-2. Connect a Firebase project: follow [docs/firebase.md](docs/firebase.md). It walks through creating the project, turning on sign-in, filling in `src/environments/`, deploying the Security Rules and making yourself the first admin.
+2. Connect a Firebase project: follow [docs/firebase.md](docs/firebase.md). It walks through creating the project, turning on sign-in, filling in `src/environments/` and deploying the Security Rules.
 3. `npm start` and open <http://localhost:4200>.
 
 ## Commands
@@ -24,7 +24,7 @@ A personal income, expense and transfer tracker: an Angular 22 progressive web a
 ## Layout
 
 - `src/app/core/` — Firebase setup, auth and guards, repositories, pure domain logic, models
-- `src/app/features/` — one folder per screen group (auth, onboarding, dashboard, transactions, …, admin)
+- `src/app/features/` — one folder per screen group (auth, onboarding, dashboard, transactions, …, settings)
 - `src/app/layout/` — the shell, breakpoints, theme
 - `src/app/shared/` — Lumen UI, the in-house component library, plus app composites, pipes and styles
 - `firestore.rules`, `firestore.indexes.json`, `storage.rules`, `firebase.json` — the Firebase project files, tested in `firebase/`

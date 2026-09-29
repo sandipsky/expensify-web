@@ -3,35 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Security rules of docs/requirements.md §9. Every path under users/{uid}
-    // belongs to that signed-in user while their profile status is 'active';
-    // admins may list profiles and change only role and status on other users,
-    // and never reach a subcollection (ADM-07). Tested in firebase/firestore.rules.spec.ts.
+    // belongs to that signed-in user and nobody else; writes are schema-checked.
+    // Tested in firebase/firestore.rules.spec.ts.
 
-    function signedIn() {
-      return request.auth != null;
-    }
     function isOwner(uid) {
-      return signedIn() && request.auth.uid == uid;
-    }
-    // The caller's own profile; one extra document read per request (cached per evaluation).
-    function profile() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-    function isActive() {
-      return signedIn() && profile().status == 'active';
-    }
-    function isAdmin() {
-      return isActive() && profile().role == 'admin';
-    }
-    function isActiveOwner(uid) {
-      return isOwner(uid) && isActive();
-    }
-    function invited() {
-      return request.auth.token.email != null
-        && exists(/databases/$(database)/documents/invites/$(request.auth.token.email.lower()));
-    }
-    function accessKeys() {
-      return request.resource.data.diff(resource.data).affectedKeys();
+      return request.auth != null && request.auth.uid == uid;
     }
     function isDate(v) {
       return v is string && v.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}');
@@ -61,49 +37,26 @@ service cloud.firestore {
     }
 
     match /users/{uid} {
-      // Own profile is readable in every status (the blocked screen needs it); admins list profiles.
-      allow read: if isOwner(uid) || isAdmin();
-      // Sign-up creates the profile as a pending user; an invited email starts active (ADM-01, ADM-08).
-      allow create: if isOwner(uid)
-        && request.resource.data.role == 'user'
-        && (request.resource.data.status == 'pending'
-          || (request.resource.data.status == 'active' && invited()));
-      // Users edit their own profile but never their role or status.
-      allow update: if isActiveOwner(uid) && !accessKeys().hasAny(['role', 'status']);
-      // Admins change only role and status, and never their own (ADM-05).
-      allow update: if isAdmin() && request.auth.uid != uid
-        && accessKeys().hasOnly(['role', 'status', 'updatedAt'])
-        && request.resource.data.role in ['user', 'admin']
-        && request.resource.data.status in ['pending', 'active', 'disabled'];
-      // Account deletion removes the profile last, so the owner is still active here.
-      allow delete: if isActiveOwner(uid);
+      // The profile: created at sign-up, then edited and deleted by its owner.
+      allow read, write: if isOwner(uid);
 
-      // Financial data: the active owner only. Admins have no access below this line (ADM-07).
       match /accounts/{id} {
-        allow read, delete: if isActiveOwner(uid);
-        allow create, update: if isActiveOwner(uid) && validAccount(request.resource.data);
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validAccount(request.resource.data);
       }
       match /categories/{id} {
-        allow read: if isActiveOwner(uid);
-        allow create, update: if isActiveOwner(uid) && validCategory(request.resource.data);
-        allow delete: if isActiveOwner(uid) && resource.data.get('isSystem', false) != true;
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validCategory(request.resource.data);
+        allow delete: if isOwner(uid) && resource.data.get('isSystem', false) != true;
       }
       match /transactions/{id} {
-        allow read, delete: if isActiveOwner(uid);
-        allow create, update: if isActiveOwner(uid) && validTransaction(request.resource.data);
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validTransaction(request.resource.data);
       }
       match /{coll}/{id} {
-        allow read, write: if isActiveOwner(uid)
+        allow read, write: if isOwner(uid)
           && coll in ['budgets', 'recurringRules', 'devices', 'goals'];
       }
-    }
-
-    // Pre-approved emails (ADM-08). Admins manage them; a signed-in user may read their own.
-    match /invites/{email} {
-      allow read: if isAdmin()
-        || (signedIn() && request.auth.token.email != null
-            && request.auth.token.email.lower() == email);
-      allow create, update, delete: if isAdmin();
     }
   }
 }

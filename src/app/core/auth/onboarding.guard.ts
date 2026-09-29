@@ -2,7 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-/** An active user who hasn't finished onboarding goes there first (ONB-04). Runs after `authGuard`. */
+/** A user who hasn't finished onboarding goes there first (ONB-04). Runs after `authGuard`. */
 export const onboardingGuard: CanActivateFn & CanActivateChildFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);

@@ -10,12 +10,13 @@
 export const environment = {
   production: true,
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: '',
+    apiKey: "AIzaSyCqTDdb8Fgq4ojpV3-z2FzfHQ_EApFsLT4",
+    authDomain: "expense-tracker-5b5b9.firebaseapp.com",
+    projectId: "expense-tracker-5b5b9",
+    storageBucket: "expense-tracker-5b5b9.firebasestorage.app",
+    messagingSenderId: "462108626354",
+    appId: "1:462108626354:web:9a8b728ca58d4cd031e8ab",
+    measurementId: "G-CV60D5P3S8"
   },
   appCheck: {
     /** reCAPTCHA Enterprise site key from the App Check page; leave empty to run without App Check. */

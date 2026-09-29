@@ -1,15 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { Preferences } from '../preferences';
-import { LocalDb, timestampFromMillis } from './local-db';
+import { LocalDb } from './local-db';
 import { NewProfile, StoredProfile, UsersRepo } from './users.repo';
 
 const newProfile = (overrides: Partial<NewProfile> = {}): NewProfile => ({
   displayName: 'Ada',
   email: 'ada@example.com',
   photoURL: null,
-  role: 'user',
-  status: 'pending',
   baseCurrency: 'NPR',
   locale: 'en-US',
   timeZone: 'Asia/Kathmandu',
@@ -26,7 +24,7 @@ const newProfile = (overrides: Partial<NewProfile> = {}): NewProfile => ({
   ...overrides,
 });
 
-describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)', () => {
+describe('UsersRepo and Preferences (§8 users/{uid}, SET-01 to SET-07)', () => {
   let db: LocalDb;
   let repo: UsersRepo;
 
@@ -41,7 +39,7 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
   const profile = async () => (await snapshot())?.profile ?? null;
   const stored = async () => (await db.get('users')).find((d) => d.id === 'local')?.data;
 
-  it('reads defaults until the profile exists, and creates it with role and status (ADM-01)', async () => {
+  it('reads defaults until the profile exists, then creates it', async () => {
     const prefs = TestBed.inject(Preferences);
     expect(await snapshot()).toEqual({ uid: 'local', profile: null, fromCache: false });
     expect(prefs.loaded()).toBe(false);
@@ -51,23 +49,17 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
 
     repo.create(newProfile());
     expect(await stored()).toMatchObject({
-      role: 'user',
-      status: 'pending',
       baseCurrency: 'NPR',
       schemaVersion: 1,
       onboardingCompleted: false,
     });
     expect((await stored())?.['createdAt']).toBeTruthy();
-    expect(await profile()).toMatchObject({
-      role: 'user',
-      status: 'pending',
-      email: 'ada@example.com',
-    });
+    expect(await profile()).toMatchObject({ email: 'ada@example.com', displayName: 'Ada' });
     expect(prefs.loaded()).toBe(true);
   });
 
   it('saves only the preferences passed, merging notification preferences (SYN-03)', async () => {
-    repo.create(newProfile({ status: 'active' }));
+    repo.create(newProfile());
     const prefs = TestBed.inject(Preferences);
     prefs.save({ baseCurrency: 'USD' });
     const createdAt = (await stored())?.['createdAt'];
@@ -81,8 +73,6 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
       baseCurrency: 'USD',
       weekStartDay: 7,
       theme: 'dark',
-      role: 'user',
-      status: 'active',
       notificationPrefs: {
         dailyReminder: true,
         reminderTime: '21:30',
@@ -96,15 +86,13 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
     expect(prefs.weekStartDay()).toBe(7);
   });
 
-  it('never writes role or status from the user’s own changes (ADM-01)', async () => {
-    repo.create(newProfile({ status: 'active' }));
+  it('saves the name and onboarding without touching the preferences (AUTH-08, ONB-04)', async () => {
+    repo.create(newProfile());
     TestBed.inject(Preferences).save({ theme: 'light' });
     repo.updateIdentity({ displayName: 'Ada L.', photoURL: null });
     repo.completeOnboarding();
     const data = await stored();
     expect(data).toMatchObject({
-      role: 'user',
-      status: 'active',
       displayName: 'Ada L.',
       onboardingCompleted: true,
       theme: 'light',
@@ -115,8 +103,6 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
     await db
       .batch()
       .set('users/local', {
-        role: 'superuser',
-        status: 'banned',
         baseCurrency: 'dollars',
         locale: 'not a locale!',
         monthStartDay: 31,
@@ -126,8 +112,6 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
       })
       .commit();
     const read = (await profile()) as StoredProfile;
-    expect(read.role).toBeUndefined();
-    expect(read.status).toBeUndefined();
     expect(read.baseCurrency).toBeUndefined();
     expect(read.locale).toBeUndefined();
     expect(read.theme).toBeUndefined();
@@ -144,30 +128,8 @@ describe('UsersRepo and Preferences (§8 users/{uid}, §3.16, SET-01 to SET-07)'
     expect(prefs.theme()).toBe('system');
   });
 
-  it('lists every profile for admins, newest first, and changes only access fields (ADM-03, ADM-04)', async () => {
-    await db
-      .batch()
-      .set('users/a', { ...newProfile({ email: 'a@x.com' }), createdAt: timestampFromMillis(1) })
-      .set('users/b', {
-        ...newProfile({ email: 'b@x.com', status: 'active', role: 'admin' }),
-        createdAt: timestampFromMillis(2),
-      })
-      .commit();
-    const list = await firstValueFrom(repo.watchAll());
-    expect(list.map((u) => [u.uid, u.email, u.role, u.status])).toEqual([
-      ['b', 'b@x.com', 'admin', 'active'],
-      ['a', 'a@x.com', 'user', 'pending'],
-    ]);
-
-    repo.setAccess('a', { status: 'active' });
-    repo.setAccess('a', { role: 'admin' });
-    const a = (await db.get('users')).find((d) => d.id === 'a')!.data;
-    expect(a).toMatchObject({ status: 'active', role: 'admin', email: 'a@x.com' });
-    expect(a['updatedAt']).toBeTruthy();
-  });
-
   it('deletes the profile', async () => {
-    repo.create(newProfile({ status: 'active' }));
+    repo.create(newProfile());
     await repo.delete();
     expect(await profile()).toBeNull();
     expect(TestBed.inject(Preferences).theme()).toBe('system');

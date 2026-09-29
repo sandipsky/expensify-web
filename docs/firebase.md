@@ -123,7 +123,7 @@ Two things to watch for:
 
 ## Step 6: Deploy the Security Rules and indexes
 
-The rules in `firestore.rules` are what stop one user from reading another user's money, and what keeps new sign-ups out until an admin approves them. Nothing works properly until they're deployed.
+The rules in `firestore.rules` are what stop one user from reading another user's money. Until they're deployed, a database created in production mode refuses everything, and the browser console shows `permission-denied`.
 
 1. Install the Firebase command-line tool once (Node.js is already installed if you can run the app):
 
@@ -148,7 +148,7 @@ The rules in `firestore.rules` are what stop one user from reading another user'
 
 **No command line?** You can also paste the contents of `firestore.rules` into **Firestore Database → Rules** in the console and click **Publish**. The indexes then get created on demand: the first time a query needs one, the browser console shows an error with a link that creates it in one click.
 
-## Step 7: Start the app and make yourself the first admin
+## Step 7: Start the app and sign up
 
 1. Run the app:
 
@@ -160,17 +160,7 @@ The rules in `firestore.rules` are what stop one user from reading another user'
 
 2. Click **Create an account** and register, or use **Continue with Google**.
 
-3. You land on **Waiting for approval**. That's correct: every new account starts as `pending`, and only an admin can let people in. Since nobody is an admin yet, you'll promote yourself by hand, once:
-
-   1. In the Firebase console open **Firestore Database → Data**.
-   2. Open the `users` collection. There's one document, named after your user ID.
-   3. Click it. Find the field `role` and change its value from `user` to `admin`.
-   4. Find `status` and change it from `pending` to `active`.
-   5. Click **Update** for each.
-
-4. Go back to the browser tab. Within a few seconds the waiting page moves on by itself to the welcome steps (currency, first account, categories). Finish them and you're on the dashboard.
-
-From now on you approve everyone else in the app: the **Users** page appears in the side menu for admins, with a count of people waiting. Admins only ever see names, emails, roles and statuses, never anyone's transactions.
+3. You go straight to the welcome steps (currency, first account, categories). Finish them and you're on the dashboard. There is no approval step: anyone who signs up can use the app at once, and each person only ever sees their own data.
 
 ## Step 8 (optional but recommended before going public): App Check
 
@@ -198,7 +188,7 @@ The Firebase Emulator Suite runs Authentication and Firestore on your own machin
 
 2. In `environment.development.ts` set `useEmulators: true` and `projectId: 'demo-expensify'` (the emulators accept any project ID that starts with `demo-`, and that one is what the scripts use). The other fields can stay as they are.
 
-3. Run `npm start` as usual. Sign-ups now go to the emulator; make yourself admin from the emulator UI's Firestore tab the same way as in step 7.
+3. Run `npm start` as usual. Sign-ups now go to the emulator, and you can see and wipe the data in the emulator UI's Firestore tab.
 
 The Security Rules tests run on the emulator too, without you starting it:
 
@@ -219,13 +209,12 @@ The spec has two projects, `expense-tracker-dev` for every merge and `expense-tr
 
 ## If something goes wrong
 
-| What you see                                                                       | What it means                                                                                                                                                     |
-| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Yellow banner "Firebase isn't set up yet" on the sign-in page                      | `apiKey` or `projectId` is empty in the environment file `npm start` uses (`environment.development.ts`).                                                         |
-| "This sign-in method isn't turned on in the Firebase project yet"                  | Step 2: enable Email/Password or Google under Authentication → Sign-in method.                                                                                    |
-| "This website isn't on the Firebase project's list of authorized domains yet"      | Authentication → Settings → Authorized domains: add the domain (localhost is there by default).                                                                   |
-| "Your browser blocked the Google sign-in window"                                   | Allow pop-ups for the site, then try again.                                                                                                                       |
-| Stuck on "Loading your account" for more than a few seconds                        | The app can't reach Firestore: you're offline, the rules aren't deployed (step 6), or the project ID is wrong.                                                    |
-| "Couldn't save your change" toasts, and `permission-denied` in the browser console | The rules refused the write. Usually the account isn't `active` yet, or the rules in the project are older than `firestore.rules`. Re-run `npm run deploy:rules`. |
-| An error in the console with a long link to "create index"                         | A query needs a composite index that isn't built yet. Click the link, or run `npm run deploy:rules` and wait a minute.                                            |
-| Still "Waiting for approval" after you changed `status` in the console             | Check you edited `status` (not `role`) on **your** document under `users`, and that the value is exactly `active`, lowercase.                                     |
+| What you see                                                                       | What it means                                                                                                                                                          |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Yellow banner "Firebase isn't set up yet" on the sign-in page                      | `apiKey` or `projectId` is empty in the environment file `npm start` uses (`environment.development.ts`).                                                              |
+| "This sign-in method isn't turned on in the Firebase project yet"                  | Step 2: enable Email/Password or Google under Authentication → Sign-in method.                                                                                         |
+| "This website isn't on the Firebase project's list of authorized domains yet"      | Authentication → Settings → Authorized domains: add the domain (localhost is there by default).                                                                        |
+| "Your browser blocked the Google sign-in window"                                   | Allow pop-ups for the site, then try again.                                                                                                                            |
+| Stuck on "Loading your account" for more than a few seconds                        | The app can't reach Firestore: you're offline, the rules aren't deployed (step 6), or the project ID is wrong.                                                         |
+| "Couldn't save your change" toasts, and `permission-denied` in the browser console | The rules refused the request. Usually they were never deployed (step 6), or the rules in the project are older than `firestore.rules`. Re-run `npm run deploy:rules`. |
+| An error in the console with a long link to "create index"                         | A query needs a composite index that isn't built yet. Click the link, or run `npm run deploy:rules` and wait a minute.                                                 |

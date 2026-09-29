@@ -77,22 +77,6 @@
       <l-icon name="settings" color="inherit" />
       <span class="app-nav__label">Settings</span>
     </a>
-    @if (auth.isAdmin()) {
-      <a
-        class="app-nav__link"
-        routerLink="/admin/users"
-        routerLinkActive="is-active"
-        ariaCurrentWhenActive="page"
-      >
-        <l-icon name="group" color="inherit" />
-        <span class="app-nav__label">Users</span>
-        @if (badges.pendingUsers(); as pending) {
-          <span class="app-nav__count">
-            {{ pending }}<span class="visually-hidden"> waiting for approval</span>
-          </span>
-        }
-      </a>
-    }
   </nav>
 
   <div layout-header class="app-header">

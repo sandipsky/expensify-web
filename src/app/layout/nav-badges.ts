@@ -9,6 +9,4 @@ import { Injectable, signal } from '@angular/core';
 export class NavBadges {
   /** Ask-first recurring entries waiting for Confirm or Skip (REC-04). */
   readonly recurring = signal(0);
-  /** Sign-ups waiting for an admin's approval, on the Users item (ADM-03). */
-  readonly pendingUsers = signal(0);
 }

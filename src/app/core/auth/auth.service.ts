@@ -1,6 +1,5 @@
 import { Injectable, Injector, computed, effect, inject, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
 import {
   EmailAuthProvider,
   GoogleAuthProvider,
@@ -20,11 +19,10 @@ import {
   updatePassword,
   updateProfile,
 } from 'firebase/auth';
-import { InvitesRepo } from '../data/invites.repo';
 import { UsersRepo } from '../data/users.repo';
 import { guessCurrency } from '../domain/currency-guess';
 import { firebase, isFirebaseConfigured } from '../firebase/firebase';
-import { DEFAULT_NOTIFICATION_PREFS, UserRole, UserStatus } from '../models/user';
+import { DEFAULT_NOTIFICATION_PREFS } from '../models/user';
 import { DEFAULT_CURRENCY, deviceLocale, deviceTimeZone } from '../preferences';
 import { AuthError, toAuthError } from './auth-errors';
 
@@ -48,17 +46,13 @@ export const LOGIN_URL = '/login';
 /**
  * Firebase Auth behind signals (§3.1), plus the sign-in flow of §10: once Auth
  * resolves, the user's own profile is listened to; if the server says there
- * is none, one is created as `user` and `pending`, or `active` when the email
- * was invited (ADM-01, ADM-08). The listener keeps `status` live, so an admin
- * approving or disabling the user moves them between the app and `/no-access`
- * within seconds (ADM-04). Signing out reloads the page, which drops every
- * store's data before another user can sign in.
+ * is none, one is created, and the user goes on to onboarding. Signing out
+ * reloads the page, which drops every store's data before another user can
+ * sign in.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly users = inject(UsersRepo);
-  private readonly invites = inject(InvitesRepo);
-  private readonly router = inject(Router);
   private readonly injector = inject(Injector);
 
   /** False until `environment.ts` holds a Firebase project (docs/firebase.md). */
@@ -75,11 +69,6 @@ export class AuthService {
     const snapshot = this.snapshot();
     return user && snapshot?.uid === user.uid ? snapshot.profile : null;
   });
-  readonly status = computed<UserStatus | null>(() => this.profile()?.status ?? null);
-  readonly role = computed<UserRole | null>(() => this.profile()?.role ?? null);
-  /** Only active users may use the app (ADM-02). */
-  readonly isActive = computed(() => this.status() === 'active');
-  readonly isAdmin = computed(() => this.isActive() && this.role() === 'admin');
 
   /**
    * True once the guards can decide: the session is known, and a signed-in
@@ -133,8 +122,8 @@ export class AuthService {
 
   /**
    * Creates the login (AUTH-01). No verification email is sent (AUTH-02): the
-   * account waits for an admin instead. The name goes on the Auth user and
-   * the new profile.
+   * account can be used at once. The name goes on the Auth user and the new
+   * profile.
    */
   async register(name: string, email: string, password: string): Promise<void> {
     const displayName = name.trim() || null;
@@ -223,7 +212,8 @@ export class AuthService {
   /**
    * Creates the profile once the server has said there is none (§10
    * "Sign-in flow"). A cache-only answer isn't enough: another device may have
-   * created it, and overwriting would reset the user's role and status.
+   * created it, and overwriting would reset the user's preferences and
+   * onboarding.
    */
   private ensureProfile(): void {
     const user = this.user();
@@ -231,18 +221,15 @@ export class AuthService {
     if (!user || !snapshot || snapshot.uid !== user.uid) return;
     if (snapshot.profile || snapshot.fromCache || this.creatingFor === user.uid) return;
     this.creatingFor = user.uid;
-    untracked(() => void this.createProfile(user));
+    untracked(() => this.createProfile(user));
   }
 
-  private async createProfile(user: AuthUser): Promise<void> {
-    const invited = await this.invites.isInvited(user.email);
+  private createProfile(user: AuthUser): void {
     const locale = deviceLocale();
     this.users.create({
       displayName: user.displayName ?? this.nameForNewProfile,
       email: user.email,
       photoURL: user.photoURL,
-      role: 'user',
-      status: invited ? 'active' : 'pending',
       baseCurrency: guessCurrency(locale, DEFAULT_CURRENCY),
       locale,
       timeZone: deviceTimeZone(),
@@ -255,27 +242,16 @@ export class AuthService {
   }
 
   /**
-   * Keeps the screen in step with the session and status while the app is
-   * open: a session that ends elsewhere reloads onto sign-in; a status that
-   * changes moves the user to or from `/no-access` (ADM-04). The guards do
-   * the same on navigation.
+   * Keeps the screen in step with the session while the app is open: a
+   * session that ends elsewhere reloads onto sign-in. The guards do the same
+   * on navigation.
    */
   private follow(): void {
     const user = this.user();
     if (user === undefined) return;
     const previous = this.lastUid;
     this.lastUid = user?.uid ?? null;
-    if (!user) {
-      if (previous) this.leave(LOGIN_URL);
-      return;
-    }
-    if (!this.settled()) return;
-    const active = this.isActive();
-    untracked(() => {
-      const url = this.router.url;
-      if (!active && !url.startsWith('/no-access')) void this.router.navigateByUrl('/no-access');
-      else if (active && url.startsWith('/no-access')) void this.router.navigateByUrl('/');
-    });
+    if (!user && previous) this.leave(LOGIN_URL);
   }
 
   private current(): User {

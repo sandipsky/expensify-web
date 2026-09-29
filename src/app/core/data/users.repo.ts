@@ -6,18 +6,13 @@ import { clampStartDay, clampWeekday } from '../domain/period';
 import { isTimeOfDay } from '../domain/reminders';
 import { TimestampLike } from '../models/timestamp';
 import {
-  AdminUser,
   DEFAULT_NOTIFICATION_PREFS,
   IdentityChanges,
   NotificationPrefs,
   PreferenceChanges,
   THEMES,
   Theme,
-  USER_ROLES,
-  USER_STATUSES,
   UserProfile,
-  UserRole,
-  UserStatus,
 } from '../models/user';
 import { Db, Doc, DocData, serverTimestamp } from './db';
 import { WriteErrors } from './write-errors';
@@ -41,23 +36,12 @@ export interface ProfileSnapshot {
   fromCache: boolean;
 }
 
-/** The access fields an admin may change on another user (ADM-04, ADM-05). */
-export interface AccessChanges {
-  role?: UserRole;
-  status?: UserStatus;
-}
-
-/** The users collection, which admins may list (ADM-03, §9). */
-const USERS = 'users';
-
 /**
- * `users/{uid}` (§8), the profile document. Sign-in creates it with `role`
- * and `status` (§3.16, §10 "Sign-in flow"); the user never writes those two
- * again, and the rules refuse if they try (ADM-01). Preferences are written
- * field by field with a merging set, so another device's change to a
- * different preference survives (SYN-03). Writes return before they're
- * confirmed and hand failures to `WriteErrors` (NFR-03). Admins list every
- * profile and change access here too, and nothing else (ADM-07).
+ * `users/{uid}` (§8), the profile document. Sign-in creates it (§10 "Sign-in
+ * flow"). Preferences are written field by field with a merging set, so
+ * another device's change to a different preference survives (SYN-03).
+ * Writes return before they're confirmed and hand failures to `WriteErrors`
+ * (NFR-03).
  */
 @Injectable({ providedIn: 'root' })
 export class UsersRepo {
@@ -71,7 +55,7 @@ export class UsersRepo {
   private readonly profile$ = this.db.uid$.pipe(
     switchMap((uid) =>
       uid
-        ? this.db.watchDoc(`${USERS}/${uid}`).pipe(
+        ? this.db.watchDoc(`users/${uid}`).pipe(
             map(({ doc, fromCache }): ProfileSnapshot => ({
               uid,
               profile: doc ? toProfile(doc) : null,
@@ -121,25 +105,6 @@ export class UsersRepo {
     return this.db.batch().delete(this.db.userPath).commit();
   }
 
-  /** Every profile, newest sign-up first, for the admin Users page (ADM-03). Admins only. */
-  watchAll(): Observable<AdminUser[]> {
-    return this.db
-      .watch(USERS, { orderBy: [['createdAt', 'desc']] })
-      .pipe(map((docs) => docs.map(toAdminUser)));
-  }
-
-  /**
-   * Changes another user's role or status (ADM-04, ADM-05). The rules allow an
-   * admin nothing else on a profile, and never their own.
-   */
-  setAccess(uid: string, changes: AccessChanges): void {
-    this.db
-      .batch()
-      .update(`${USERS}/${uid}`, { ...changes, updatedAt: serverTimestamp() })
-      .commit()
-      .catch((error) => this.errors.report(error));
-  }
-
   // Not awaited: offline, a commit resolves only once the server confirms (§10).
   private commit(data: DocData, merge = false): void {
     this.db
@@ -155,10 +120,6 @@ function toProfile(doc: Doc): StoredProfile {
   const profile: StoredProfile = {};
   for (const field of ['displayName', 'email', 'photoURL', 'timeZone'] as const) {
     if (typeof data[field] === 'string') profile[field] = data[field];
-  }
-  if (USER_ROLES.includes(data['role'] as UserRole)) profile.role = data['role'] as UserRole;
-  if (USER_STATUSES.includes(data['status'] as UserStatus)) {
-    profile.status = data['status'] as UserStatus;
   }
   if (isCurrencyCode(data['baseCurrency'])) profile.baseCurrency = data['baseCurrency'];
   if (isLocale(data['locale'])) profile.locale = data['locale'];
@@ -177,24 +138,6 @@ function toProfile(doc: Doc): StoredProfile {
   profile.createdAt = timestampOf(data['createdAt']);
   profile.updatedAt = timestampOf(data['updatedAt']);
   return profile;
-}
-
-/** Only what the Users page shows; a value this version can't read falls back to the safe default. */
-function toAdminUser(doc: Doc): AdminUser {
-  const data = doc.data as Record<string, unknown>;
-  const text = (field: string) =>
-    typeof data[field] === 'string' ? (data[field] as string) : null;
-  return {
-    uid: doc.id,
-    displayName: text('displayName'),
-    email: text('email'),
-    photoURL: text('photoURL'),
-    role: USER_ROLES.includes(data['role'] as UserRole) ? (data['role'] as UserRole) : 'user',
-    status: USER_STATUSES.includes(data['status'] as UserStatus)
-      ? (data['status'] as UserStatus)
-      : 'pending',
-    createdAt: timestampOf(data['createdAt']),
-  };
 }
 
 function timestampOf(value: unknown): TimestampLike | null {

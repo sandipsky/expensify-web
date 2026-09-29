@@ -96,8 +96,8 @@ export class UserDataRepo {
   /**
    * Deletes the account's data (SET-04), as §12 has the client do until the
    * deleteAccount Function exists: every collection in batches, then the
-   * receipt files, then the profile document last, since the Security Rules
-   * need it active until then. Deleting the sign-in itself joins this in M0.
+   * receipt files, then the profile document last. Deleting the sign-in
+   * itself joins this in M0.
    * Stops before the profile if anything failed, so it can be run again.
    */
   async deleteAll(): Promise<boolean> {
